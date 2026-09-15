@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Settings — Transform.cx</title>
+<link rel="stylesheet" href="assets/tx.css">
+<style>
+  .cl-row td{ vertical-align:middle; }
+  .swatch{ width:26px; height:26px; border-radius:7px; display:grid; place-items:center; font-size:10.5px; font-weight:640; color:var(--surface); background:var(--fg); flex:none; }
+  .swatch.alt{ background:var(--muted); }
+</style>
+</head>
+<body>
+<div class="app" data-od-id="app-shell">
+
+  <aside class="side" data-od-id="sidebar">
+    <div class="side-brand">
+      <img class="exl-logo" src="EXL_Service_logo.svg.webp" alt="EXL">
+      <span class="brand-div" aria-hidden="true"></span>
+      <div>
+        <div class="brand-prod">Transform.cx</div>
+        <div class="caps">Skyline workspace</div>
+      </div>
+    </div>
+    <nav class="nav" data-od-id="side-nav">
+      <a class="nlink" href="projects.html"><svg class="i"><use href="#i-grid"/></svg>Projects</a>
+      <div class="sec">Workspace</div>
+      <a class="nlink" href="jobs.html"><svg class="i"><use href="#i-clock"/></svg>Jobs</a>
+      <a class="nlink" href="dashboard.html"><svg class="i"><use href="#i-chart"/></svg>Dashboard</a>
+      <div class="sec">Pipeline · Skyline Broadband</div>
+      <a class="nlink" href="analysis.html"><svg class="i"><use href="#i-chart"/></svg>Analysis<span class="tail">68%</span></a>
+      <a class="nlink" href="design.html"><svg class="i"><use href="#i-flow"/></svg>Design<span class="tail">Review</span></a>
+      <a class="nlink" href="develop.html"><svg class="i"><use href="#i-code"/></svg>Develop<span class="tail">Ready</span></a>
+      <div class="sec">Data</div>
+      <a class="nlink" href="connectors.html"><svg class="i"><use href="#i-plug"/></svg>Connectors<span class="tail">5</span></a>
+      <div class="sec">Admin</div>
+      <a class="nlink active" href="settings.html"><svg class="i"><use href="#i-gear"/></svg>Settings</a>
+      <a class="nlink" href="rbac.html"><svg class="i"><use href="#i-users"/></svg>Team &amp; roles</a>
+      <a class="nlink" href="audit-log.html"><svg class="i"><use href="#i-scroll"/></svg>Audit log</a>
+    </nav>
+    <div class="side-foot">
+      <div class="listitem" style="border:0;padding:4px 8px">
+        <span class="avatar avatar-sm">PN</span>
+        <div style="min-width:0;flex:1"><div style="font-size:12.5px;font-weight:560">Priya Nair</div><div class="hint" style="font-size:11px">Admin</div></div>
+        <a class="icon-btn" href="login.html" title="Sign out"><svg class="i"><use href="#i-out"/></svg></a>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar" data-od-id="topbar">
+      <div class="crumbs"><span>Skyline workspace</span><span class="sep">/</span><span class="here">Settings</span></div>
+      <div class="spacer"></div>
+      <button class="icon-btn" title="Notifications" onclick="TX.toast('No new notifications','i-bell')"><svg class="i"><use href="#i-bell"/></svg></button>
+    </header>
+
+    <div class="page" data-od-id="settings-page">
+      <div class="page-h">
+        <div style="flex:1">
+          <h1 data-od-id="page-title">Settings</h1>
+          <p class="sub">Clients, workspace defaults and cost tagging. Every job a team runs is billed to a client, so keep this list current.</p>
+        </div>
+      </div>
+
+      <div data-tab-scope>
+      <div class="tabs" data-tabs style="margin-bottom:16px" data-od-id="settings-tabs">
+        <button role="tab" aria-selected="true" data-tab="clients" data-od-id="tab-clients">Clients <span class="count" id="cl-count">4</span></button>
+        <button role="tab" aria-selected="false" data-tab="workspace" data-od-id="tab-workspace">Workspace</button>
+        <button role="tab" aria-selected="false" data-tab="cost" data-od-id="tab-cost">Cost &amp; budgets</button>
+      </div>
+
+      <div data-panel="clients" data-od-id="panel-clients">
+        <div class="card">
+          <div class="card-h" style="justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <h3>Clients</h3>
+            <div class="row" style="gap:8px">
+              <div style="position:relative">
+                <svg class="i" style="position:absolute;left:9px;top:9px;color:var(--muted)"><use href="#i-search"/></svg>
+                <input class="input" style="height:30px;padding-left:30px;width:200px" placeholder="Search clients" aria-label="Search clients" data-filter-target="#client-table" data-filter-count="#cl-shown" data-filter-empty="#clients-empty">
+              </div>
+              <span class="hint"><span id="cl-shown">4</span> shown</span>
+              <button class="btn btn-primary" data-open="dlg-client" data-od-id="add-client-btn"><svg class="i"><use href="#i-plus"/></svg>Add client</button>
+            </div>
+          </div>
+          <table class="table" id="client-table" style="margin-top:10px">
+            <thead><tr><th>Client</th><th>Primary contact</th><th class="num">Projects</th><th class="num">Jobs · 30d</th><th class="num">Spend · 30d</th><th>Status</th><th style="width:76px"></th></tr></thead>
+            <tbody id="client-body">
+              <tr class="cl-row" data-filter-row data-od-id="client-skyline">
+                <td><div class="row" style="gap:10px"><span class="swatch">SB</span><div><div style="font-weight:560">Skyline Broadband</div><div class="hint" style="font-size:11.5px">Telecom / ISP · Bengaluru</div></div></div></td>
+                <td><div>Priya Nair<div class="hint" style="font-size:11.5px">priya@skyline-broadband.com</div></div></td>
+                <td class="num">3</td><td class="num">48</td><td class="num">₹6.4L</td>
+                <td><span class="badge badge-ok"><span class="dot"></span>Active</span></td>
+                <td><div class="row" style="gap:2px"><button class="icon-btn" data-edit aria-label="Edit client"><svg class="i"><use href="#i-edit"/></svg></button><button class="icon-btn" data-del aria-label="Delete client"><svg class="i"><use href="#i-trash"/></svg></button></div></td>
+              </tr>
+              <tr class="cl-row" data-filter-row data-od-id="client-northwind">
+                <td><div class="row" style="gap:10px"><span class="swatch alt">NR</span><div><div style="font-weight:560">Northwind Retail</div><div class="hint" style="font-size:11.5px">Retail · Pune</div></div></div></td>
+                <td><div>Rohan Gupta<div class="hint" style="font-size:11.5px">rohan@northwind.in</div></div></td>
+                <td class="num">1</td><td class="num">12</td><td class="num">₹1.1L</td>
+                <td><span class="badge badge-ok"><span class="dot"></span>Active</span></td>
+                <td><div class="row" style="gap:2px"><button class="icon-btn" data-edit aria-label="Edit client"><svg class="i"><use href="#i-edit"/></svg></button><button class="icon-btn" data-del aria-label="Delete client"><svg class="i"><use href="#i-trash"/></svg></button></div></td>
+              </tr>
+              <tr class="cl-row" data-filter-row data-od-id="client-helios">
+                <td><div class="row" style="gap:10px"><span class="swatch alt">HH</span><div><div style="font-weight:560">Helios Health</div><div class="hint" style="font-size:11.5px">Healthcare · Hyderabad</div></div></div></td>
+                <td><div>Dr. Meera Iyer<div class="hint" style="font-size:11.5px">meera@helios.health</div></div></td>
+                <td class="num">2</td><td class="num">27</td><td class="num">₹3.2L</td>
+                <td><span class="badge badge-acc"><span class="dot"></span>Trial</span></td>
+                <td><div class="row" style="gap:2px"><button class="icon-btn" data-edit aria-label="Edit client"><svg class="i"><use href="#i-edit"/></svg></button><button class="icon-btn" data-del aria-label="Delete client"><svg class="i"><use href="#i-trash"/></svg></button></div></td>
+              </tr>
+              <tr class="cl-row" data-filter-row data-od-id="client-vertex">
+                <td><div class="row" style="gap:10px"><span class="swatch alt">VL</span><div><div style="font-weight:560">Vertex Logistics</div><div class="hint" style="font-size:11.5px">Logistics · Chennai</div></div></div></td>
+                <td><div class="hint">No contact yet</div></td>
+                <td class="num muted">0</td><td class="num muted">0</td><td class="num muted">₹0</td>
+                <td><span class="badge"><span class="dot"></span>Paused</span></td>
+                <td><div class="row" style="gap:2px"><button class="icon-btn" data-edit aria-label="Edit client"><svg class="i"><use href="#i-edit"/></svg></button><button class="icon-btn" data-del aria-label="Delete client"><svg class="i"><use href="#i-trash"/></svg></button></div></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="empty" id="clients-empty" hidden data-od-id="clients-empty">
+            <div style="margin-bottom:8px"><svg class="i i-lg"><use href="#i-filter"/></svg></div>
+            No clients match this search.
+          </div>
+        </div>
+      </div>
+
+      <div data-panel="workspace" hidden data-od-id="panel-workspace">
+        <div class="grid-2">
+          <div class="card card-b" style="display:flex;flex-direction:column;gap:12px">
+            <div><div class="label">Workspace name</div><input class="input" value="Skyline workspace" aria-label="Workspace name"></div>
+            <div><div class="label">Default region</div><select class="input" aria-label="Default region"><option>asia-south1 (Mumbai)</option><option>us-central1</option><option>eu-west1</option></select></div>
+            <div class="row" style="justify-content:space-between"><div><div class="label">PII redaction by default</div><div class="hint">Applied to every new upload unless overridden.</div></div><span class="switch" role="switch" aria-checked="true"></span></div>
+            <button class="btn btn-sm" style="align-self:flex-start" onclick="TX.toast('Workspace defaults saved','i-check')">Save defaults</button>
+          </div>
+          <div class="card card-b" style="display:flex;flex-direction:column;gap:12px">
+            <div class="label">Cost tagging</div>
+            <div class="mini-kv"><span class="k">Require client on every job</span><span class="switch" role="switch" aria-checked="true"></span></div>
+            <div class="mini-kv"><span class="k">Tag build minutes to the project client</span><span class="switch" role="switch" aria-checked="true"></span></div>
+            <div class="mini-kv"><span class="k">Block runs with no client set</span><span class="switch" role="switch" aria-checked="false"></span></div>
+            <div class="hint">Tags flow into Cost &amp; budgets and into the jobs table, so a client can be filtered and recharged.</div>
+          </div>
+        </div>
+      </div>
+
+      <div data-panel="cost" hidden data-od-id="panel-cost">
+        <div class="card card-b">
+          <div class="card-h" style="padding:0 0 12px"><h3>Spend by client · last 30 days</h3></div>
+          <div>
+            <div class="mini-kv" style="margin-bottom:10px"><span class="k" style="width:150px">Skyline Broadband</span><div class="track" style="flex:1"><div class="fill" style="width:100%"></div></div><span class="tabular" style="width:70px;text-align:right">₹6.4L</span></div>
+            <div class="mini-kv" style="margin-bottom:10px"><span class="k" style="width:150px">Helios Health</span><div class="track" style="flex:1"><div class="fill" style="width:50%"></div></div><span class="tabular" style="width:70px;text-align:right">₹3.2L</span></div>
+            <div class="mini-kv" style="margin-bottom:10px"><span class="k" style="width:150px">Northwind Retail</span><div class="track" style="flex:1"><div class="fill" style="width:17.2%"></div></div><span class="tabular" style="width:70px;text-align:right">₹1.1L</span></div>
+            <div class="mini-kv"><span class="k" style="width:150px">Vertex Logistics</span><div class="track" style="flex:1"><div class="fill" style="width:0%"></div></div><span class="tabular" style="width:70px;text-align:right">₹0</span></div>
+          </div>
+          <p class="hint" style="margin-top:12px">Bar width is proportional to spend; the maximum is ₹6.4L (Skyline Broadband). Real billing figures sync from the metering service.</p>
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" data-overlay></div>
+
+<div class="dialog" id="dlg-client" role="dialog" aria-modal="true" data-od-id="client-dialog">
+  <div class="dialog-h">
+    <h2 id="client-title">Add client</h2>
+    <p class="hint">A client is who the work is billed to. Teams pick it when they create a job, so cost reporting can be sliced per client.</p>
+  </div>
+  <div class="dialog-b">
+    <div class="field"><label class="label" for="c-name">Client name</label><input class="input" id="c-name" placeholder="e.g. Northwind Retail"></div>
+    <div class="field"><label class="label" for="c-contact">Primary contact email</label><input class="input" id="c-contact" type="email" placeholder="name@company.com"></div>
+    <div class="field"><label class="label" for="c-industry">Industry</label><input class="input" id="c-industry" placeholder="e.g. Telecom / ISP"></div>
+    <div class="row" style="justify-content:space-between">
+      <div><div class="label">Active</div><div class="hint">Inactive clients can't be picked on new jobs.</div></div>
+      <span class="switch" role="switch" aria-checked="true"></span>
+    </div>
+  </div>
+  <div class="dialog-f">
+    <button class="btn" data-close>Cancel</button>
+    <button class="btn btn-primary" id="c-save" data-od-id="client-save">Save client</button>
+  </div>
+</div>
+
+<div class="dialog" id="dlg-confirm" role="dialog" aria-modal="true" data-od-id="confirm-dialog">
+  <div class="dialog-h"><h2 id="cf-title">Delete client?</h2><p class="hint" id="cf-body">—</p></div>
+  <div class="dialog-f">
+    <button class="btn" data-close>Cancel</button>
+    <button class="btn" id="cf-ok" style="color:var(--danger-fg);border-color:oklch(87% 0.05 27);background:var(--danger-soft)">Delete client</button>
+  </div>
+</div>
+
+<script src="assets/ui.js"></script>
+<script>
+(function(){
+  var editing = null;
+  var title = document.getElementById("client-title");
+  function openClient(name, contact, industry){
+    editing = name || null;
+    title.textContent = editing ? "Edit " + editing : "Add client";
+    document.getElementById("c-name").value = name || "";
+    document.getElementById("c-contact").value = contact || "";
+    document.getElementById("c-industry").value = industry || "";
+    TX.openLayer("dlg-client");
+  }
+  function firstName(tr){
+    var el = tr.querySelector("td div div div");
+    return el ? el.textContent.trim() : "this client";
+  }
+  document.querySelectorAll("#client-body .cl-row").forEach(function(tr){
+    var cells = tr.cells;
+    tr.querySelector("[data-edit]").addEventListener("click", function(){
+      var contactEl = cells[1].querySelector(".hint");
+      var indEl = cells[0].querySelector(".hint");
+      openClient(
+        firstName(tr),
+        contactEl ? contactEl.textContent.trim() : "",
+        indEl ? indEl.textContent.replace(/^[^·]*·\s*/, "") : ""
+      );
+    });
+    tr.querySelector("[data-del]").addEventListener("click", function(){
+      var nm = firstName(tr);
+      document.getElementById("cf-title").textContent = "Delete " + nm + "?";
+      document.getElementById("cf-body").textContent = "Jobs already run stay in the workspace and keep their cost history, but new jobs can no longer be tagged to this client unless it is re-added.";
+      TX.openLayer("dlg-confirm");
+      var ok = document.getElementById("cf-ok");
+      var fresh = ok.cloneNode(true);
+      ok.replaceWith(fresh);
+      fresh.addEventListener("click", function(){
+        TX.closeLayers();
+        tr.remove();
+        var n = document.querySelectorAll("#client-body .cl-row").length;
+        document.getElementById("cl-count").textContent = n;
+        var shown = document.getElementById("cl-shown");
+        if (shown) shown.textContent = n;
+        TX.toast(nm + " removed from clients", "i-trash");
+      });
+    });
+  });
+  document.getElementById("c-save").addEventListener("click", function(){
+    var name = document.getElementById("c-name").value.trim() || "Untitled client";
+    TX.closeLayers();
+    TX.toast(editing ? 'Client "' + name + '" updated' : 'Client "' + name + '" added — selectable on new jobs', "i-check");
+  });
+  if (location.hash === "#clients"){ TX.toast("Manage clients for cost tagging below", "i-info"); }
+})();
+</script>
+</body>
+</html>

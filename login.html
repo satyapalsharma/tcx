@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in — Transform.cx</title>
+<link rel="stylesheet" href="assets/tx.css">
+<style>
+  body{ display:grid; place-items:center; min-height:100vh; padding:40px 16px; }
+  .login-wrap{ width:min(372px, 100%); }
+  .pwd-wrap{ position:relative; }
+  .pwd-wrap .input{ padding-right:40px; }
+  .pwd-eye{ position:absolute; right:5px; top:3px; }
+  .divider-row{ display:flex; align-items:center; gap:12px; margin:18px 0 14px; }
+  .divider-row .line{ flex:1; height:1px; background:var(--border); }
+  .divider-row span{ font-size:11.5px; color:var(--muted); }
+  .login-foot{ margin-top:26px; display:flex; flex-direction:column; gap:14px; align-items:center; }
+  .g-mark{ width:15px; height:15px; border-radius:50%; display:grid; place-items:center; font-size:10px; font-weight:700; background:var(--surface-inset); }
+</style>
+</head>
+<body>
+<main class="login-wrap" data-od-id="login-root">
+  <div data-od-id="login-brand" style="display:flex;align-items:center;gap:9px;margin-bottom:26px">
+    <img class="exl-logo" src="EXL_Service_logo.svg.webp" alt="EXL" style="height:24px;width:auto;display:block">
+    <span style="width:1px;height:22px;background:var(--border)" aria-hidden="true"></span>
+    <span style="font-size:16px;font-weight:640;letter-spacing:-0.02em">Transform.cx</span>
+  </div>
+
+  <h1 data-od-id="login-heading" style="font-size:22px;font-weight:640;letter-spacing:-0.025em">Sign in</h1>
+  <p class="muted" style="margin:6px 0 22px">Continue to your workspace where conversations become deployed agents.</p>
+
+  <form id="login-form" novalidate data-od-id="login-form" class="card" style="padding:20px">
+    <div class="field" id="f-email">
+      <label class="label" for="email">Work email</label>
+      <input class="input" id="email" name="email" type="email" autocomplete="email" placeholder="name@company.com" value="priya@skyline-broadband.com">
+      <span class="error-text"><svg class="i"><use href="#i-warn"/></svg>Enter a valid company email address.</span>
+    </div>
+
+    <div class="field" id="f-password" style="margin-top:14px">
+      <label class="label" for="password">Password</label>
+      <div class="pwd-wrap">
+        <input class="input" id="password" name="password" type="password" autocomplete="current-password" placeholder="8+ characters">
+        <button type="button" class="icon-btn pwd-eye" data-od-id="toggle-password" aria-label="Show password"><svg class="i"><use href="#i-eye"/></svg></button>
+      </div>
+      <span class="error-text"><svg class="i"><use href="#i-warn"/></svg>Password must be at least 8 characters.</span>
+    </div>
+
+    <div class="row" style="justify-content:space-between;margin-top:14px">
+      <button type="button" class="row" style="gap:8px;font-size:12.5px;color:var(--muted)" data-od-id="remember-me">
+        <span class="switch" role="switch" aria-checked="true" aria-label="Keep me signed in"></span>Keep me signed in
+      </button>
+      <a class="link" href="#reset" id="reset-link">Forgot password?</a>
+    </div>
+
+    <button class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:18px" type="submit" data-od-id="sign-in-btn">
+      Sign in
+    </button>
+
+    <div class="divider-row"><span class="line"></span><span>or continue with</span><span class="line"></span></div>
+
+    <div class="grid-2">
+      <button type="button" class="btn" style="justify-content:center" data-od-id="sso-google" id="sso-google">
+        <span class="g-mark">G</span>Google
+      </button>
+      <button type="button" class="btn" style="justify-content:center" data-od-id="sso-saml" id="sso-saml">
+        <svg class="i"><use href="#i-lock"/></svg>SAML SSO
+      </button>
+    </div>
+
+    <p class="hint" style="text-align:center;margin-top:16px" id="demo-hint">Demo build — use any 8+ character password to enter the workspace.</p>
+  </form>
+
+  <div class="login-foot" data-od-id="login-footer">
+    <div class="stage-flow" aria-hidden="true">
+      <span class="snode done"><span class="glyph"><svg class="i" style="width:10px;height:10px"><use href="#i-check"/></svg></span>Analysis</span>
+      <span class="slink"></span>
+      <span class="snode live"><span class="glyph"><span class="mini"></span></span>Design</span>
+      <span class="slink"></span>
+      <span class="snode"><span class="glyph"></span>Develop</span>
+    </div>
+    <p class="hint">Analysis → Design → Develop — one pipeline, or just the stage your team owns.</p>
+    <p class="hint">No account yet? <a class="link" href="#invite" id="invite-link">Ask your workspace admin</a></p>
+  </div>
+</main>
+
+<script src="assets/ui.js"></script>
+<script>
+(function () {
+  var form = document.getElementById("login-form");
+  var email = document.getElementById("email");
+  var pwd = document.getElementById("password");
+  var eye = document.querySelector(".pwd-eye");
+
+  eye.addEventListener("click", function () {
+    var show = pwd.type === "password";
+    pwd.type = show ? "text" : "password";
+    eye.setAttribute("aria-label", show ? "Hide password" : "Show password");
+  });
+
+  function markErr(fieldId, on) {
+    document.getElementById(fieldId).classList.toggle("has-error", on);
+  }
+
+  email.addEventListener("input", function () { markErr("f-email", false); });
+  pwd.addEventListener("input", function () { markErr("f-password", false); });
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var okEmail = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.value.trim());
+    var okPwd = pwd.value.length >= 8;
+    markErr("f-email", !okEmail);
+    markErr("f-password", !okPwd);
+    if (!okEmail) { email.focus(); return; }
+    if (!okPwd) { pwd.focus(); return; }
+    var btn = form.querySelector("[type=submit]");
+    btn.innerHTML = '<span class="spinner"></span>Signing in…';
+    btn.disabled = true;
+    try { localStorage.setItem("tx-user", email.value.trim()); } catch (err) {}
+    setTimeout(function () { location.href = "projects.html"; }, 650);
+  });
+
+  ["sso-google", "sso-saml"].forEach(function (id) {
+    document.getElementById(id).addEventListener("click", function () {
+      try { localStorage.setItem("tx-user", "priya@skyline-broadband.com"); } catch (e) {}
+      location.href = "projects.html";
+    });
+  });
+  document.getElementById("reset-link").addEventListener("click", function (e) {
+    e.preventDefault();
+    TX.toast("Password reset link sent to " + (email.value.trim() || "your email"), "i-mail");
+  });
+  document.getElementById("invite-link").addEventListener("click", function (e) {
+    e.preventDefault();
+    TX.toast("Demo — invites are managed from Team & roles", "i-info");
+  });
+})();
+</script>
+</body>
+</html>

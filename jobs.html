@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jobs — Transform.cx</title>
+<link rel="stylesheet" href="assets/tx.css">
+<style>
+  .jtable td{ vertical-align:middle; }
+  .jtable .prog{ min-width:120px; }
+  .jrow{ cursor:pointer; }
+  .jrow:hover{ background:var(--surface-hover); }
+</style>
+</head>
+<body>
+<div class="app" data-od-id="app-shell">
+
+  <aside class="side" data-od-id="sidebar">
+    <div class="side-brand">
+      <img class="exl-logo" src="EXL_Service_logo.svg.webp" alt="EXL">
+      <span class="brand-div" aria-hidden="true"></span>
+      <div>
+        <div class="brand-prod">Transform.cx</div>
+        <div class="caps">Skyline workspace</div>
+      </div>
+    </div>
+    <nav class="nav" data-od-id="side-nav">
+      <a class="nlink" href="projects.html"><svg class="i"><use href="#i-grid"/></svg>Projects</a>
+      <div class="sec">Workspace</div>
+      <a class="nlink active" href="jobs.html"><svg class="i"><use href="#i-clock"/></svg>Jobs</a>
+      <a class="nlink" href="dashboard.html"><svg class="i"><use href="#i-chart"/></svg>Dashboard</a>
+      <div class="sec">Pipeline · Skyline Broadband</div>
+      <a class="nlink" href="analysis.html"><svg class="i"><use href="#i-chart"/></svg>Analysis<span class="tail">68%</span></a>
+      <a class="nlink" href="design.html"><svg class="i"><use href="#i-flow"/></svg>Design<span class="tail">Review</span></a>
+      <a class="nlink" href="develop.html"><svg class="i"><use href="#i-code"/></svg>Develop<span class="tail">Ready</span></a>
+      <div class="sec">Data</div>
+      <a class="nlink" href="connectors.html"><svg class="i"><use href="#i-plug"/></svg>Connectors<span class="tail">5</span></a>
+      <div class="sec">Admin</div>
+      <a class="nlink" href="settings.html"><svg class="i"><use href="#i-gear"/></svg>Settings</a>
+      <a class="nlink" href="rbac.html"><svg class="i"><use href="#i-users"/></svg>Team &amp; roles</a>
+      <a class="nlink" href="audit-log.html"><svg class="i"><use href="#i-scroll"/></svg>Audit log</a>
+    </nav>
+    <div class="side-foot">
+      <div class="listitem" style="border:0;padding:4px 8px">
+        <span class="avatar avatar-sm">PN</span>
+        <div style="min-width:0;flex:1"><div style="font-size:12.5px;font-weight:560">Priya Nair</div><div class="hint" style="font-size:11px">Admin</div></div>
+        <a class="icon-btn" href="login.html" title="Sign out"><svg class="i"><use href="#i-out"/></svg></a>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar" data-od-id="topbar">
+      <div class="crumbs"><span>Skyline workspace</span><span class="sep">/</span><span class="here">Jobs</span></div>
+      <div class="spacer"></div>
+      <span class="badge badge-warn badge-run"><span class="dot"></span>2 running</span>
+      <button class="icon-btn" title="Notifications" onclick="TX.toast('No new notifications','i-bell')"><svg class="i"><use href="#i-bell"/></svg></button>
+    </header>
+
+    <div class="page" data-od-id="jobs-page">
+      <div class="page-h">
+        <div style="flex:1">
+          <h1 data-od-id="page-title">Jobs</h1>
+          <p class="sub">Every pipeline run, map generation and agent build in one place — with live status, client cost tag and the ability to cancel, rerun or delete a job.</p>
+        </div>
+        <button class="btn" onclick="TX.toast('Job history exported as jobs-30d.csv','i-download')"><svg class="i"><use href="#i-download"/></svg>Export CSV</button>
+        <button class="btn btn-primary" data-open="dlg-newjob" data-od-id="new-job-btn"><svg class="i"><use href="#i-plus"/></svg>New job</button>
+      </div>
+
+      <div class="grid-4" style="margin-bottom:18px" data-od-id="job-kpis">
+        <div class="card kpi"><div class="k">Running now</div><div class="v">2</div><div class="d">1 queued behind RUN-4821</div></div>
+        <div class="card kpi"><div class="k">Completed · 30d</div><div class="v">1,204</div><div class="d">98.1% success rate</div></div>
+        <div class="card kpi"><div class="k">Failed · 30d</div><div class="v">23</div><div class="d">mostly Bedrock auth scope</div></div>
+        <div class="card kpi"><div class="k">Spend · 30d</div><div class="v">₹10.7L</div><div class="d">across 4 clients</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-h" style="justify-content:space-between;flex-wrap:wrap;gap:10px">
+          <h3>All jobs</h3>
+          <div class="toolbar">
+            <div style="position:relative">
+              <svg class="i" style="position:absolute;left:9px;top:9px;color:var(--muted)"><use href="#i-search"/></svg>
+              <input class="input" id="j-search" style="height:30px;padding-left:30px;width:190px" placeholder="Search job or project" aria-label="Search jobs">
+            </div>
+            <select class="input" id="j-status" style="height:30px;width:140px" aria-label="Filter by status">
+              <option value="">All statuses</option>
+              <option value="run">Running</option>
+              <option value="queued">Queued</option>
+              <option value="done">Completed</option>
+              <option value="failed">Failed</option>
+            </select>
+            <select class="input" id="j-client" style="height:30px;width:150px" aria-label="Filter by client">
+              <option value="">All clients</option>
+              <option>Skyline Broadband</option>
+              <option>Northwind Retail</option>
+              <option>Helios Health</option>
+            </select>
+            <select class="input" id="j-pipe" style="height:30px;width:140px" aria-label="Filter by pipeline">
+              <option value="">All pipelines</option>
+              <option>Analysis</option>
+              <option>Design</option>
+              <option>Develop</option>
+            </select>
+            <span class="hint"><span id="j-count">8</span> shown</span>
+          </div>
+        </div>
+        <table class="table jtable" style="margin-top:8px" id="jobs-table">
+          <thead><tr><th>Job</th><th>Client</th><th>Pipeline</th><th>Status</th><th>Progress</th><th>Started</th><th class="num">Cost</th><th style="width:96px"></th></tr></thead>
+          <tbody id="jobs-body">
+            <tr class="jrow" data-status="run" data-client="Skyline Broadband" data-pipe="Analysis" data-od-id="job-4821">
+              <td><div style="font-weight:560" class="mono">RUN-4821</div><div class="hint" style="font-size:11.5px">Week-26 clustering refresh</div></td>
+              <td>Skyline Broadband</td><td>Analysis · full</td>
+              <td><span class="badge badge-warn badge-run"><span class="dot"></span>Running</span></td>
+              <td><div class="meter prog"><div class="track"><div class="fill fill-warn" style="width:68%"></div></div><span class="tabular muted" style="font-size:11.5px">68%</span></div></td>
+              <td class="muted">12 min ago</td><td class="num">₹1,284</td>
+              <td><div class="row" style="gap:2px"><button class="icon-btn" data-open-job aria-label="Job details"><svg class="i"><use href="#i-eye"/></svg></button><button class="icon-btn" data-del-job aria-label="Delete job"><svg class="i"><use href="#i-trash"/></svg></button></div></td>
+            </tr>
+            <tr class="jrow" data-status="run" data-client="Skyline Broadband" data-pipe="Design" data-od-id="job-4819">
+              <td><div style="font-weight:560" class="mono">GEN-4819</div><div class="hint" style="font-size:11.5px">Billing map regen from cluster drift</div></td>
+              <td>Skyline Broadband</td><td>Design · map regen</td>
+              <td><span class="badge badge-warn badge-run"><span class="dot"></span>Running</span></td>
+              <td><div class="meter prog"><div class="track"><div class="fill fill-warn" style="width:32%"></div></div><span class="tabular muted" style="font-size:11.5px">32%</span></div></td>
+              <td class="muted">4 min ago</td><td class="num">₹410</td>
+              <td><div class="row" style="gap:2px"><button class="icon-btn" data-open-job aria-label="Job details"><svg class="i"><use href="#i-eye"/></svg></button><button class="icon-btn" data-del-job aria-label="Delete job"><svg class="i"><use href="#i-trash"/></svg></button></div></td>
+            </tr>
+            <tr class="jrow" data-status="queued" data-client="Skyline Broadband" data-pipe="Analysis" data-od-id="job-4822">
+              <td><div style="font-weight:560" class="mono">RUN-4822</div><div class="hint" style="font-size:11.5px">Week-27 refresh · express mode</div></td>
+              <td>Skyline Broadband</td><td>Analysis · express</td>
+              <td><span class="badge"><span class="dot"></span>Queued</span></td>
+              <td><div class="meter prog"><div class="track"><div class="fill" style="width:0%"></div></div><span class="tabular muted" style="font-size:11.5px">—</span></div></td>
+              <td class="muted">just now</td><td class="num muted">—</td>
+              <td><div class="row" style="gap:2px"><button class="icon-btn" data-open-job aria-label="Job details"><svg class="i"><use href="#i-eye"/></svg></button><button class="icon-btn" data-del-job aria-label="Delete job"><svg class="i"><use href="#i-trash"/></svg></button></div></td>
+            </tr>
+            <tr class="jrow" data-status="done" data-client="Skyline Broadband" data-pipe="Develop" data-od-id="job-4808">
+              <td><div style="font-weight:560" class="mono">ADK-4808</div><div class="hint" style="font-size:11.5px">Agent build · Google ADK</div></td>
+              <td>Skyline Broadband</td><td>Develop · codegen</td>
+              <td><span class="badge badge-ok"><span class="dot"></span>Completed</span></td>
+              <td><div class="meter prog"><div class="track"><div class="fill fill-ok" style="width:100%"></div></div><span class="tabular muted" style="font-size:11.5px">100%</span></div></td>
+              <td class="muted">2 days ago</td><td class="num">₹980</td>
+              <td><div class="row" style="gap:2px"><button class="icon-btn" data-open-job aria-label="Job details"><svg class="i"><use href="#i-eye"/></svg></button><button class="icon-btn" data-del-job aria-label="Delete job"><svg class="i"><use href="#i-trash"/></svg></button></div></td>
+            </tr>
+            <tr class="jrow" data-status="done" data-client="Skyline Broadband" data-pipe="Analysis" data-od-id="job-4792">
+              <td><div style="font-weight:560" class="mono">RUN-4792</div><div class="hint" style="font-size:11.5px">Network Ops Copilot · intent pass</div></td>
+              <td>Skyline Broadband</td><td>Analysis · intents only</td>
+              <td><span class="badge badge-warn"><span class="dot"></span>Clustering skipped</span></td>
+              <td><div class="meter prog"><div class="track"><div class="fill fill-ok" style="width:100%"></div></div><span class="tabular muted" style="font-size:11.5px">41 intents</span></div></td>
+              <td class="muted">3 days ago</td><td class="num">₹640</td>
+              <td><div class="row" style="gap:2px"><button class="icon-btn" data-open-job aria-label="Job details"><svg class="i"><use href="#i-eye"/></svg></button><button class="icon-btn" data-del-job aria-label="Delete job"><svg class="i"><use href="#i-trash"/></svg></button></div></td>
+            </tr>
+            <tr class="jrow" data-status="failed" data-client="Northwind Retail" data-pipe="Analysis" data-od-id="job-4770">
+              <td><div style="font-weight:560" class="mono">RUN-4770</div><div class="hint" style="font-size:11.5px">Northwind · first pass</div></td>
+              <td>Northwind Retail</td><td>Analysis · full</td>
+              <td><span class="badge badge-err"><span class="dot"></span>Failed</span></td>
+              <td><div class="meter prog"><div class="track"><div class="fill" style="width:44%"></div></div><span class="tabular muted" style="font-size:11.5px">44%</span></div></td>
+              <td class="muted">4 days ago</td><td class="num">₹180</td>
+              <td><div class="row" style="gap:2px"><button class="icon-btn" data-open-job aria-label="Job details"><svg class="i"><use href="#i-eye"/></svg></button><button class="icon-btn" data-del-job aria-label="Delete job"><svg class="i"><use href="#i-trash"/></svg></button></div></td>
+            </tr>
+            <tr class="jrow" data-status="done" data-client="Helios Health" data-pipe="Design" data-od-id="job-4761">
+              <td><div style="font-weight:560" class="mono">MAP-4761</div><div class="hint" style="font-size:11.5px">Claims intake process map v2</div></td>
+              <td>Helios Health</td><td>Design · process map</td>
+              <td><span class="badge badge-ok"><span class="dot"></span>Completed</span></td>
+              <td><div class="meter prog"><div class="track"><div class="fill fill-ok" style="width:100%"></div></div><span class="tabular muted" style="font-size:11.5px">100%</span></div></td>
+              <td class="muted">6 days ago</td><td class="num">₹720</td>
+              <td><div class="row" style="gap:2px"><button class="icon-btn" data-open-job aria-label="Job details"><svg class="i"><use href="#i-eye"/></svg></button><button class="icon-btn" data-del-job aria-label="Delete job"><svg class="i"><use href="#i-trash"/></svg></button></div></td>
+            </tr>
+            <tr class="jrow" data-status="done" data-client="Helios Health" data-pipe="Develop" data-od-id="job-4750">
+              <td><div style="font-weight:560" class="mono">LGR-4750</div><div class="hint" style="font-size:11.5px">LangGraph build · claims bot</div></td>
+              <td>Helios Health</td><td>Develop · codegen</td>
+              <td><span class="badge badge-ok"><span class="dot"></span>Completed</span></td>
+              <td><div class="meter prog"><div class="track"><div class="fill fill-ok" style="width:100%"></div></div><span class="tabular muted" style="font-size:11.5px">100%</span></div></td>
+              <td class="muted">1 week ago</td><td class="num">₹1,050</td>
+              <td><div class="row" style="gap:2px"><button class="icon-btn" data-open-job aria-label="Job details"><svg class="i"><use href="#i-eye"/></svg></button><button class="icon-btn" data-del-job aria-label="Delete job"><svg class="i"><use href="#i-trash"/></svg></button></div></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="empty" id="jobs-empty" hidden data-od-id="jobs-empty">
+          <div style="margin-bottom:8px"><svg class="i i-lg"><use href="#i-filter"/></svg></div>
+          No jobs match these filters.
+          <div style="margin-top:10px"><button class="btn btn-sm" id="jobs-reset">Reset filters</button></div>
+        </div>
+        <div class="row" style="padding:10px 16px;justify-content:flex-end"><span class="hint">Showing <span id="j-shown">8</span> of 1,229 jobs · older pages load on scroll</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" data-overlay></div>
+
+<div class="drawer" id="dw-job" role="dialog" aria-modal="true" aria-label="Job details" data-od-id="job-drawer">
+  <div class="drawer-h">
+    <div style="min-width:0;flex:1">
+      <div class="caps">Job</div>
+      <div id="jd-id" style="font-size:15px;font-weight:620;letter-spacing:-0.01em;margin-top:2px" class="mono">RUN-4821</div>
+    </div>
+    <button class="icon-btn" data-close aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="drawer-b">
+    <div class="grid-2" style="margin-bottom:14px">
+      <div class="card" style="padding:10px 12px"><div class="caps" style="font-size:10px">Status</div><div id="jd-status" style="margin-top:4px">—</div></div>
+      <div class="card" style="padding:10px 12px"><div class="caps" style="font-size:10px">Cost so far</div><div class="tabular" id="jd-cost" style="font-size:15px;font-weight:620;margin-top:3px">—</div></div>
+    </div>
+    <div class="card-b" style="padding:0 0 12px;display:flex;flex-direction:column;gap:8px">
+      <div class="mini-kv"><span class="k">Client</span><span id="jd-client">—</span></div>
+      <div class="mini-kv"><span class="k">Pipeline</span><span id="jd-pipe">—</span></div>
+      <div class="mini-kv"><span class="k">Started</span><span id="jd-started">—</span></div>
+      <div class="mini-kv"><span class="k">Records processed</span><span class="tabular">18,442</span></div>
+    </div>
+    <div class="caps" style="margin:6px 0 8px">Step timeline</div>
+    <div id="jd-steps"></div>
+  </div>
+  <div class="drawer-f" style="flex-wrap:wrap">
+    <button class="btn" id="jd-cancel"><svg class="i"><use href="#i-x"/></svg>Cancel job</button>
+    <button class="btn" id="jd-logs"><svg class="i"><use href="#i-download"/></svg>Download logs</button>
+    <button class="btn btn-primary" id="jd-rerun"><svg class="i"><use href="#i-sync"/></svg>Rerun</button>
+  </div>
+</div>
+
+<div class="dialog" id="dlg-newjob" role="dialog" aria-modal="true" data-od-id="newjob-dialog">
+  <div class="dialog-h"><h2>New job</h2><p class="hint">Runs against an existing project. The client tag decides who the cost is billed to.</p></div>
+  <div class="dialog-b">
+    <div class="field"><label class="label" for="nj-project">Project</label>
+      <select class="input" id="nj-project"><option>Skyline Broadband — Winter CX Automation</option><option>Network Ops Copilot — outage triage</option><option>Escalation Playbooks refresh</option></select>
+    </div>
+    <div class="field"><label class="label" for="nj-client">Client <span class="muted" style="font-weight:460">· cost tag</span></label>
+      <select class="input" id="nj-client"><option>Skyline Broadband</option><option>Northwind Retail</option><option>Helios Health</option></select>
+    </div>
+    <div class="field"><label class="label" for="nj-pipe">Pipeline</label>
+      <select class="input" id="nj-pipe"><option>Analysis — intents + clustering</option><option>Design — process map + UML</option><option>Develop — agent codegen</option></select>
+    </div>
+    <div class="row" style="justify-content:space-between;border:1px solid var(--border);border-radius:var(--r-md);padding:11px 12px;background:var(--surface-inset)">
+      <div><div class="label">Express mode</div><div class="hint">Runs intent → clustering → map → UML with no review gates.</div></div>
+      <span class="switch" role="switch" aria-checked="false"></span>
+    </div>
+  </div>
+  <div class="dialog-f">
+    <button class="btn" data-close>Cancel</button>
+    <button class="btn btn-primary" id="nj-start" data-od-id="nj-start">Start job</button>
+  </div>
+</div>
+
+<div class="dialog" id="dlg-confirm" role="dialog" aria-modal="true" data-od-id="confirm-dialog">
+  <div class="dialog-h"><h2 id="cf-title">Delete job?</h2><p class="hint" id="cf-body">—</p></div>
+  <div class="dialog-f">
+    <button class="btn" data-close>Cancel</button>
+    <button class="btn" id="cf-ok" style="color:var(--danger-fg);border-color:oklch(87% 0.05 27);background:var(--danger-soft)">Delete job</button>
+  </div>
+</div>
+
+<script src="assets/ui.js"></script>
+<script>
+(function(){
+  var STEPS = {
+    "RUN-4821": [["done","Ingestion · 18,442 rows"],["done","PII redaction · 3,104 fields"],["done","Embedding · 24,190 vectors"],["run","Clustering · 68%"],["wait","Coverage report · queued"]],
+    "GEN-4819": [["done","Load approved clusters"],["run","Regenerate process map · 32%"],["wait","Re-sync UML sequence"]],
+    "RUN-4822": [["wait","Waiting for RUN-4821 to finish"]],
+    "ADK-4808": [["done","Generate scaffold"],["done","Wire tools"],["done","Unit tests · 4/4"],["done","Deployed · staging"]],
+    "RUN-4792": [["done","Ingestion · 6,211 rows"],["done","Intent extraction · 41 intents"],["wait","Clustering skipped · below 50-intent threshold"],["done","Review handoff"]],
+    "RUN-4770": [["done","Ingestion · 9,205 rows"],["done","PII redaction"],["failed","Embedding · model quota exceeded"],["wait","Coverage report"]],
+    "MAP-4761": [["done","Cluster → map"],["done","Reviewer approved"],["done","Exported PDF"]],
+    "LGR-4750": [["done","Generate scaffold"],["done","Wire action groups"],["done","Tests · 3/3"],["done","Deployed · staging"]]
+  };
+  var ICONS = { done:"i-check", run:"i-sync", wait:"i-dot", failed:"i-x" };
+  var jobBody = document.getElementById("jobs-body");
+
+  function filterJobs(){
+    var q = document.getElementById("j-search").value.trim().toLowerCase();
+    var st = document.getElementById("j-status").value;
+    var cl = document.getElementById("j-client").value;
+    var pi = document.getElementById("j-pipe").value;
+    var shown = 0;
+    jobBody.querySelectorAll(".jrow").forEach(function(r){
+      var ok = (!q || r.textContent.toLowerCase().indexOf(q) > -1)
+        && (!st || r.getAttribute("data-status") === st)
+        && (!cl || r.getAttribute("data-client") === cl)
+        && (!pi || r.getAttribute("data-pipe") === pi);
+      r.style.display = ok ? "" : "none";
+      if (ok) shown++;
+    });
+    document.getElementById("j-count").textContent = shown;
+    document.getElementById("j-shown").textContent = shown;
+    document.getElementById("jobs-empty").hidden = shown !== 0;
+  }
+  ["j-search","j-status","j-client","j-pipe"].forEach(function(id){
+    document.getElementById(id).addEventListener("input", filterJobs);
+    document.getElementById(id).addEventListener("change", filterJobs);
+  });
+  document.getElementById("jobs-reset").addEventListener("click", function(){
+    document.getElementById("j-search").value = "";
+    document.getElementById("j-status").value = "";
+    document.getElementById("j-client").value = "";
+    document.getElementById("j-pipe").value = "";
+    filterJobs();
+  });
+
+  function openJob(tr){
+    var mono = tr.cells[0].querySelector(".mono").textContent.trim();
+    document.getElementById("jd-id").textContent = mono;
+    document.getElementById("jd-client").textContent = tr.getAttribute("data-client");
+    document.getElementById("jd-pipe").textContent = tr.cells[2].textContent.trim();
+    document.getElementById("jd-started").textContent = tr.cells[5].textContent.trim();
+    document.getElementById("jd-cost").textContent = tr.cells[6].textContent.trim();
+    document.getElementById("jd-status").innerHTML = tr.cells[3].innerHTML;
+    var list = document.getElementById("jd-steps");
+    list.innerHTML = "";
+    (STEPS[mono] || [["done","Run completed"]]).forEach(function(s){
+      var d = document.createElement("div");
+      d.className = "job-line" + (s[0] === "wait" ? " muted" : "");
+      d.innerHTML = '<span class="st ' + s[0] + '"><svg class="i"><use href="#' + ICONS[s[0]] + '"/></svg></span><span></span>';
+      d.lastChild.textContent = s[1];
+      list.appendChild(d);
+    });
+    TX.openLayer("dw-job");
+  }
+  function attachRow(tr){
+    tr.addEventListener("click", function(e){
+      if (e.target.closest("[data-del-job]")) return;
+      openJob(tr);
+    });
+    tr.querySelector("[data-open-job]").addEventListener("click", function(e){ e.stopPropagation(); openJob(tr); });
+    tr.querySelector("[data-del-job]").addEventListener("click", function(e){
+      e.stopPropagation();
+      var mono = tr.cells[0].querySelector(".mono").textContent.trim();
+      askConfirm(mono, tr, function(){});
+    });
+  }
+  function askConfirm(mono, tr, cb){
+    document.getElementById("cf-title").textContent = "Delete " + mono + "?";
+    document.getElementById("cf-body").textContent = "The job and its step timeline are removed from this list. Outputs already handed to Design or Develop are not affected. This is written to the audit log.";
+    TX.openLayer("dlg-confirm");
+    var ok = document.getElementById("cf-ok");
+    var fresh = ok.cloneNode(true);
+    ok.replaceWith(fresh);
+    fresh.addEventListener("click", function(){
+      TX.closeLayers();
+      tr.remove();
+      filterJobs();
+      TX.toast(mono + " deleted", "i-trash");
+    });
+  }
+  jobBody.querySelectorAll(".jrow").forEach(attachRow);
+
+  document.getElementById("nj-start").addEventListener("click", function(){
+    var client = document.getElementById("nj-client").value;
+    TX.closeLayers();
+    TX.toast("Job queued and tagged to " + client, "i-play");
+  });
+  document.getElementById("jd-cancel").addEventListener("click", function(){ TX.closeLayers(); TX.toast("Run cancellation requested", "i-x"); });
+  document.getElementById("jd-logs").addEventListener("click", function(){ TX.toast("job-logs.zip downloading", "i-download"); });
+  document.getElementById("jd-rerun").addEventListener("click", function(){ TX.closeLayers(); TX.toast("Rerun queued with the same inputs", "i-sync"); });
+})();
+</script>
+</body>
+</html>

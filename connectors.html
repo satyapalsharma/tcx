@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Connectors — Transform.cx</title>
+<link rel="stylesheet" href="assets/tx.css">
+<style>
+  .conn-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+  .conn-card{ padding:14px; display:flex; flex-direction:column; gap:8px; cursor:pointer; transition:border-color .12s, background .12s; text-align:left; }
+  .conn-card:hover{ border-color:oklch(85% 0.008 250); background:var(--surface-hover); }
+  .conn-card .mark{ width:30px; height:30px; border-radius:7px; background:var(--fg); color:var(--surface); display:grid; place-items:center; font-size:11px; font-weight:680; }
+  .conn-card .mark.alt{ background:var(--surface-inset); color:var(--fg); border:1px solid var(--border); }
+  .kv{ display:flex; justify-content:space-between; font-size:12px; padding:5px 0; border-top:1px solid var(--border); }
+  .kv:first-of-type{ border-top:0; }
+  .kv span:first-child{ color:var(--muted); }
+  @media (max-width:1100px){ .conn-grid{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:560px){ .conn-grid{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="app" data-od-id="app-shell">
+  <aside class="side" data-od-id="sidebar">
+    <div class="side-brand">
+      <img class="exl-logo" src="EXL_Service_logo.svg.webp" alt="EXL">
+      <span class="brand-div" aria-hidden="true"></span>
+      <div>
+        <div class="brand-prod">Transform.cx</div>
+        <div class="caps">Skyline workspace</div>
+      </div>
+    </div>
+    <nav class="nav" data-od-id="side-nav">
+      <a class="nlink" href="projects.html"><svg class="i"><use href="#i-grid"/></svg>Projects</a>
+      <div class="sec">Workspace</div>
+      <a class="nlink" href="jobs.html"><svg class="i"><use href="#i-clock"/></svg>Jobs</a>
+      <a class="nlink" href="dashboard.html"><svg class="i"><use href="#i-chart"/></svg>Dashboard</a>
+      <div class="sec">Pipeline · Skyline Broadband</div>
+      <a class="nlink" href="analysis.html"><svg class="i"><use href="#i-chart"/></svg>Analysis</a>
+      <a class="nlink" href="design.html"><svg class="i"><use href="#i-flow"/></svg>Design</a>
+      <a class="nlink" href="develop.html"><svg class="i"><use href="#i-code"/></svg>Develop</a>
+      <div class="sec">Data</div>
+      <a class="nlink active" href="connectors.html"><svg class="i"><use href="#i-plug"/></svg>Connectors<span class="tail">5</span></a>
+      <div class="sec">Admin</div>
+      <a class="nlink" href="settings.html"><svg class="i"><use href="#i-gear"/></svg>Settings</a>
+      <a class="nlink" href="rbac.html"><svg class="i"><use href="#i-users"/></svg>Team &amp; roles</a>
+      <a class="nlink" href="audit-log.html"><svg class="i"><use href="#i-scroll"/></svg>Audit log</a>
+    </nav>
+    <div class="side-foot">
+      <div class="listitem" style="border:0;padding:4px 8px">
+        <span class="avatar avatar-sm">PN</span>
+        <div style="min-width:0;flex:1"><div style="font-size:12.5px;font-weight:560">Priya Nair</div><div class="hint" style="font-size:11px">Admin</div></div>
+        <a class="icon-btn" href="login.html" title="Sign out"><svg class="i"><use href="#i-out"/></svg></a>
+      </div>
+    </div>
+  </aside>
+  <div class="main">
+    <header class="topbar" data-od-id="topbar">
+      <div class="crumbs"><span>Skyline workspace</span><span class="sep">/</span><span class="here">Connectors</span></div>
+      <div class="spacer"></div>
+      <span class="badge badge-warn"><span class="dot"></span>1 needs re-auth</span>
+      <button class="icon-btn" title="Notifications" onclick="TX.toast('No new notifications','i-bell')"><svg class="i"><use href="#i-bell"/></svg></button>
+    </header>
+    <div class="page" data-od-id="connectors-page">
+      <div class="page-h">
+        <div style="flex:1">
+          <h1 data-od-id="page-title">Connectors</h1>
+          <p class="sub">Point Transform.cx at the places your customer interactions already live. Syncs run hourly; credentials sit in the workspace vault, never inside pipeline runs.</p>
+        </div>
+        <button class="btn" onclick="TX.toast('Connector SDK docs (stub for demo)','i-ext')"><svg class="i"><use href="#i-ext"/></svg>SDK docs</button>
+        <button class="btn btn-primary" data-open="dw-newconn" data-od-id="add-connector-btn"><svg class="i"><use href="#i-plus"/></svg>Add connector</button>
+      </div>
+      <div class="row" style="gap:8px;margin-bottom:14px" data-od-id="conn-filters">
+        <input class="input" style="width:280px" placeholder="Search connectors" aria-label="Search connectors" data-filter-target="#conn-grid" data-filter-count="#conn-count" data-filter-empty="#conn-empty">
+        <span style="flex:1"></span>
+        <span class="hint"><span id="conn-count">7</span> shown</span>
+      </div>
+      <div class="conn-grid" id="conn-grid" data-od-id="conn-grid">
+        <div class="card conn-card" data-filter-row data-conn="Amazon S3" data-kind="Storage · bulk ingest" data-badge="badge-ok|Live" data-od-id="conn-s3">
+          <div class="row" style="gap:9px"><span class="mark">S3</span><strong style="font-size:13px">Amazon S3</strong><span class="badge badge-ok" style="margin-left:auto"><span class="dot"></span>Live</span></div>
+          <span class="muted" style="font-size:12px">Transcript and media bucket for the weekly ingest wave.</span>
+          <div class="kv"><span>Bucket</span><span class="mono" style="font-size:11.5px">tx-skyline-exports</span></div>
+          <div class="kv"><span>Objects</span><span class="tabular">18,442 files</span></div>
+          <div class="kv"><span>Last sync</span><span>12 min ago</span></div>
+        </div>
+        <div class="card conn-card" data-filter-row data-conn="Genesys Cloud" data-kind="Voice · recordings API" data-badge="badge-ok|Live" data-od-id="conn-genesys">
+          <div class="row" style="gap:9px"><span class="mark">G</span><strong style="font-size:13px">Genesys Cloud</strong><span class="badge badge-ok" style="margin-left:auto"><span class="dot"></span>Live</span></div>
+          <span class="muted" style="font-size:12px">Call recordings and transcripts via the recording API.</span>
+          <div class="kv"><span>Region</span><span>mypurecloud.in</span></div>
+          <div class="kv"><span>Queue coverage</span><span>14 of 16</span></div>
+          <div class="kv"><span>Last sync</span><span>12 min ago</span></div>
+        </div>
+        <div class="card conn-card" data-filter-row data-conn="Salesforce" data-kind="CRM · cases &amp; contacts" data-badge="badge-warn|Re-auth" data-od-id="conn-salesforce">
+          <div class="row" style="gap:9px"><span class="mark">SF</span><strong style="font-size:13px">Salesforce</strong><span class="badge badge-warn" style="margin-left:auto"><span class="dot"></span>Re-auth</span></div>
+          <span class="muted" style="font-size:12px">Case notes, call logs and contact objects with field mapping.</span>
+          <div class="kv"><span>Instance</span><span class="mono" style="font-size:11.5px">skyline-bb.my.salesforce.com</span></div>
+          <div class="kv"><span>Objects</span><span>Case · Contact · Task</span></div>
+          <div class="kv"><span>Token</span><span style="color:var(--warn-fg);font-weight:560">expired 3 days ago</span></div>
+        </div>
+        <div class="card conn-card" data-filter-row data-conn="Zendesk" data-kind="Support · tickets API" data-badge="badge-ok|Live" data-od-id="conn-zendesk">
+          <div class="row" style="gap:9px"><span class="mark">Z</span><strong style="font-size:13px">Zendesk</strong><span class="badge badge-ok" style="margin-left:auto"><span class="dot"></span>Live</span></div>
+          <span class="muted" style="font-size:12px">Tickets and conversations — the email-side wave.</span>
+          <div class="kv"><span>Subdomain</span><span class="mono" style="font-size:11.5px">skyline.zendesk.com</span></div>
+          <div class="kv"><span>Threads</span><span>9,205 threads</span></div>
+          <div class="kv"><span>Last sync</span><span>38 min ago</span></div>
+        </div>
+        <div class="card conn-card" data-filter-row data-conn="HubSpot" data-kind="CRM · marketing side" data-badge="badge|Not connected" data-od-id="conn-hubspot">
+          <div class="row" style="gap:9px"><span class="mark alt">HS</span><strong style="font-size:13px">HubSpot</strong><span class="badge" style="margin-left:auto"><span class="dot"></span>Not connected</span></div>
+          <span class="muted" style="font-size:12px">Churn-trigger workflows from the marketing-side CRM.</span>
+          <div class="kv"><span>Objects</span><span>Ticket · Contact</span></div>
+          <div class="kv"><span>Direction</span><span>Bidirectional</span></div>
+        </div>
+        <div class="card conn-card" data-filter-row data-conn="NICE CXone" data-kind="Voice · inContact" data-badge="badge|Not connected" data-od-id="conn-nice">
+          <div class="row" style="gap:9px"><span class="mark alt">in</span><strong style="font-size:13px">NICE CXone</strong><span class="badge" style="margin-left:auto"><span class="dot"></span>Not connected</span></div>
+          <span class="muted" style="font-size:12px">Voice + digital recordings with routing metadata.</span>
+          <div class="kv"><span>Channels</span><span>Voice · Chat · Email</span></div>
+        </div>
+        <button class="card conn-card" data-filter-row data-open="dw-newconn" data-od-id="conn-new-tile" style="border-style:dashed;cursor:pointer">
+          <span class="mark alt"><svg class="i" style="width:14px;height:14px"><use href="#i-plus"/></svg></span>
+          <strong style="font-size:13px">New connector</strong>
+          <span class="muted" style="font-size:12px">Freshdesk · Intercom · Dialpad · generic webhook</span>
+        </button>
+      </div>
+      <div class="empty" id="conn-empty" hidden data-od-id="conn-empty">
+        <div style="margin-bottom:8px"><svg class="i i-lg"><use href="#i-filter"/></svg></div>
+        No connectors match this search.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" data-overlay></div>
+
+<div class="drawer" id="dw-conn" role="dialog" aria-modal="true" data-od-id="conn-drawer">
+  <div class="drawer-h">
+    <div class="row" style="gap:10px;min-width:0;flex:1">
+      <span id="dw-mark" style="width:32px;height:32px;border-radius:8px;background:var(--fg);color:var(--surface);display:grid;place-items:center;font-size:11px;font-weight:680">S3</span>
+      <div>
+        <div id="dw-name" style="font-size:15px;font-weight:620;letter-spacing:-0.01em">Amazon S3</div>
+        <div class="hint" id="dw-kind" style="margin-top:1px">Storage · bulk ingest</div>
+      </div>
+    </div>
+    <span id="dw-status" class="badge badge-ok"><span class="dot"></span>Live</span>
+    <button class="icon-btn" data-close title="Close"><svg class="i"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="drawer-b" style="display:flex;flex-direction:column;gap:14px">
+    <div>
+      <div class="caps" style="margin-bottom:8px">Sync health</div>
+      <div class="row" style="gap:10px;font-size:12.5px">
+        <span>Last sync: <strong>12 min ago</strong></span>
+        <span class="muted">·</span>
+        <span>Next: <strong>in 48 min</strong></span>
+        <span style="flex:1"></span>
+        <button class="btn btn-sm" onclick="TX.toast('Sync requested — queue position 2','i-sync')"><svg class="i"><use href="#i-sync"/></svg>Sync now</button>
+      </div>
+      <div class="meter" style="margin-top:8px"><div class="track"><div class="fill fill-ok" style="width:100%"></div></div></div>
+    </div>
+    <div class="divider"></div>
+    <div class="grid-2">
+      <div class="field"><label class="label" for="dw-field-name">Name</label><input class="input" id="dw-field-name" value="Skyline exports bucket"></div>
+      <div class="field"><label class="label" for="dw-region">Region</label>
+        <select class="input" id="dw-region"><option>ap-south-1 (Mumbai)</option><option>us-east-1</option><option>eu-central-1</option></select>
+      </div>
+    </div>
+    <div class="field">
+      <label class="label" for="dw-prefix">Prefix filter</label>
+      <input class="input mono" id="dw-prefix" style="font-size:12px" value="transcripts/wk*/">
+      <span class="hint">Only objects under this prefix join the pipeline.</span>
+    </div>
+    <div class="row" style="justify-content:space-between">
+      <div><div class="label">PII redaction on ingest</div><div class="hint">Masks numbers and IDs before embedding.</div></div>
+      <span class="switch" role="switch" aria-checked="true"></span>
+    </div>
+    <div class="row" style="justify-content:space-between">
+      <div><div class="label">Live source</div><div class="hint">Off = frozen snapshot from last sync.</div></div>
+      <span class="switch" role="switch" aria-checked="true"></span>
+    </div>
+    <details class="adv">
+      <summary><svg class="i"><use href="#i-key"/></svg>Credentials<svg class="i chev"><use href="#i-chev"/></svg></summary>
+      <div class="adv-body" style="display:flex;flex-direction:column;gap:10px">
+        <div class="field"><span class="label">Access mode</span>
+          <div class="row" style="gap:6px" data-chips>
+            <button class="chip" aria-pressed="true">IAM role (recommended)</button>
+            <button class="chip" aria-pressed="false">Access key pair</button>
+          </div>
+        </div>
+        <div class="field"><label class="label" for="dw-arn">Role ARN</label><input class="input mono" id="dw-arn" style="font-size:12px" value="arn:aws:iam::4132xxxx:role/tx-s3-read"></div>
+        <p class="hint">Keys live in the workspace vault with audit logging on every use. Rotate pairs every 90 days.</p>
+      </div>
+    </details>
+  </div>
+  <div class="drawer-f">
+    <button class="btn btn-sm" style="margin-right:auto" onclick="TX.toast('Test OK — 3 sample objects readable','i-check')">Test connection</button>
+    <button class="btn" data-close>Cancel</button>
+    <button class="btn btn-primary" data-od-id="conn-save" onclick="TX.closeLayers();TX.toast('Connector settings saved','i-check')">Save changes</button>
+  </div>
+</div>
+
+<div class="drawer" id="dw-newconn" role="dialog" aria-modal="true" data-od-id="new-connector-drawer">
+  <div class="drawer-h">
+    <div style="flex:1"><div style="font-size:15px;font-weight:620;letter-spacing:-0.01em">New connector</div><div class="hint">Pick a provider, then authenticate. Takes about 2 minutes.</div></div>
+    <button class="icon-btn" data-close title="Close"><svg class="i"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="drawer-b" style="display:flex;flex-direction:column;gap:14px">
+    <div class="field">
+      <span class="label">1 · Provider</span>
+      <div class="row" style="gap:6px;flex-wrap:wrap" data-chips data-od-id="nc-providers">
+        <button class="chip" aria-pressed="true">Generic webhook</button>
+        <button class="chip" aria-pressed="false">Freshdesk</button>
+        <button class="chip" aria-pressed="false">Intercom</button>
+        <button class="chip" aria-pressed="false">Dialpad</button>
+      </div>
+    </div>
+    <div class="field">
+      <span class="label">2 · Auth</span>
+      <div class="field" style="margin-bottom:8px"><label class="label" for="nc-name">Display name</label><input class="input" id="nc-name" placeholder="e.g. WhatsApp support exports"></div>
+      <div class="field"><label class="label" for="nc-token">Auth token / API key</label><input class="input" id="nc-token" placeholder="Stored in vault — never shown again"></div>
+    </div>
+    <div class="field">
+      <span class="label">3 · Default sync</span>
+      <div class="row" style="gap:6px" data-chips>
+        <button class="chip" aria-pressed="true">Hourly</button>
+        <button class="chip" aria-pressed="false">Every 15 min</button>
+        <button class="chip" aria-pressed="false">Manual</button>
+      </div>
+    </div>
+  </div>
+  <div class="drawer-f">
+    <button class="btn" data-close>Cancel</button>
+    <button class="btn btn-primary" onclick="TX.closeLayers();TX.toast('Connection wizard launched — check email for verification link','i-plug')">Connect</button>
+  </div>
+</div>
+
+<script src="assets/ui.js"></script>
+<script>
+(function(){
+  document.querySelectorAll(".conn-card[data-conn]").forEach(function(card){
+    card.addEventListener("click", function(){
+      document.getElementById("dw-name").textContent = card.getAttribute("data-conn");
+      document.getElementById("dw-kind").textContent = card.getAttribute("data-kind");
+      document.getElementById("dw-mark").textContent = card.getAttribute("data-conn").split(" ").map(function(w){return w[0];}).join("").slice(0,2).toUpperCase();
+      var parts = card.getAttribute("data-badge").split("|");
+      var ds = document.getElementById("dw-status");
+      ds.className = "badge " + parts[0];
+      ds.innerHTML = '<span class="dot"></span>' + parts[1];
+      TX.openLayer("dw-conn");
+    });
+  });
+})();
+</script>
+</body>
+</html>

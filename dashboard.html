@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard — Skyline Broadband · Transform.cx</title>
+<link rel="stylesheet" href="assets/tx.css">
+<style>
+  .cluster-map{ min-width:640px; }
+  .cl-map-wrap{ overflow-x:auto; padding:4px 0 6px; }
+  .agent-card{ padding:14px; display:flex; flex-direction:column; gap:9px; }
+  .agent-card .head{ display:flex; align-items:center; gap:9px; }
+  .lvl{ font-size:11px; font-weight:600; letter-spacing:.06em; color:var(--muted); }
+  .ctree td:first-child{ font-weight:520; }
+  .ctree .kid td:first-child{ padding-left:34px; }
+  .ctree .leaf td:first-child{ padding-left:58px; color:var(--muted); }
+</style>
+</head>
+<body>
+<div class="app" data-od-id="app-shell">
+
+  <aside class="side" data-od-id="sidebar">
+    <div class="side-brand">
+      <img class="exl-logo" src="EXL_Service_logo.svg.webp" alt="EXL">
+      <span class="brand-div" aria-hidden="true"></span>
+      <div>
+        <div class="brand-prod">Transform.cx</div>
+        <div class="caps">Skyline workspace</div>
+      </div>
+    </div>
+    <nav class="nav" data-od-id="side-nav">
+      <a class="nlink" href="projects.html"><svg class="i"><use href="#i-grid"/></svg>Projects</a>
+      <div class="sec">Workspace</div>
+      <a class="nlink" href="jobs.html"><svg class="i"><use href="#i-clock"/></svg>Jobs</a>
+      <a class="nlink active" href="dashboard.html"><svg class="i"><use href="#i-chart"/></svg>Dashboard</a>
+      <div class="sec">Pipeline · Skyline Broadband</div>
+      <a class="nlink" href="analysis.html"><svg class="i"><use href="#i-chart"/></svg>Analysis<span class="tail">68%</span></a>
+      <a class="nlink" href="design.html"><svg class="i"><use href="#i-flow"/></svg>Design<span class="tail">Review</span></a>
+      <a class="nlink" href="develop.html"><svg class="i"><use href="#i-code"/></svg>Develop<span class="tail">Ready</span></a>
+      <div class="sec">Data</div>
+      <a class="nlink" href="connectors.html"><svg class="i"><use href="#i-plug"/></svg>Connectors<span class="tail">5</span></a>
+      <div class="sec">Admin</div>
+      <a class="nlink" href="settings.html"><svg class="i"><use href="#i-gear"/></svg>Settings</a>
+      <a class="nlink" href="rbac.html"><svg class="i"><use href="#i-users"/></svg>Team &amp; roles</a>
+      <a class="nlink" href="audit-log.html"><svg class="i"><use href="#i-scroll"/></svg>Audit log</a>
+    </nav>
+    <div class="side-foot">
+      <div class="listitem" style="border:0;padding:4px 8px">
+        <span class="avatar avatar-sm">PN</span>
+        <div style="min-width:0;flex:1"><div style="font-size:12.5px;font-weight:560">Priya Nair</div><div class="hint" style="font-size:11px">Admin</div></div>
+        <a class="icon-btn" href="login.html" title="Sign out"><svg class="i"><use href="#i-out"/></svg></a>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar" data-od-id="topbar">
+      <div class="crumbs">
+        <span>Skyline workspace</span><span class="sep">/</span>
+        <select aria-label="Switch completed job" style="max-width:280px">
+          <option>RUN-4821 · Week-26 clustering refresh</option>
+          <option>RUN-4792 · Network Ops Copilot</option>
+          <option>RUN-4770 · Northwind first pass</option>
+        </select>
+        <span class="sep">/</span><span class="here">Dashboard</span>
+      </div>
+      <div class="spacer"></div>
+      <span class="badge badge-ok"><span class="dot"></span>Completed · 18 Jul, 14:32</span>
+      <button class="btn btn-sm" onclick="TX.toast('Dashboard exported as skyline-run-4821.pdf','i-download')"><svg class="i"><use href="#i-download"/></svg>Export</button>
+      <button class="icon-btn" title="Notifications" onclick="TX.toast('No new notifications','i-bell')"><svg class="i"><use href="#i-bell"/></svg></button>
+    </header>
+
+    <div class="page" data-od-id="dashboard-page">
+      <div class="page-h">
+        <div style="flex:1">
+          <h1 data-od-id="page-title">Run dashboard</h1>
+          <p class="sub">Everything the finished run produced — 286 canonical intents, six L1 clusters with their L2 / L3 shape, and the agent builds generated from them. Filter or sort any column.</p>
+        </div>
+        <span class="badge"><span class="dot"></span>Client · Skyline Broadband</span>
+        <span class="badge"><span class="dot"></span>42 min · ₹1,284</span>
+      </div>
+
+      <div class="grid-4" style="margin-bottom:18px" data-od-id="dash-kpis">
+        <div class="card kpi"><div class="k">Records processed</div><div class="v">18,442</div><div class="d">3 sources · 24.7k events</div></div>
+        <div class="card kpi"><div class="k">Canonical intents</div><div class="v">286</div><div class="d">3,214 raw → deduped</div></div>
+        <div class="card kpi"><div class="k">L1 clusters</div><div class="v">6</div><div class="d">19 L2 · 57 L3 nodes</div></div>
+        <div class="card kpi"><div class="k">Agent builds</div><div class="v">9</div><div class="d">4 runtimes · 7 deployed</div></div>
+      </div>
+
+      <div data-tab-scope>
+      <div class="tabs" data-tabs style="margin-bottom:16px" data-od-id="dash-tabs">
+        <button role="tab" aria-selected="true" data-tab="intents" data-od-id="tab-d-intents">Intents <span class="count">286</span></button>
+        <button role="tab" aria-selected="false" data-tab="clusters" data-od-id="tab-d-clusters">Clusters <span class="count">6 L1</span></button>
+        <button role="tab" aria-selected="false" data-tab="agents" data-od-id="tab-d-agents">Agents <span class="count">9</span></button>
+      </div>
+
+      <div data-panel="intents" data-od-id="panel-d-intents">
+        <div class="card">
+          <div class="card-h" style="justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <h3>Intent ledger</h3>
+            <div class="toolbar">
+              <div style="position:relative">
+                <svg class="i" style="position:absolute;left:9px;top:9px;color:var(--muted)"><use href="#i-search"/></svg>
+                <input class="input" id="d-search" style="height:30px;padding-left:30px;width:190px" placeholder="Search intent" aria-label="Search intents">
+              </div>
+              <select class="input" id="d-l1" style="height:30px;width:180px" aria-label="Filter by L1 cluster">
+                <option value="">All L1 clusters</option>
+                <option>Billing &amp; Payments</option>
+                <option>Connectivity &amp; Outages</option>
+                <option>New Installation</option>
+                <option>Plan Changes</option>
+                <option>Cancellation &amp; Port-out</option>
+                <option>Account &amp; Identity</option>
+              </select>
+              <select class="input" id="d-conf" style="height:30px;width:150px" aria-label="Filter by confidence">
+                <option value="">All confidence</option>
+                <option value="high">High (≥ 0.9)</option>
+                <option value="mid">Medium (0.7–0.9)</option>
+                <option value="low">Low (&lt; 0.7)</option>
+              </select>
+              <select class="input" id="d-esc" style="height:30px;width:160px" aria-label="Filter by escalation">
+                <option value="">Any escalation</option>
+                <option value="40">Escalation ≥ 40%</option>
+                <option value="20">Escalation ≥ 20%</option>
+              </select>
+              <span class="hint"><span id="d-count">10</span> shown</span>
+            </div>
+          </div>
+          <table class="table" id="d-table" style="margin-top:8px">
+            <thead>
+              <tr>
+                <th>Intent</th>
+                <th>L1 cluster</th>
+                <th class="num sortable" data-sort="vol" data-od-id="sort-vol">Volume <span class="arc">↓</span></th>
+                <th class="num sortable" data-sort="conf" data-od-id="sort-conf">Conf. <span class="arc">↓</span></th>
+                <th class="num sortable" data-sort="esc" data-od-id="sort-esc">Escalation <span class="arc">↓</span></th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="d-body">
+              <tr data-l1="Billing &amp; Payments" data-conf="0.96" data-vol="1842" data-esc="41">
+                <td style="font-weight:520">Charged for a cancelled service line</td><td class="muted">Billing &amp; Payments</td>
+                <td class="num">1,842</td><td class="num">0.96</td><td class="num">41%</td><td><span class="badge badge-ok"><span class="dot"></span>Canonical</span></td>
+              </tr>
+              <tr data-l1="Billing &amp; Payments" data-conf="0.94" data-vol="1631" data-esc="33">
+                <td style="font-weight:520">Invoice higher than agreed promo price</td><td class="muted">Billing &amp; Payments</td>
+                <td class="num">1,631</td><td class="num">0.94</td><td class="num">33%</td><td><span class="badge badge-ok"><span class="dot"></span>Canonical</span></td>
+              </tr>
+              <tr data-l1="Connectivity &amp; Outages" data-conf="0.97" data-vol="1530" data-esc="22">
+                <td style="font-weight:520">Internet down — area outage (NOIA)</td><td class="muted">Connectivity &amp; Outages</td>
+                <td class="num">1,530</td><td class="num">0.97</td><td class="num">22%</td><td><span class="badge badge-ok"><span class="dot"></span>Canonical</span></td>
+              </tr>
+              <tr data-l1="Connectivity &amp; Outages" data-conf="0.92" data-vol="1118" data-esc="18">
+                <td style="font-weight:520">Slow speeds at peak hours</td><td class="muted">Connectivity &amp; Outages</td>
+                <td class="num">1,118</td><td class="num">0.92</td><td class="num">18%</td><td><span class="badge badge-acc"><span class="dot"></span>New · wk26</span></td>
+              </tr>
+              <tr data-l1="New Installation" data-conf="0.95" data-vol="1043" data-esc="9">
+                <td style="font-weight:520">Book new fiber installation slot</td><td class="muted">New Installation</td>
+                <td class="num">1,043</td><td class="num">0.95</td><td class="num">9%</td><td><span class="badge badge-ok"><span class="dot"></span>Canonical</span></td>
+              </tr>
+              <tr data-l1="Cancellation &amp; Port-out" data-conf="0.93" data-vol="976" data-esc="57">
+                <td style="font-weight:520">Port number out to another provider</td><td class="muted">Cancellation &amp; Port-out</td>
+                <td class="num">976</td><td class="num">0.93</td><td class="num">57%</td><td><span class="badge badge-acc"><span class="dot"></span>New · wk26</span></td>
+              </tr>
+              <tr data-l1="Billing &amp; Payments" data-conf="0.91" data-vol="892" data-esc="26">
+                <td style="font-weight:520">Auto-pay failed but card is valid</td><td class="muted">Billing &amp; Payments</td>
+                <td class="num">892</td><td class="num">0.91</td><td class="num">26%</td><td><span class="badge badge-ok"><span class="dot"></span>Canonical</span></td>
+              </tr>
+              <tr data-l1="Plan Changes" data-conf="0.89" data-vol="640" data-esc="12">
+                <td style="font-weight:520">Router returns after plan upgrade</td><td class="muted">Plan Changes</td>
+                <td class="num">640</td><td class="num">0.89</td><td class="num">12%</td><td><span class="badge badge-ok"><span class="dot"></span>Canonical</span></td>
+              </tr>
+              <tr data-l1="Account &amp; Identity" data-conf="0.84" data-vol="388" data-esc="15">
+                <td style="font-weight:520">Password reset for MySkyline app</td><td class="muted">Account &amp; Identity</td>
+                <td class="num">388</td><td class="num">0.84</td><td class="num">15%</td><td><span class="badge"><span class="dot"></span>Review</span></td>
+              </tr>
+              <tr data-l1="Cancellation &amp; Port-out" data-conf="0.68" data-vol="214" data-esc="48">
+                <td style="font-weight:520">Duplicate charge after plan change</td><td class="muted">Cancellation &amp; Port-out</td>
+                <td class="num">214</td><td class="num">0.68</td><td class="num">48%</td><td><span class="badge badge-warn"><span class="dot"></span>Low confidence</span></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="empty" id="d-empty" hidden>
+            <div style="margin-bottom:8px"><svg class="i i-lg"><use href="#i-filter"/></svg></div>
+            No intents match these filters.
+            <div style="margin-top:10px"><button class="btn btn-sm" id="d-reset">Reset filters</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div data-panel="clusters" hidden data-od-id="panel-d-clusters">
+        <div class="grid-2" style="align-items:start">
+          <div class="card card-b" data-od-id="dash-cluster-map">
+            <div class="card-h" style="padding:0 0 10px"><h3>Cluster shape</h3></div>
+            <div class="cl-map-wrap">
+              <svg class="cluster-map" viewBox="0 0 940 430" role="img" aria-label="Cluster map: 286 canonical intents grouped into 6 L1 clusters sized by share of volume">
+                <g class="cm-hub" transform="translate(24,160)">
+                  <rect width="196" height="96" rx="12"/>
+                  <text x="98" y="40" text-anchor="middle" font-size="30" font-weight="640">286</text>
+                  <text x="98" y="62" text-anchor="middle" font-size="12">canonical intents</text>
+                  <text x="98" y="80" text-anchor="middle" font-size="11" fill="oklch(80% 0.02 250)">6 L1 · 19 L2 · 57 L3</text>
+                </g>
+                <path class="cm-link" d="M220 208 C260 208 260 35 300 35"/>
+                <path class="cm-link" d="M220 208 C260 208 260 103 300 103"/>
+                <path class="cm-link" d="M220 208 C260 208 260 171 300 171"/>
+                <path class="cm-link" d="M220 208 C260 208 260 239 300 239"/>
+                <path class="cm-link" d="M220 208 C260 208 260 307 300 307"/>
+                <path class="cm-link" d="M220 208 C260 208 260 375 300 375"/>
+                <g class="cm-l1 on" transform="translate(300,8)">
+                  <rect width="616" height="54" rx="10"/><text x="16" y="22" font-size="12.5" font-weight="580">Billing &amp; Payments</text>
+                  <text x="296" y="22" font-size="11" fill="var(--muted)">4 L2 · 12 L3</text><text x="600" y="22" text-anchor="end" font-size="11.5" fill="var(--muted)" class="tabular">7,045 · 38.2%</text>
+                  <rect class="cm-bar" x="16" y="32" width="584" height="6" rx="3"/><rect class="cm-bar-fill" x="16" y="32" width="584" height="6" rx="3"/>
+                </g>
+                <g class="cm-l1" transform="translate(300,76)">
+                  <rect width="616" height="54" rx="10"/><text x="16" y="22" font-size="12.5" font-weight="580">Connectivity &amp; Outages</text>
+                  <text x="296" y="22" font-size="11" fill="var(--muted)">5 L2 · 18 L3</text><text x="600" y="22" text-anchor="end" font-size="11.5" fill="var(--muted)" class="tabular">4,445 · 24.1%</text>
+                  <rect class="cm-bar" x="16" y="32" width="584" height="6" rx="3"/><rect class="cm-bar-fill" x="16" y="32" width="368.5" height="6" rx="3"/>
+                </g>
+                <g class="cm-l1" transform="translate(300,144)">
+                  <rect width="616" height="54" rx="10"/><text x="16" y="22" font-size="12.5" font-weight="580">New Installation &amp; Provisioning</text>
+                  <text x="296" y="22" font-size="11" fill="var(--muted)">3 L2 · 9 L3</text><text x="600" y="22" text-anchor="end" font-size="11.5" fill="var(--muted)" class="tabular">2,545 · 13.8%</text>
+                  <rect class="cm-bar" x="16" y="32" width="584" height="6" rx="3"/><rect class="cm-bar-fill" x="16" y="32" width="211" height="6" rx="3"/>
+                </g>
+                <g class="cm-l1" transform="translate(300,212)">
+                  <rect width="616" height="54" rx="10"/><text x="16" y="22" font-size="12.5" font-weight="580">Plan Changes &amp; Upgrades</text>
+                  <text x="296" y="22" font-size="11" fill="var(--muted)">3 L2 · 7 L3</text><text x="600" y="22" text-anchor="end" font-size="11.5" fill="var(--muted)" class="tabular">1,697 · 9.2%</text>
+                  <rect class="cm-bar" x="16" y="32" width="584" height="6" rx="3"/><rect class="cm-bar-fill" x="16" y="32" width="140.6" height="6" rx="3"/>
+                </g>
+                <g class="cm-l1" transform="translate(300,280)">
+                  <rect width="616" height="54" rx="10"/><text x="16" y="22" font-size="12.5" font-weight="580">Cancellation &amp; Port-out</text>
+                  <text x="296" y="22" font-size="11" fill="var(--muted)">2 L2 · 6 L3</text><text x="600" y="22" text-anchor="end" font-size="11.5" fill="var(--muted)" class="tabular">1,550 · 8.4%</text>
+                  <rect class="cm-bar" x="16" y="32" width="584" height="6" rx="3"/><rect class="cm-bar-fill" x="16" y="32" width="128.4" height="6" rx="3"/>
+                </g>
+                <g class="cm-l1" transform="translate(300,348)">
+                  <rect width="616" height="54" rx="10"/><text x="16" y="22" font-size="12.5" font-weight="580">Account &amp; Identity</text>
+                  <text x="296" y="22" font-size="11" fill="var(--muted)">2 L2 · 5 L3</text><text x="600" y="22" text-anchor="end" font-size="11.5" fill="var(--muted)" class="tabular">1,160 · 6.3%</text>
+                  <rect class="cm-bar" x="16" y="32" width="584" height="6" rx="3"/><rect class="cm-bar-fill" x="16" y="32" width="96.3" height="6" rx="3"/>
+                </g>
+              </svg>
+            </div>
+            <p class="hint" style="margin-top:6px">Bar width is proportional to each L1 cluster's share of the 18,442 labelled records.</p>
+          </div>
+          <div class="card">
+            <div class="card-h"><h3>L1 → L2 → L3 breakdown</h3></div>
+            <table class="table ctree" style="margin-top:6px">
+              <thead><tr><th>Cluster</th><th class="num">Intents</th><th class="num">Volume</th><th class="num">Share</th></tr></thead>
+              <tbody>
+                <tr><td>Billing &amp; Payments <span class="lvl">L1</span></td><td class="num">86</td><td class="num">7,045</td><td class="num">38.2%</td></tr>
+                <tr class="kid"><td>Invoice Disputes <span class="lvl">L2</span></td><td class="num">34</td><td class="num">2,847</td><td class="num">15.4%</td></tr>
+                <tr class="leaf"><td>Charged for cancelled line <span class="lvl">L3</span></td><td class="num">—</td><td class="num">1,842</td><td class="num">10.0%</td></tr>
+                <tr class="leaf"><td>Promotional credit missing <span class="lvl">L3</span></td><td class="num">—</td><td class="num">641</td><td class="num">3.5%</td></tr>
+                <tr class="kid"><td>Late fees &amp; credits <span class="lvl">L2</span></td><td class="num">21</td><td class="num">1,206</td><td class="num">6.5%</td></tr>
+                <tr class="kid"><td>Auto-pay failures <span class="lvl">L2</span></td><td class="num">18</td><td class="num">1,033</td><td class="num">5.6%</td></tr>
+                <tr><td>Connectivity &amp; Outages <span class="lvl">L1</span></td><td class="num">74</td><td class="num">4,445</td><td class="num">24.1%</td></tr>
+                <tr class="kid"><td>NOIA / area outage <span class="lvl">L2</span></td><td class="num">29</td><td class="num">2,104</td><td class="num">11.4%</td></tr>
+                <tr><td>New Installation <span class="lvl">L1</span></td><td class="num">41</td><td class="num">2,545</td><td class="num">13.8%</td></tr>
+                <tr><td>Plan Changes <span class="lvl">L1</span></td><td class="num">38</td><td class="num">1,697</td><td class="num">9.2%</td></tr>
+                <tr><td>Cancellation &amp; Port-out <span class="lvl">L1</span></td><td class="num">27</td><td class="num">1,550</td><td class="num">8.4%</td></tr>
+                <tr><td>Account &amp; Identity <span class="lvl">L1</span></td><td class="num">20</td><td class="num">1,160</td><td class="num">6.3%</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div data-panel="agents" hidden data-od-id="panel-d-agents">
+        <div class="grid-3">
+          <div class="card agent-card">
+            <div class="head"><svg class="i i-lg"><use href="#i-robot"/></svg><strong style="font-size:13.5px">Billing Dispute Agent</strong><span class="badge badge-ok" style="margin-left:auto"><span class="dot"></span>Deployed</span></div>
+            <div class="mini-kv"><span class="k">Runtime</span><span class="mono">Google ADK</span></div>
+            <div class="mini-kv"><span class="k">Build</span><span class="mono">ADK-0143</span></div>
+            <div class="mini-kv"><span class="k">Tests</span><span class="tabular">4/4</span></div>
+            <div class="mini-kv"><span class="k">Environment</span><span>staging · asia-south1</span></div>
+            <a class="row" href="develop.html" style="gap:6px;font-size:12.5px;font-weight:540;margin-top:2px"><svg class="i"><use href="#i-code"/></svg>Open in Develop<svg class="i" style="margin-left:auto"><use href="#i-chevr"/></svg></a>
+          </div>
+          <div class="card agent-card">
+            <div class="head"><svg class="i i-lg"><use href="#i-robot"/></svg><strong style="font-size:13.5px">Outage Triage Agent</strong><span class="badge badge-ok" style="margin-left:auto"><span class="dot"></span>Deployed</span></div>
+            <div class="mini-kv"><span class="k">Runtime</span><span class="mono">CX Agent Studio</span></div>
+            <div class="mini-kv"><span class="k">Build</span><span class="mono">CXA-0031</span></div>
+            <div class="mini-kv"><span class="k">Tests</span><span class="tabular">5/5</span></div>
+            <div class="mini-kv"><span class="k">Environment</span><span>production</span></div>
+            <a class="row" href="develop.html" style="gap:6px;font-size:12.5px;font-weight:540;margin-top:2px"><svg class="i"><use href="#i-code"/></svg>Open in Develop<svg class="i" style="margin-left:auto"><use href="#i-chevr"/></svg></a>
+          </div>
+          <div class="card agent-card">
+            <div class="head"><svg class="i i-lg"><use href="#i-robot"/></svg><strong style="font-size:13.5px">Retention Save Agent</strong><span class="badge badge-warn" style="margin-left:auto"><span class="dot"></span>1 flaky test</span></div>
+            <div class="mini-kv"><span class="k">Runtime</span><span class="mono">LangGraph</span></div>
+            <div class="mini-kv"><span class="k">Build</span><span class="mono">LGR-0091</span></div>
+            <div class="mini-kv"><span class="k">Tests</span><span class="tabular">3/4</span></div>
+            <div class="mini-kv"><span class="k">Environment</span><span>not deployed</span></div>
+            <a class="row" href="develop.html" style="gap:6px;font-size:12.5px;font-weight:540;margin-top:2px"><svg class="i"><use href="#i-code"/></svg>Open in Develop<svg class="i" style="margin-left:auto"><use href="#i-chevr"/></svg></a>
+          </div>
+        </div>
+        <div class="card" style="margin-top:16px">
+          <div class="card-h"><h3>All builds from this run</h3></div>
+          <table class="table" style="margin-top:6px">
+            <thead><tr><th>Build</th><th>Agent</th><th>Runtime</th><th>From map</th><th class="num">Tests</th><th>Environment</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">ADK-0143</td><td>Billing Dispute Agent</td><td>Google ADK</td><td class="mono">billing-dispute@v3</td><td class="num">4/4</td><td>staging</td><td><span class="badge badge-ok"><span class="dot"></span>Deployed</span></td></tr>
+              <tr><td class="mono">ADK-0142</td><td>Billing Dispute Agent</td><td>Google ADK</td><td class="mono">billing-dispute@v2</td><td class="num">4/4</td><td>staging</td><td><span class="badge badge-ok"><span class="dot"></span>Deployed</span></td></tr>
+              <tr><td class="mono">CXA-0031</td><td>Outage Triage Agent</td><td>CX Agent Studio</td><td class="mono">outage-triage@v2</td><td class="num">5/5</td><td>production</td><td><span class="badge badge-ok"><span class="dot"></span>Deployed</span></td></tr>
+              <tr><td class="mono">BRK-0037</td><td>Invoice Explanation Agent</td><td>Amazon Bedrock</td><td class="mono">billing-dispute@v2</td><td class="num">2/4</td><td>—</td><td><span class="badge badge-err"><span class="dot"></span>Failed · auth scope</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/ui.js"></script>
+<script>
+(function(){
+  var body = document.getElementById("d-body");
+  var sortState = { key:null, dir:-1 };
+
+  function applyFilters(){
+    var q = document.getElementById("d-search").value.trim().toLowerCase();
+    var l1 = document.getElementById("d-l1").value;
+    var cf = document.getElementById("d-conf").value;
+    var es = document.getElementById("d-esc").value;
+    var shown = 0;
+    body.querySelectorAll("tr").forEach(function(r){
+      var conf = parseFloat(r.getAttribute("data-conf"));
+      var esc = parseFloat(r.getAttribute("data-esc"));
+      var ok = (!q || r.textContent.toLowerCase().indexOf(q) > -1)
+        && (!l1 || r.getAttribute("data-l1") === l1)
+        && (!cf || (cf === "high" && conf >= 0.9) || (cf === "mid" && conf >= 0.7 && conf < 0.9) || (cf === "low" && conf < 0.7))
+        && (!es || esc >= parseFloat(es));
+      r.style.display = ok ? "" : "none";
+      if (ok) shown++;
+    });
+    document.getElementById("d-count").textContent = shown;
+    document.getElementById("d-empty").hidden = shown !== 0;
+  }
+  ["d-search","d-l1","d-conf","d-esc"].forEach(function(id){
+    document.getElementById(id).addEventListener("input", applyFilters);
+    document.getElementById(id).addEventListener("change", applyFilters);
+  });
+  document.getElementById("d-reset").addEventListener("click", function(){
+    document.getElementById("d-search").value = "";
+    document.getElementById("d-l1").value = "";
+    document.getElementById("d-conf").value = "";
+    document.getElementById("d-esc").value = "";
+    applyFilters();
+  });
+
+  document.querySelectorAll("th.sortable").forEach(function(th){
+    th.setAttribute("role", "button");
+    th.setAttribute("tabindex", "0");
+    function doSort(){
+      var key = th.getAttribute("data-sort");
+      sortState.dir = sortState.key === key ? -sortState.dir : -1;
+      sortState.key = key;
+      document.querySelectorAll("th.sortable").forEach(function(t){ t.removeAttribute("data-dir"); t.querySelector(".arc").textContent = "↓"; });
+      th.setAttribute("data-dir", sortState.dir === -1 ? "desc" : "asc");
+      th.querySelector(".arc").textContent = sortState.dir === -1 ? "↓" : "↑";
+      var rows = Array.prototype.slice.call(body.querySelectorAll("tr"));
+      var map = { vol:"data-vol", conf:"data-conf", esc:"data-esc" };
+      rows.sort(function(a, b){
+        return sortState.dir * (parseFloat(a.getAttribute(map[key])) - parseFloat(b.getAttribute(map[key])));
+      });
+      rows.forEach(function(r){ body.appendChild(r); });
+      applyFilters();
+    }
+    th.addEventListener("click", doSort);
+    th.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " ") { e.preventDefault(); doSort(); } });
+  });
+  applyFilters();
+})();
+</script>
+</body>
+</html>

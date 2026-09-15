@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Audit log — Transform.cx</title>
+<link rel="stylesheet" href="assets/tx.css">
+<style>
+  .ev{ display:flex; gap:12px; padding:12px 16px; border-bottom:1px solid var(--border); }
+  .ev:last-child{ border-bottom:0; }
+  .ev .when{ width:120px; flex:none; color:var(--muted); font-size:12px; padding-top:2px; }
+  .ev .ico{ width:26px; height:26px; border-radius:7px; background:var(--surface-inset); display:grid; place-items:center; flex:none; margin-top:1px; }
+  .ev .ico .i{ color:var(--muted); }
+  .ev.ok .ico{ background:var(--success-soft); } .ev.ok .ico .i{ color:var(--success); }
+  .ev.warn .ico{ background:var(--warn-soft); } .ev.warn .ico .i{ color:var(--warn-fg); }
+  .ev.act .ico{ background:var(--accent-soft); } .ev.act .ico .i{ color:var(--accent-strong); }
+  .ev .meta{ min-width:0; flex:1; }
+  .ev .actor{ font-weight:560; }
+  .ev .detail{ color:var(--muted); font-size:12.5px; margin-top:2px; }
+  .date-sep{ background:var(--surface); color:var(--muted); padding:6px 16px; }
+  /* custom range date inputs */
+  #date-range{ display:none; align-items:center; gap:6px; }
+  #date-range.on{ display:flex; align-items:center; }
+  #date-range .input{ width:144px; padding:6px 8px; font-size:12.5px; }
+  @media (max-width:560px){
+    .ev{ flex-wrap:wrap; gap:6px 10px; }
+    .ev .when{ order:3; flex-basis:100%; width:auto; padding-top:0; }
+  }
+
+  /* motion — one language: quick ease-out, transform+opacity only */
+  .ev{ transition:background .1s ease; }
+  .ev:not(.date-sep):hover{ background:var(--surface-hover); }
+  @keyframes sec-rise{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:none; } }
+  @keyframes ev-rise{ from{ opacity:0; transform:translateY(5px); } to{ opacity:1; transform:none; } }
+  @media (prefers-reduced-motion: no-preference){
+    .mo-sec{ animation:sec-rise .24s cubic-bezier(.2,0,0,1) both; }
+    .mo-sec-1{ animation-delay:.06s; }
+    .mo-sec-2{ animation-delay:.12s; }
+    .mo-ev{ animation:ev-rise .18s cubic-bezier(.2,0,0,1) both; }
+  }
+  /* tx.css spinner is white-on-accent (primary buttons); keep it visible on a secondary button */
+  #load-older .spinner{ border-color:oklch(70% 0.01 250 / .45); border-top-color:var(--fg); }
+  @media (prefers-reduced-motion: reduce){
+    #load-older .spinner{ animation:none; }
+  }
+</style>
+</head>
+<body>
+<div class="app" data-od-id="app-shell">
+  <aside class="side" data-od-id="sidebar">
+    <div class="side-brand">
+      <img class="exl-logo" src="EXL_Service_logo.svg.webp" alt="EXL">
+      <span class="brand-div" aria-hidden="true"></span>
+      <div>
+        <div class="brand-prod">Transform.cx</div>
+        <div class="caps">Skyline workspace</div>
+      </div>
+    </div>
+    <nav class="nav" data-od-id="side-nav">
+      <a class="nlink" href="projects.html"><svg class="i" aria-hidden="true"><use href="#i-grid"/></svg>Projects</a>
+      <div class="sec">Workspace</div>
+      <a class="nlink" href="jobs.html"><svg class="i" aria-hidden="true"><use href="#i-clock"/></svg>Jobs</a>
+      <a class="nlink" href="dashboard.html"><svg class="i" aria-hidden="true"><use href="#i-chart"/></svg>Dashboard</a>
+      <div class="sec">Pipeline · Skyline Broadband</div>
+      <a class="nlink" href="analysis.html"><svg class="i" aria-hidden="true"><use href="#i-chart"/></svg>Analysis</a>
+      <a class="nlink" href="design.html"><svg class="i" aria-hidden="true"><use href="#i-flow"/></svg>Design</a>
+      <a class="nlink" href="develop.html"><svg class="i" aria-hidden="true"><use href="#i-code"/></svg>Develop</a>
+      <div class="sec">Data</div>
+      <a class="nlink" href="connectors.html"><svg class="i" aria-hidden="true"><use href="#i-plug"/></svg>Connectors</a>
+      <div class="sec">Admin</div>
+      <a class="nlink" href="settings.html"><svg class="i" aria-hidden="true"><use href="#i-gear"/></svg>Settings</a>
+      <a class="nlink" href="rbac.html"><svg class="i" aria-hidden="true"><use href="#i-users"/></svg>Team &amp; roles</a>
+      <a class="nlink active" href="audit-log.html"><svg class="i" aria-hidden="true"><use href="#i-scroll"/></svg>Audit log</a>
+    </nav>
+    <div class="side-foot">
+      <div class="listitem" style="border:0;padding:4px 8px">
+        <span class="avatar avatar-sm">PN</span>
+        <div style="min-width:0;flex:1"><div style="font-size:12.5px;font-weight:560">Priya Nair</div><div class="hint" style="font-size:11px">Admin</div></div>
+        <a class="icon-btn" href="login.html" title="Sign out" aria-label="Sign out"><svg class="i" aria-hidden="true"><use href="#i-out"/></svg></a>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar" data-od-id="topbar">
+      <div class="crumbs"><span>Skyline workspace</span><span class="sep">/</span><span class="here">Audit log</span></div>
+      <div class="spacer"></div>
+      <button class="btn btn-sm" id="export-csv"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Export CSV</button>
+    </header>
+
+    <div class="page" data-no-reveal data-od-id="audit-page">
+      <div class="page-h mo-sec">
+        <div style="flex:1">
+          <h1 data-od-id="page-title">Audit log</h1>
+          <p class="sub">Every mutation across Analysis, Design, Develop, connectors and admin — who, what and when. Retention: 365 days. Exports are signed URLs valid 15 minutes.</p>
+        </div>
+        <button class="btn" onclick="TX.toast('Retention applies workspace-wide — contact admin to change','i-info')"><svg class="i" aria-hidden="true"><use href="#i-gear"/></svg>Retention policy</button>
+      </div>
+
+      <div class="card mo-sec mo-sec-1" data-od-id="audit-filters">
+        <div class="card-b" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:12px 16px">
+          <input class="input" style="flex:1 1 220px;max-width:280px" id="f-q" placeholder="Search actor, target, detail…" aria-label="Search events by actor, target or detail">
+          <select class="input" style="width:160px" id="f-actor" aria-label="Filter by actor">
+            <option value="all">All actors</option>
+            <option value="Riya Menon">Riya Menon</option>
+            <option value="Devika Sharma">Devika Sharma</option>
+            <option value="Arjun Shah">Arjun Shah</option>
+            <option value="Priya Nair">Priya Nair</option>
+            <option value="system">System / runs</option>
+          </select>
+          <select class="input" style="width:170px" id="f-scope" aria-label="Filter by scope">
+            <option value="all">All scopes</option>
+            <option value="Analysis">Analysis</option>
+            <option value="Design">Design</option>
+            <option value="Develop">Develop</option>
+            <option value="Connectors">Connectors</option>
+            <option value="Admin">Admin</option>
+          </select>
+          <div class="row" style="gap:6px" data-chips id="date-chips" role="group" aria-label="Date range">
+            <button class="chip" data-val="24h" aria-pressed="false">Last 24 h</button>
+            <button class="chip" data-val="week" aria-pressed="true">This week</button>
+            <button class="chip" data-val="custom" aria-pressed="false">Custom range</button>
+          </div>
+          <span id="date-range">
+            <input type="date" class="input" id="f-from" min="2026-08-01" max="2026-08-16" aria-label="From date">
+            <span class="hint" aria-hidden="true">→</span>
+            <input type="date" class="input" id="f-to" min="2026-08-01" max="2026-08-16" aria-label="To date">
+          </span>
+          <span style="flex:1"></span>
+          <span class="hint"><span id="ev-count">12</span> events</span>
+        </div>
+      </div>
+
+      <div class="card mo-sec mo-sec-2" style="margin-top:14px" id="audit-events" data-od-id="audit-events">
+        <div class="ev act" data-filter-row>
+          <div class="when tabular">2 min ago</div>
+          <div class="ico"><svg class="i" aria-hidden="true"><use href="#i-play"/></svg></div>
+          <div class="meta">
+            <div><span class="actor">Arjun Shah</span> started <strong>GEN-0143</strong> on <span class="mono" style="font-size:12px">Google ADK</span> from <span class="mono" style="font-size:12px">map v3</span></div>
+            <div class="detail">Develop · build queued behind RUN-4821 · 4 tests incl. supervisor-token edge case</div>
+          </div>
+        </div>
+        <div class="ev ok" data-filter-row>
+          <div class="when tabular">48 min ago</div>
+          <div class="ico"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></div>
+          <div class="meta">
+            <div><span class="actor">Devika Sharma</span> approved <strong>process map v3</strong> and handed off to Develop</div>
+            <div class="detail">Design · Billing Dispute Resolution · UML v3 included in snapshot</div>
+          </div>
+        </div>
+        <div class="ev" data-filter-row>
+          <div class="when tabular">1 h ago</div>
+          <div class="ico"><svg class="i" aria-hidden="true"><use href="#i-mail"/></svg></div>
+          <div class="meta">
+            <div><span class="actor">Devika Sharma</span> requested changes on <strong>Port-out Retention</strong></div>
+            <div class="detail">Design · escalation should trigger after two declined offers, not one</div>
+          </div>
+        </div>
+        <div class="ev" data-filter-row>
+          <div class="when tabular">12:41 today</div>
+          <div class="ico"><svg class="i" aria-hidden="true"><use href="#i-sync"/></svg></div>
+          <div class="meta">
+            <div><span class="actor">System</span> completed <strong>RUN-4819</strong> — intent extraction on wk26 wave</div>
+            <div class="detail">Analysis · 18,442 records · 3,214 raw intents, deduped to 286</div>
+          </div>
+        </div>
+        <div class="ev warn" data-filter-row>
+          <div class="when tabular">11:55 today</div>
+          <div class="ico"><svg class="i" aria-hidden="true"><use href="#i-warn"/></svg></div>
+          <div class="meta">
+            <div><span class="actor">System</span> flagged <strong>Salesforce connector</strong> for re-auth</div>
+            <div class="detail">Connectors · OAuth refresh token rejected · sync paused since 3 days ago</div>
+          </div>
+        </div>
+        <div class="date-sep ev" data-date="2026-08-15"><span style="font-size:12px">Yesterday · 15 Aug</span></div>
+        <div class="ev ok" data-filter-row>
+          <div class="when tabular">18:22</div>
+          <div class="ico"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></div>
+          <div class="meta">
+            <div><span class="actor">Riya Menon</span> approved <strong>4 L1 clusters</strong> and sent to Design</div>
+            <div class="detail">Analysis · Billing 38.2% · Connectivity 24.1% · Install 13.8% · Cancel 8.4%</div>
+          </div>
+        </div>
+        <div class="ev" data-filter-row>
+          <div class="when tabular">16:03</div>
+          <div class="ico"><svg class="i" aria-hidden="true"><use href="#i-upload"/></svg></div>
+          <div class="meta">
+            <div><span class="actor">Riya Menon</span> uploaded <strong>genesys_Aug_w26.jsonl</strong> to staging</div>
+            <div class="detail">Analysis · 4,120 call transcripts · PII redaction on</div>
+          </div>
+        </div>
+        <div class="ev act" data-filter-row>
+          <div class="when tabular">14:19</div>
+          <div class="ico"><svg class="i" aria-hidden="true"><use href="#i-bolt"/></svg></div>
+          <div class="meta">
+            <div><span class="actor">Arjun Shah</span> deployed <strong>ADK-0142</strong> to staging</div>
+            <div class="detail">Develop · from map v2 · Cloud Run revision adk-0142 · 4/4 tests</div>
+          </div>
+        </div>
+        <div class="date-sep ev" data-date="2026-08-13"><span style="font-size:12px">13 Aug</span></div>
+        <div class="ev" data-filter-row>
+          <div class="when tabular">17:44</div>
+          <div class="ico"><svg class="i" aria-hidden="true"><use href="#i-users"/></svg></div>
+          <div class="meta">
+            <div><span class="actor">Priya Nair</span> changed <strong>Karan Mehta</strong> role: Viewer → limited Design-view</div>
+            <div class="detail">Admin · applies on next sign-in · umbrella chips unchanged</div>
+          </div>
+        </div>
+        <div class="ev warn" data-filter-row>
+          <div class="when tabular">15:30</div>
+          <div class="ico"><svg class="i" aria-hidden="true"><use href="#i-warn"/></svg></div>
+          <div class="meta">
+            <div><span class="actor">System</span> aborted <strong>RUN-4812</strong> after 40 min — embedding quota exhausted</div>
+            <div class="detail">Analysis · 12% raw intents extracted before abort · rerun queued wk27</div>
+          </div>
+        </div>
+        <div class="ev ok" data-filter-row>
+          <div class="when tabular">11:12</div>
+          <div class="ico"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></div>
+          <div class="meta">
+            <div><span class="actor">Devika Sharma</span> approved <strong>New Installation Booking</strong> map v2</div>
+            <div class="detail">Design · handed off to Develop as snapshot v2</div>
+          </div>
+        </div>
+        <div class="ev" data-filter-row>
+          <div class="when tabular">09:05</div>
+          <div class="ico"><svg class="i" aria-hidden="true"><use href="#i-key"/></svg></div>
+          <div class="meta">
+            <div><span class="actor">Priya Nair</span> rotated <strong>svc-transform-bot</strong> deploy token</div>
+            <div class="detail">Admin · old token valid 24 h overlap · audit logged with vault ref vault:tdx-9182</div>
+          </div>
+        </div>
+        <div class="empty" id="audit-empty" hidden data-od-id="audit-empty">
+          <svg class="i i-lg" aria-hidden="true" style="margin-bottom:8px"><use href="#i-search"/></svg>
+          <div style="font-weight:560;color:var(--fg)">No events match these filters</div>
+          <div>Try a different actor, scope, date range, or search term.</div>
+          <button class="btn btn-sm" id="reset-filters" style="margin-top:10px">Reset filters</button>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:14px;justify-content:space-between">
+        <span class="hint" id="showing-hint">Showing 12 of 481 events in the selected window</span>
+        <button class="btn btn-sm" id="load-older" data-od-id="load-older"><svg class="i" aria-hidden="true"><use href="#i-chevr"/></svg>Load older events</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/ui.js"></script>
+<script>
+(function(){
+  var actors = document.getElementById("f-actor");
+  var scopeSel = document.getElementById("f-scope");
+  var qInput = document.getElementById("f-q");
+  var evCount = document.getElementById("ev-count");
+  var emptyBox = document.getElementById("audit-empty");
+  var list = document.getElementById("audit-events");
+  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var fromDate = document.getElementById("f-from");
+  var toDate = document.getElementById("f-to");
+  var rangeWrap = document.getElementById("date-range");
+  var showingHint = document.getElementById("showing-hint");
+
+  /* rows inherit their section date from the preceding separator (today = 16 Aug 2026) */
+  var TODAY = "2026-08-16";
+  function stampDates(){
+    var d = TODAY;
+    list.querySelectorAll(".ev").forEach(function(el){
+      if (el.classList.contains("date-sep")){ d = el.getAttribute("data-date") || d; }
+      else el.setAttribute("data-date", d);
+    });
+  }
+  var rangeMode = "week";
+  function inRange(ds){
+    if (!ds) return true;
+    if (rangeMode === "24h") return ds >= "2026-08-15";
+    if (rangeMode === "custom"){
+      var f = fromDate.value, t = toDate.value;
+      if (f && ds < f) return false;
+      if (t && ds > t) return false;
+    }
+    return true;
+  }
+
+  /* re-run the row rise-in on the rows a filter change makes visible */
+  function animateVisible(){
+    if (reduceMotion) return;
+    var i = 0;
+    list.querySelectorAll("[data-filter-row]").forEach(function(ev){
+      ev.classList.remove("mo-ev");
+      ev.style.animationDelay = "";
+      if (ev.style.display !== "none" && !ev.classList.contains("date-sep") && i < 9){
+        void ev.offsetWidth; /* restart animation */
+        ev.style.animationDelay = (i * 24) + "ms";
+        ev.classList.add("mo-ev");
+        i++;
+      }
+    });
+  }
+  /* single pipeline: search + actor + scope all evaluated together */
+  function applyFilters(skipAnim){
+    var actor = actors.value, scope = scopeSel.value;
+    var q = qInput.value.trim().toLowerCase();
+    var visible = 0;
+    list.querySelectorAll("[data-filter-row]").forEach(function(ev){
+      if (ev.classList.contains("date-sep")){ ev.style.display = ""; return; }
+      var txt = ev.textContent.toLowerCase();
+      var detail = ev.querySelector(".detail");
+      var sc = detail ? detail.textContent : "";
+      var show = (actor === "all" || txt.indexOf(actor.toLowerCase()) !== -1) &&
+                 (scope === "all" || sc.indexOf(scope) !== -1) &&
+                 (q === "" || txt.indexOf(q) !== -1) &&
+                 inRange(ev.getAttribute("data-date"));
+      ev.style.display = show ? "" : "none";
+      if (show) visible++;
+    });
+    // hide separator rows that have no visible events after them
+    list.querySelectorAll(".date-sep").forEach(function(sep){
+      var next = sep.nextElementSibling, show = false;
+      while (next && !next.classList.contains("date-sep") && !next.classList.contains("empty")){
+        if (next.style.display !== "none"){ show = true; break; }
+        next = next.nextElementSibling;
+      }
+      sep.style.display = show ? "" : "none";
+    });
+    evCount.textContent = visible;
+    var loaded = list.querySelectorAll("[data-filter-row]").length;
+    showingHint.textContent = (visible === loaded)
+      ? "Showing " + loaded + " of 481 events in the selected window"
+      : visible + " of " + loaded + " loaded events match · 481 in full window";
+    emptyBox.hidden = visible !== 0;
+    if (!skipAnim) animateVisible();
+  }
+  actors.addEventListener("change", function(){ applyFilters(); });
+  scopeSel.addEventListener("change", function(){ applyFilters(); });
+  qInput.addEventListener("input", function(){ applyFilters(); });
+
+  /* date-range chips — read state after ui.js single-select toggles it */
+  document.getElementById("date-chips").addEventListener("click", function(e){
+    var c = e.target.closest(".chip"); if (!c) return;
+    setTimeout(function(){
+      rangeMode = c.getAttribute("data-val");
+      rangeWrap.classList.toggle("on", rangeMode === "custom");
+      applyFilters();
+    }, 0);
+  });
+  fromDate.addEventListener("change", function(){ if (rangeMode === "custom") applyFilters(); });
+  toDate.addEventListener("change", function(){ if (rangeMode === "custom") applyFilters(); });
+
+  document.getElementById("reset-filters").addEventListener("click", function(){
+    qInput.value = ""; actors.value = "all"; scopeSel.value = "all";
+    rangeMode = "week"; fromDate.value = ""; toDate.value = "";
+    rangeWrap.classList.remove("on");
+    document.querySelectorAll("#date-chips .chip").forEach(function(c){
+      c.setAttribute("aria-pressed", c.getAttribute("data-val") === "week" ? "true" : "false");
+    });
+    applyFilters(); qInput.focus();
+  });
+
+  /* export the currently filtered view as a real CSV download */
+  document.getElementById("export-csv").addEventListener("click", function(){
+    var out = [];
+    list.querySelectorAll("[data-filter-row]").forEach(function(ev){
+      if (ev.style.display === "none") return;
+      var head = ev.querySelector(".meta > div").textContent.trim().replace(/\s+/g, " ");
+      var det = ev.querySelector(".detail");
+      out.push([ev.getAttribute("data-date"), ev.querySelector(".when").textContent.trim(), head, det ? det.textContent.trim() : ""]);
+    });
+    var csv = "date,time,event,detail\n" + out.map(function(r){
+      return r.map(function(v){ return '"' + String(v).replace(/"/g, '""') + '"'; }).join(",");
+    }).join("\n");
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    a.download = "audit-skyline-aug.csv";
+    document.body.appendChild(a); a.click(); a.remove();
+    TX.toast("Exported " + out.length + " events as CSV", "i-download");
+  });
+
+  /* load-older bridge: spinner -> append -> rows rise in, count + summary update */
+  var loadBtn = document.getElementById("load-older");
+  var olderEvents = [
+    '<div class="date-sep ev" data-date="2026-08-12"><span style="font-size:12px">12 Aug</span></div>',
+    '<div class="ev" data-filter-row><div class="when tabular">16:47</div><div class="ico"><svg class="i" aria-hidden="true"><use href="#i-sync"/></svg></div><div class="meta"><div><span class="actor">System</span> completed <strong>RUN-4811</strong> — cluster re-run on Billing L2</div><div class="detail">Analysis · silhouette 0.41 to 0.46 after merging duplicate payment nodes</div></div></div>',
+    '<div class="ev" data-filter-row><div class="when tabular">14:02</div><div class="ico"><svg class="i" aria-hidden="true"><use href="#i-flow"/></svg></div><div class="meta"><div><span class="actor">Devika Sharma</span> edited <strong>Port-out Retention</strong> map v1</div><div class="detail">Design · added declined-offer loop node before escalation branch</div></div></div>',
+    '<div class="ev act" data-filter-row><div class="when tabular">10:18</div><div class="ico"><svg class="i" aria-hidden="true"><use href="#i-bolt"/></svg></div><div class="meta"><div><span class="actor">Arjun Shah</span> generated <strong>GEN-0139</strong> draft for Amazon Bedrock</div><div class="detail">Develop · from map v1 · superseded by ADK target on 13 Aug</div></div></div>'
+  ].join("");
+  loadBtn.addEventListener("click", function(){
+    if (loadBtn.disabled) return;
+    loadBtn.disabled = true;
+    loadBtn.innerHTML = '<span class="spinner" aria-hidden="true"></span>Loading…';
+    setTimeout(function(){
+      var frag = document.createElement("div");
+      frag.innerHTML = olderEvents;
+      while (frag.firstChild) list.insertBefore(frag.firstChild, emptyBox);
+      stampDates();
+      applyFilters(); /* respects active filters, hides orphan separators, updates count + summary */
+      loadBtn.disabled = false;
+      loadBtn.innerHTML = '<svg class="i" aria-hidden="true"><use href="#i-chevr"/></svg>Load older events';
+      TX.toast("3 older events loaded — 12 Aug", "i-chevr");
+    }, reduceMotion ? 250 : 700);
+  });
+
+  stampDates();
+  applyFilters(true); /* settle count + summary without animating first paint */
+})();
+</script>
+</body>
+</html>

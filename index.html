@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transform.cx — prototype overview</title>
+<link rel="stylesheet" href="assets/tx.css">
+<style>
+  body{ display:grid; place-items:center; min-height:100vh; padding:48px 20px; }
+  .ov{ width:min(760px, 100%); }
+  .ov h1{ font-size:clamp(23px, 4.6vw, 30px); font-weight:640; letter-spacing:-0.025em; margin-top:14px; }
+  .ov .lede{ color:var(--muted); font-size:14.5px; margin-top:8px; max-width:58ch; line-height:1.55; }
+  .screens{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:32px; }
+  .scr{ display:flex; align-items:center; gap:12px; padding:13px 15px; border-radius:var(--r-md); background:var(--surface); border:1px solid var(--border); text-decoration:none; color:var(--fg); transition:border-color .12s ease, background .12s ease, transform .06s ease; }
+  .scr:hover{ border-color:oklch(85% 0.008 250); background:var(--surface-hover); }
+  .scr:active{ transform:translateY(1px); }
+  .scr .go{ transition:color .12s ease; }
+  .scr:hover .go{ color:var(--fg); }
+  .scr.pri{ border-color:var(--accent-border); background:var(--accent-soft); }
+  .scr.pri .ic{ background:var(--accent-strong); } .scr.pri .ic .i{ color:var(--surface); }
+  .scr.pri:hover{ background:var(--accent-soft); border-color:var(--accent); }
+  .scr .ic{ width:32px; height:32px; border-radius:8px; background:var(--surface-inset); display:grid; place-items:center; flex:none; }
+  .scr .ic .i{ color:var(--muted); }
+  .scr .n{ font-weight:560; font-size:13px; }
+  .scr .d{ color:var(--muted); font-size:12px; margin-top:2px; }
+  .scr .go{ margin-left:auto; color:var(--muted); }
+  .note{ margin-top:26px; padding:14px 16px; background:var(--surface-inset); border-radius:8px; font-size:12px; color:var(--muted); display:flex; align-items:center; gap:8px; }
+  @media (max-width:624px){ .screens{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<main class="ov" data-od-id="launcher">
+  <div class="row" style="gap:10px;align-items:center">
+    <img class="exl-logo" src="EXL_Service_logo.svg.webp" alt="EXL" style="height:22px;width:auto;display:block">
+    <span style="width:1px;height:22px;background:var(--border)" aria-hidden="true"></span>
+    <div>
+      <div style="font-weight:640;font-size:16px;letter-spacing:-0.02em">Transform.cx</div>
+      <div class="caps" style="margin-top:1px">Prototype v1 · EXL</div>
+    </div>
+    <span class="badge" style="margin-left:auto"><span class="dot"></span>12 screens</span>
+  </div>
+
+  <h1>Conversation-to-automation pipeline,<br>broken into clean stages</h1>
+  <p class="lede">Customer interactions in &rarr; intents extracted &rarr; L1&rarr;L2&rarr;L3 clusters &rarr; process maps &rarr; agent code. Three umbrellas &mdash; <strong>Analysis</strong> (Analysts), <strong>Design</strong> (CX Designers), <strong>Develop</strong> (Developers) &mdash; each usable on its own or stacked end-to-end. Demo tells the Skyline Broadband story throughout.</p>
+
+  <div class="screens" data-od-id="screen-list">
+    <a class="scr pri" href="login.html" data-od-id="scr-login">
+      <span class="ic"><svg class="i"><use href="#i-lock"/></svg></span>
+      <div><div class="n">Login</div><div class="d">Sign in &middot; SSO + SAML stubs &middot; demo gate</div></div>
+      <svg class="i go" aria-hidden="true"><use href="#i-arrowr"/></svg>
+    </a>
+    <a class="scr" href="projects.html" data-od-id="scr-projects">
+      <span class="ic"><svg class="i"><use href="#i-grid"/></svg></span>
+      <div><div class="n">Projects home</div><div class="d">3 umbrellas &middot; project cards &middot; pipeline status</div></div>
+      <svg class="i go" aria-hidden="true"><use href="#i-arrowr"/></svg>
+    </a>
+    <a class="scr" href="jobs.html" data-od-id="scr-jobs">
+      <span class="ic"><svg class="i"><use href="#i-clock"/></svg></span>
+      <div><div class="n">Jobs</div><div class="d">All runs &middot; status, cost tag, cancel / rerun / delete</div></div>
+      <svg class="i go" aria-hidden="true"><use href="#i-arrowr"/></svg>
+    </a>
+    <a class="scr" href="dashboard.html" data-od-id="scr-dashboard">
+      <span class="ic"><svg class="i"><use href="#i-chart"/></svg></span>
+      <div><div class="n">Run dashboard</div><div class="d">Intents &middot; L1→L2→L3 clusters &middot; agents with filters + sort</div></div>
+      <svg class="i go" aria-hidden="true"><use href="#i-arrowr"/></svg>
+    </a>
+    <a class="scr" href="analysis.html" data-od-id="scr-analysis">
+      <span class="ic"><svg class="i"><use href="#i-chart"/></svg></span>
+      <div><div class="n">Analysis &middot; Riya&rsquo;s view</div><div class="d">Intents &middot; L1&rarr;L2&rarr;L3 clusters &middot; live run progress</div></div>
+      <svg class="i go" aria-hidden="true"><use href="#i-arrowr"/></svg>
+    </a>
+    <a class="scr" href="design.html" data-od-id="scr-design">
+      <span class="ic"><svg class="i"><use href="#i-flow"/></svg></span>
+      <div><div class="n">Design &middot; Devika&rsquo;s view</div><div class="d">Process map + UML &middot; review &amp; approve workflow</div></div>
+      <svg class="i go" aria-hidden="true"><use href="#i-arrowr"/></svg>
+    </a>
+    <a class="scr" href="develop.html" data-od-id="scr-develop">
+      <span class="ic"><svg class="i"><use href="#i-code"/></svg></span>
+      <div><div class="n">Develop &middot; Arjun&rsquo;s view</div><div class="d">ADK / Bedrock / LangGraph code gen &middot; build tracking</div></div>
+      <svg class="i go" aria-hidden="true"><use href="#i-arrowr"/></svg>
+    </a>
+    <a class="scr" href="connectors.html" data-od-id="scr-connectors">
+      <span class="ic"><svg class="i"><use href="#i-plug"/></svg></span>
+      <div><div class="n">Connectors &middot; Priya&rsquo;s view</div><div class="d">S3 &middot; Genesys &middot; Salesforce &middot; sync health</div></div>
+      <svg class="i go" aria-hidden="true"><use href="#i-arrowr"/></svg>
+    </a>
+    <a class="scr" href="rbac.html" data-od-id="scr-rbac">
+      <span class="ic"><svg class="i"><use href="#i-users"/></svg></span>
+      <div><div class="n">Team &amp; roles (RBAC)</div><div class="d">Members &middot; umbrella chips &middot; permission matrix</div></div>
+      <svg class="i go" aria-hidden="true"><use href="#i-arrowr"/></svg>
+    </a>
+    <a class="scr" href="settings.html" data-od-id="scr-settings">
+      <span class="ic"><svg class="i"><use href="#i-gear"/></svg></span>
+      <div><div class="n">Settings</div><div class="d">Clients &middot; cost tagging &middot; workspace defaults</div></div>
+      <svg class="i go" aria-hidden="true"><use href="#i-arrowr"/></svg>
+    </a>
+    <a class="scr" href="audit-log.html" data-od-id="scr-audit">
+      <span class="ic"><svg class="i"><use href="#i-scroll"/></svg></span>
+      <div><div class="n">Audit log</div><div class="d">Filterable timeline &middot; actor + scope filters &middot; export</div></div>
+      <svg class="i go" aria-hidden="true"><use href="#i-arrowr"/></svg>
+    </a>
+  </div>
+
+  <div class="note" data-od-id="resume-note">
+    <svg class="i"><use href="#i-clock"/></svg>
+    Last opened in this session:
+    <a class="link" id="last-page" href="login.html" style="margin-left:2px">Login</a>
+    &middot; sidebar also returns you to any stage directly
+  </div>
+</main>
+<script src="assets/ui.js"></script>
+<script>
+  var lp = localStorage.getItem("tx-last-page");
+  var note = document.querySelector(".note");
+  var a = document.getElementById("last-page");
+  if (lp && lp !== "index.html"){
+    a.href = lp;
+    a.textContent = lp.replace(".html","").replace(/^./, function(c){ return c.toUpperCase(); });
+  } else {
+    note.style.display = "none";
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design — Skyline Broadband · Transform.cx</title>
+<link rel="stylesheet" href="assets/tx.css">
+<style>
+  :root{ --lineln: oklch(70% 0.012 250); }
+  .dm-grid{ display:grid; grid-template-columns:238px minmax(0,1fr); gap:16px; align-items:start; }
+  .maps-rail .mi{ display:flex; flex-direction:column; gap:3px; padding:11px 12px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .1s; }
+  .maps-rail .mi:hover{ background:var(--surface-hover); }
+  .maps-rail .mi.on{ background:var(--surface-inset); box-shadow:inset 2px 0 0 var(--fg); }
+  .ud-grid{ display:grid; grid-template-columns:minmax(0,1fr) 250px; gap:16px; align-items:start; }
+  .pmap{ display:block; width:100%; height:auto; }
+  .pmap-node{ cursor:pointer; }
+  .pmap-node .n2{ opacity:0; transition:opacity .12s; }
+  .pmap-node:hover .n1{ stroke:var(--accent-strong); stroke-width:1.8; }
+  .pmap-node:hover .n2, .pmap-node.active .n2{ opacity:.9; }
+  .pmap-node.active .n1{ stroke:var(--accent-strong); stroke-width:1.8; }
+  .pm-name{ font-weight:560; }
+  .uml-no{ font-style:italic; opacity:0; }
+  .seqll{ stroke:var(--border); stroke-dasharray:3 4; }
+  .seg-label{ font-size:10.5px; fill:var(--muted); letter-spacing:.06em; text-transform:uppercase; font-weight:560; }
+  .meta-list{ display:flex; flex-direction:column; gap:10px; font-size:12.5px; }
+  .meta-list .k{ color:var(--muted); }
+  .stage-acts{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  @media (max-width:1100px){
+    .ud-grid{ grid-template-columns:minmax(0,1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="app" data-od-id="app-shell">
+
+  <aside class="side" data-od-id="sidebar">
+    <div class="side-brand">
+      <img class="exl-logo" src="EXL_Service_logo.svg.webp" alt="EXL">
+      <span class="brand-div" aria-hidden="true"></span>
+      <div>
+        <div class="brand-prod">Transform.cx</div>
+        <div class="caps">Skyline workspace</div>
+      </div>
+    </div>
+    <nav class="nav" data-od-id="side-nav">
+      <a class="nlink" href="projects.html"><svg class="i"><use href="#i-grid"/></svg>Projects</a>
+      <div class="sec">Workspace</div>
+      <a class="nlink" href="jobs.html"><svg class="i"><use href="#i-clock"/></svg>Jobs</a>
+      <a class="nlink" href="dashboard.html"><svg class="i"><use href="#i-chart"/></svg>Dashboard</a>
+      <div class="sec">Pipeline · Skyline Broadband</div>
+      <a class="nlink" href="analysis.html"><svg class="i"><use href="#i-chart"/></svg>Analysis<span class="tail">68%</span></a>
+      <a class="nlink active" href="design.html"><svg class="i"><use href="#i-flow"/></svg>Design<span class="tail">Review</span></a>
+      <a class="nlink" href="develop.html"><svg class="i"><use href="#i-code"/></svg>Develop<span class="tail">Ready</span></a>
+      <div class="sec">Data</div>
+      <a class="nlink" href="connectors.html"><svg class="i"><use href="#i-plug"/></svg>Connectors<span class="tail">5</span></a>
+      <div class="sec">Admin</div>
+      <a class="nlink" href="settings.html"><svg class="i"><use href="#i-gear"/></svg>Settings</a>
+      <a class="nlink" href="rbac.html"><svg class="i"><use href="#i-users"/></svg>Team &amp; roles</a>
+      <a class="nlink" href="audit-log.html"><svg class="i"><use href="#i-scroll"/></svg>Audit log</a>
+    </nav>
+    <div class="side-foot">
+      <div class="listitem" style="border:0;padding:4px 8px">
+        <span class="avatar avatar-sm">DS</span>
+        <div style="min-width:0;flex:1"><div style="font-size:12.5px;font-weight:560">Devika Sharma</div><div class="hint" style="font-size:11px">CX Designer</div></div>
+        <a class="icon-btn" href="login.html" title="Sign out"><svg class="i"><use href="#i-out"/></svg></a>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar" data-od-id="topbar">
+      <div class="crumbs">
+        <span>Skyline workspace</span><span class="sep">/</span>
+        <span>Skyline Broadband — Winter CX</span><span class="sep">/</span>
+        <span class="here">Design</span>
+      </div>
+      <div class="spacer"></div>
+      <span class="badge badge-warn badge-run"><span class="dot"></span>RUN-4821 · Analysis 68%</span>
+      <button class="icon-btn" title="Notifications" onclick="TX.toast('No new notifications','i-bell')"><svg class="i"><use href="#i-bell"/></svg></button>
+    </header>
+
+    <div class="page" data-od-id="design-page">
+      <div class="page-h">
+        <div style="flex:1">
+          <h1 data-od-id="page-title">Design</h1>
+          <p class="sub">Verify and edit process maps generated from approved Analysis clusters, then review the UML sequence headers before handing off to Develop.</p>
+        </div>
+        <button class="btn" data-open="dlg-export" data-od-id="export-btn"><svg class="i"><use href="#i-download"/></svg>Export</button>
+        <button class="btn" data-open="dlg-changes" data-od-id="request-changes-btn"><svg class="i"><use href="#i-mail"/></svg>Request changes</button>
+        <button class="btn btn-primary" data-open="dlg-approve" data-od-id="approve-btn"><svg class="i"><use href="#i-check"/></svg>Approve &amp; hand off</button>
+      </div>
+
+      <div class="card card-b" style="margin-bottom:16px;padding:12px 14px;display:flex;align-items:center;gap:12px" data-od-id="upstream-strip">
+        <svg class="i" style="color:var(--muted)"><use href="#i-lock"/></svg>
+        <div style="font-size:12.5px;flex:1">
+          <strong>Inherited from Analysis · 4 approved clusters</strong>
+          <div class="hint">Last verified by Riya Menon · 2 days ago. If upstream clusters change, maps are queued for regen — your edits stay as overlays.</div>
+        </div>
+        <div class="stage-flow">
+          <span class="snode done"><span class="glyph"><svg class="i" style="width:10px;height:10px"><use href="#i-check"/></svg></span>Analysis</span>
+          <span class="slink"></span>
+          <span class="snode live"><span class="glyph"><span class="mini"></span></span>Design</span>
+          <span class="slink"></span>
+          <span class="snode"><span class="glyph"></span>Develop</span>
+        </div>
+      </div>
+
+      <div class="dm-grid" data-tab-scope>
+        <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+          <div class="tabs" style="border-radius:var(--r-md);border:1px solid var(--border);background:var(--surface)" data-tabs>
+            <button role="tab" aria-selected="true" data-tab="pmap" data-od-id="tab-pmap">Process maps <span class="count">4</span></button>
+            <button role="tab" aria-selected="false" data-tab="uml" data-od-id="tab-uml">UML diagrams <span class="count">2</span></button>
+          </div>
+          <div class="card maps-rail" data-od-id="map-rail">
+            <div class="mi on" data-od-id="mi-billing" onclick="pickMap(this)">
+              <strong style="font-size:12.5px">Billing Dispute Resolution</strong>
+              <div class="row" style="gap:6px"><span class="badge badge-warn"><span class="dot"></span>In review</span><span class="hint" style="font-size:11px">v3 · from Invoice Disputes</span></div>
+            </div>
+            <div class="mi" onclick="pickMap(this)" data-od-id="mi-outage">
+              <strong style="font-size:12.5px">Outage Triage &amp; Status</strong>
+              <div class="row" style="gap:6px"><span class="badge"><span class="dot"></span>Needs review</span><span class="hint" style="font-size:11px">v1 · early draft</span></div>
+            </div>
+            <div class="mi" onclick="pickMap(this)" data-od-id="mi-install">
+              <strong style="font-size:12.5px">New Installation Booking</strong>
+              <div class="row" style="gap:6px"><span class="badge badge-ok"><span class="dot"></span>Approved</span><span class="hint" style="font-size:11px">v2 · yesterday</span></div>
+            </div>
+            <div class="mi" onclick="pickMap(this)" data-od-id="mi-portout">
+              <strong style="font-size:12.5px">Port-out Retention</strong>
+              <div class="row" style="gap:6px"><span class="badge"><span class="dot"></span>Not generated</span><span class="hint" style="font-size:11px">cluster approved</span></div>
+            </div>
+            <div style="padding:10px 12px">
+              <button class="btn btn-sm" style="width:100%;justify-content:center" data-od-id="new-map-btn" onclick="TX.toast('Choose an approved cluster in Analysis first','i-info')"><svg class="i"><use href="#i-plus"/></svg>Generate new map</button>
+            </div>
+          </div>
+        </div>
+
+        <div data-panel="pmap" data-od-id="panel-pmap">
+          <div class="card">
+            <div class="card-h" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+              <div>
+                <h3 style="font-size:14px">Billing Dispute Resolution <span class="muted" style="font-weight:460">· v3</span></h3>
+                <div class="hint" style="font-size:11.5px">Generated from cluster “Invoice Disputes” (2,847 calls) · 5 tools · 2 sub-agent routes</div>
+              </div>
+              <div class="stage-acts">
+                <span class="badge badge-warn" id="map-status"><span class="dot"></span>In review</span>
+                <button class="btn btn-sm" data-open="dlg-export"><svg class="i"><use href="#i-download"/></svg>Export</button>
+              </div>
+            </div>
+            <div class="card-b">
+              <div class="canvas-box">
+                <svg class="pmap" viewBox="0 0 940 560" role="img" aria-label="Process map of the billing dispute conversation flow" data-od-id="pmap-canvas">
+                  <defs>
+                    <marker id="arrowhead" markerWidth="9" markerHeight="9" refX="7.5" refY="4" orient="auto">
+                      <path d="M0,0 L8,4 L0,8 Z" fill="var(--lineln)"/>
+                    </marker>
+                  </defs>
+
+                  <!-- row 1 -->
+                  <g class="pmap-node start" data-od-id="pn-start" transform="translate(40,42)">
+                    <rect class="n1" width="176" height="46" rx="10"/>
+                    <rect class="n2" width="176" height="46" rx="10" fill="none" stroke="var(--accent-strong)" stroke-width="2" stroke-opacity="0"/>
+                    <text x="88" y="28" text-anchor="middle" font-size="12.5">START · call connected</text>
+                  </g>
+                  <path class="pmap-edge" d="M216 65 H304"/>
+                  <g class="pmap-node" data-od-id="pn-auth" transform="translate(304,42)">
+                    <rect class="n1" width="176" height="46" rx="10"/>
+                    <text class="pm-name" x="88" y="20" text-anchor="middle" font-size="12.5">Authenticate caller</text>
+                    <text x="88" y="35" text-anchor="middle" font-size="10.5" fill="var(--muted)">IVR + account match</text>
+                  </g>
+                  <path class="pmap-edge" d="M480 65 H568"/>
+                  <g class="pmap-node tool" data-od-id="pn-fetch" transform="translate(568,42)">
+                    <rect class="n1" width="176" height="46" rx="10"/>
+                    <text class="pm-name" x="88" y="20" text-anchor="middle" font-size="12.5" fill="var(--success-fg)">Fetch invoice</text>
+                    <text x="88" y="35" text-anchor="middle" font-size="10.5" fill="var(--muted)">crm.get_invoice</text>
+                  </g>
+                  <path class="pmap-edge" d="M744 65 H812 Q820 65 820 73 V88"/>
+                  <g class="pmap-node decision" data-od-id="pn-valid" transform="translate(732,88)">
+                    <rect class="n1" width="176" height="46" rx="10"/>
+                    <text class="pm-name" x="88" y="20" text-anchor="middle" font-size="12.5" fill="var(--warn-fg)">Dispute valid?</text>
+                    <text x="88" y="35" text-anchor="middle" font-size="10.5" fill="var(--muted)">policy.dispute_rules</text>
+                  </g>
+
+                  <!-- yes branch -->
+                  <path class="pmap-edge" d="M732 111 H664"/>
+                  <text x="698" y="103" font-size="11" fill="var(--muted)" text-anchor="middle">yes</text>
+                  <g class="pmap-node tool" data-od-id="pn-credit" transform="translate(488,88)">
+                    <rect class="n1" width="176" height="46" rx="10"/>
+                    <text class="pm-name" x="88" y="20" text-anchor="middle" font-size="12.5" fill="var(--success-fg)">Issue credit</text>
+                    <text x="88" y="35" text-anchor="middle" font-size="10.5" fill="var(--muted)">billing.apply_credit</text>
+                  </g>
+                  <path class="pmap-edge" d="M488 111 H420"/>
+                  <g class="pmap-node" data-od-id="pn-confirm" transform="translate(244,88)">
+                    <rect class="n1" width="176" height="46" rx="10"/>
+                    <text class="pm-name" x="88" y="20" text-anchor="middle" font-size="12.5">Send confirmation</text>
+                    <text x="88" y="35" text-anchor="middle" font-size="10.5" fill="var(--muted)">SMS + email + ref code</text>
+                  </g>
+                  <path class="pmap-edge" d="M244 111 H176"/>
+                  <g class="pmap-node start" data-od-id="pn-end" transform="translate(40,88)">
+                    <rect class="n1" width="136" height="46" rx="10"/>
+                    <text x="68" y="28" text-anchor="middle" font-size="12.5">END · resolved</text>
+                  </g>
+
+                  <!-- no branch -->
+                  <path class="pmap-edge" d="M820 134 V194"/>
+                  <text x="830" y="166" font-size="11" fill="var(--muted)">no</text>
+                  <g class="pmap-node" data-od-id="pn-explain" transform="translate(732,194)">
+                    <rect class="n1" width="176" height="46" rx="10"/>
+                    <text class="pm-name" x="88" y="20" text-anchor="middle" font-size="12.5">Explain charges</text>
+                    <text x="88" y="35" text-anchor="middle" font-size="10.5" fill="var(--muted)">kb.get_terms + goodwill offer</text>
+                  </g>
+                  <path class="pmap-edge" d="M820 240 V304"/>
+                  <g class="pmap-node" data-od-id="pn-retain" transform="translate(732,304)">
+                    <rect class="n1" width="176" height="46" rx="10"/>
+                    <text class="pm-name" x="88" y="20" text-anchor="middle" font-size="12.5">Escalate to retention</text>
+                    <text x="88" y="35" text-anchor="middle" font-size="10.5" fill="var(--muted)">sub-agent · after 2 declines</text>
+                  </g>
+                  <path class="pmap-edge dash" d="M732 327 H664 Q656 327 656 319 V245"/>
+                  <text x="694" y="282" font-size="11" fill="var(--muted)" text-anchor="end">declines ×1 → retry explain</text>
+
+                  <!-- context strip -->
+                  <g transform="translate(40,382)">
+                    <rect width="620" height="118" rx="10" fill="var(--surface)" stroke="var(--border)"/>
+                    <text x="16" y="26" class="seg-label">Conversation pattern — what the map was trained on</text>
+                    <text x="16" y="50" font-size="12" fill="var(--fg)">Caller → “I cancelled last month but I’m still being charged”</text>
+                    <text x="16" y="70" font-size="12" fill="var(--muted)">Agent → verifies cancellation effective date → compares plan terms → decides refund path.</text>
+                    <text x="16" y="98" font-size="11.5" fill="var(--muted)">2,847 real calls clustered into this flow · avg handle 3m 40s · 41% reach an agent</text>
+                  </g>
+
+                  <!-- legend -->
+                  <g transform="translate(40,524)" font-size="11.5" fill="var(--muted)">
+                    <rect x="0" y="-9" width="12" height="12" rx="3.5" fill="oklch(22% 0.01 250)"/>
+                    <text x="18" y="1">start / end</text>
+                    <rect x="102" y="-9" width="12" height="12" rx="3.5" fill="var(--success-soft)" stroke="oklch(80% 0.06 150)"/>
+                    <text x="120" y="1">tool call</text>
+                    <rect x="196" y="-9" width="12" height="12" rx="3.5" fill="var(--warn-soft)" stroke="oklch(78% 0.09 80)"/>
+                    <text x="214" y="1">decision</text>
+                    <rect x="294" y="-9" width="12" height="12" rx="3.5" fill="var(--surface)" stroke="oklch(82% 0.01 250)"/>
+                    <text x="312" y="1">agent step</text>
+                    <path d="M384 -3 H404" stroke="var(--lineln)" stroke-dasharray="4 3"/>
+                    <text x="410" y="1">conditional retry</text>
+                  </g>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div data-panel="uml" hidden data-od-id="panel-uml">
+          <div class="ud-grid">
+            <div class="card">
+              <div class="card-h" style="justify-content:space-between">
+                <div>
+                  <h3 style="font-size:14px">UML sequence — Billing Dispute</h3>
+                  <div class="hint" style="font-size:11.5px">Synced with process map v3 · information flow between user, orchestrator, tools and sub-agents</div>
+                </div>
+                <div class="row" style="gap:8px">
+                  <button class="btn btn-sm" onclick="TX.toast('Sequence regenerated from map v3','i-sync')"><svg class="i"><use href="#i-sync"/></svg>Regenerate</button>
+                </div>
+              </div>
+              <div class="card-b">
+                <div class="canvas-box">
+                  <svg class="pmap" viewBox="0 0 860 470" role="img" aria-label="UML sequence diagram for billing dispute" data-od-id="uml-canvas">
+                    <g font-size="12" fill="var(--fg)">
+                      <g>
+                        <rect x="20" y="14" width="128" height="36" rx="8" fill="var(--surface)" stroke="var(--border)"/>
+                        <text x="84" y="37" text-anchor="middle">Customer</text>
+                        <line class="seqll" x1="84" y1="50" x2="84" y2="442"/>
+                      </g>
+                      <g>
+                        <rect x="212" y="14" width="150" height="36" rx="8" fill="oklch(22% 0.01 250)"/>
+                        <text x="287" y="37" text-anchor="middle" fill="var(--surface)">Orchestrator</text>
+                        <line class="seqll" x1="287" y1="50" x2="287" y2="442"/>
+                      </g>
+                      <g>
+                        <rect x="402" y="14" width="120" height="36" rx="8" fill="var(--success-soft)" stroke="oklch(80% 0.06 150)"/>
+                        <text x="462" y="37" text-anchor="middle" fill="var(--success-fg)">CRM tool</text>
+                        <line class="seqll" x1="462" y1="50" x2="462" y2="442"/>
+                      </g>
+                      <g>
+                        <rect x="542" y="14" width="120" height="36" rx="8" fill="var(--success-soft)" stroke="oklch(80% 0.06 150)"/>
+                        <text x="602" y="37" text-anchor="middle" fill="var(--success-fg)">Billing tool</text>
+                        <line class="seqll" x1="602" y1="50" x2="602" y2="442"/>
+                      </g>
+                      <g>
+                        <rect x="682" y="14" width="150" height="36" rx="8" fill="var(--warn-soft)" stroke="oklch(78% 0.09 80)"/>
+                        <text x="757" y="37" text-anchor="middle" fill="var(--warn-fg)">Escalation agent</text>
+                        <line class="seqll" x1="757" y1="50" x2="757" y2="442"/>
+                      </g>
+                    </g>
+                    <g font-size="11.5">
+                      <path class="pmap-edge" d="M84 84 H280"/>
+                      <text x="182" y="76" text-anchor="middle" fill="var(--fg)">“I was charged after cancelling”</text>
+                      <path class="pmap-edge" d="M287 120 H455"/>
+                      <text x="371" y="112" text-anchor="middle" fill="var(--muted)">get_customer(msisdn)</text>
+                      <path class="pmap-edge" d="M287 154 H455"/>
+                      <text x="371" y="146" text-anchor="middle" fill="var(--muted)">get_invoice(inv_98231)</text>
+                      <path class="pmap-edge" d="M287 188 H595"/>
+                      <text x="441" y="180" text-anchor="middle" fill="var(--muted)">validate_terms(plan, charges)</text>
+                      <path class="pmap-edge" d="M287 222 v0 c0 -14 26 -14 26 0 V222" fill="none"/>
+                      <path d="M300 214 c0 -12 22 -12 22 0" stroke="var(--lineln)" fill="none" marker-end="url(#arrowhead)"/>
+                      <text x="300" y="207" fill="var(--muted)" text-anchor="end" transform="translate(64,0)">score_dispute()</text>
+                      <path class="pmap-edge" d="M287 262 H595"/>
+                      <text x="441" y="254" text-anchor="middle" fill="var(--muted)">apply_credit(−₹412.00)</text>
+                      <path class="pmap-edge" d="M287 300 H92"/>
+                      <text x="190" y="292" text-anchor="middle" fill="var(--fg)">“Credit applied — SMS + email sent”</text>
+                      <path class="pmap-edge dash" d="M287 354 H750"/>
+                      <text x="518" y="346" text-anchor="middle" fill="var(--muted)">handoff(reason: high-value account) · optional</text>
+                    </g>
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <div class="card" data-od-id="uml-guardrails">
+              <div class="card-h"><h3>Handoff guardrails</h3></div>
+              <div class="card-b meta-list">
+                <div><span class="k">Escalation agent joins after</span><br>2 declined offers or account value &gt; ₹8,000/mo</div>
+                <div><span class="k">Tools in scope</span><br><span class="mono" style="font-size:11.5px">crm.get_customer · crm.get_invoice · billing.apply_credit · comms.send_receipt</span></div>
+                <div><span class="k">Coverage</span><br>63% of disputes resolve without the escalation path</div>
+                <div class="rag-row" style="border:1px solid var(--accent-border);background:var(--accent-soft);border-radius:8px;padding:10px 12px;gap:8px">
+                  <svg class="i" style="color:var(--accent-strong);margin-top:1px"><use href="#i-info"/></svg>
+                  <div style="font-size:12px;color:var(--accent-strong)">Ready for Develop — snapshot locks on approval. Regen keeps your overlays.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="overlay" data-overlay></div>
+
+<div class="drawer" id="dw-node" role="dialog" aria-modal="true" aria-label="Node inspector" data-od-id="node-inspector">
+  <div class="drawer-h">
+    <div style="min-width:0;flex:1">
+      <div class="caps">Process map node</div>
+      <div id="node-name" style="font-size:15px;font-weight:620;letter-spacing:-0.01em;margin-top:2px">—</div>
+    </div>
+    <button class="icon-btn" data-close title="Close"><svg class="i"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="drawer-b">
+    <div class="grid-2" style="margin-bottom:14px">
+      <div class="card" style="padding:10px 12px"><div class="caps" style="font-size:10px">Avg. handle time</div><div class="tabular" id="node-aht" style="font-size:15px;font-weight:620;margin-top:3px">—</div></div>
+      <div class="card" style="padding:10px 12px"><div class="caps" style="font-size:10px">Resolution share</div><div class="tabular" id="node-res" style="font-size:15px;font-weight:620;margin-top:3px">—</div></div>
+    </div>
+    <div class="field" style="margin-bottom:12px">
+      <span class="label">Bound tool</span>
+      <div class="mono" id="node-tool" style="background:var(--surface-inset);border:1px solid var(--border);border-radius:6px;padding:8px 10px;white-space:nowrap;overflow:auto">—</div>
+    </div>
+    <div class="field" style="margin-bottom:12px">
+      <label class="label" for="node-desc">Step instructions (what the agent does here)</label>
+      <textarea class="input" id="node-desc" rows="4"></textarea>
+      <span class="hint">Saving bumps the map to v3.1 and re-syncs the UML diagram.</span>
+    </div>
+    <div class="field" style="margin-bottom:12px">
+      <span class="label">Common caller phrases at this step</span>
+      <div class="row" id="node-phrases" style="gap:6px;flex-wrap:wrap"></div>
+    </div>
+    <div class="rag-row" style="border:1px solid var(--warn);background:var(--warn-soft);border-radius:8px;padding:10px 12px;gap:8px">
+      <svg class="i" style="color:var(--warn-fg);margin-top:1px"><use href="#i-warn"/></svg>
+      <div style="font-size:12px;color:var(--warn-fg)">Upstream Analysis is re-running (RUN-4821 · 68%). Cluster drift over 5% queues a regen after you approve — your overlays persist.</div>
+    </div>
+  </div>
+  <div class="drawer-f">
+    <button class="btn" data-close>Close</button>
+    <button class="btn btn-primary" id="node-save" data-od-id="node-save">Save changes</button>
+  </div>
+</div>
+
+<div class="dialog" id="dlg-changes" role="dialog" aria-modal="true" data-od-id="changes-dialog">
+  <div class="dialog-h">
+    <h2>Request changes</h2>
+    <p class="hint">Goes back to the owning analyst with your comment. Major asks re-run the branch — long-running jobs show in the top bar.</p>
+  </div>
+  <div class="dialog-b">
+    <div class="field">
+      <span class="label">Severity</span>
+      <div class="row" style="gap:8px" data-chips>
+        <button class="chip" aria-pressed="true">Minor — wording only</button>
+        <button class="chip" aria-pressed="false">Major — regenerate branch</button>
+      </div>
+    </div>
+    <div class="field">
+      <label class="label" for="ch-note">What should change?</label>
+      <textarea class="input" id="ch-note" rows="3" placeholder="e.g. Retention escalation should only trigger after two declined offers, not one."></textarea>
+    </div>
+  </div>
+  <div class="dialog-f">
+    <button class="btn" data-close>Cancel</button>
+    <button class="btn btn-primary" id="ch-send" data-od-id="changes-send">Send request</button>
+  </div>
+</div>
+
+<div class="dialog" id="dlg-approve" role="dialog" aria-modal="true" data-od-id="approve-dialog">
+  <div class="dialog-h">
+    <h2>Approve &amp; hand off to Develop</h2>
+    <p class="hint">Both artifacts lock at the current version. The Develop umbrella gets a read-only snapshot it can generate code against.</p>
+  </div>
+  <div class="dialog-b">
+    <div class="field">
+      <span class="label">Approving</span>
+      <div class="row" style="gap:8px;flex-wrap:wrap">
+        <span class="badge"><span class="dot"></span>Process map v3 — Billing Dispute Resolution</span>
+        <span class="badge"><span class="dot"></span>UML sequence — Billing Dispute v3</span>
+      </div>
+    </div>
+    <div class="field">
+      <label class="label" for="ap-note">Handoff note (optional)</label>
+      <textarea class="input" id="ap-note" rows="3" placeholder="e.g. Start with the Google ADK target — Bedrock follows next sprint."></textarea>
+    </div>
+  </div>
+  <div class="dialog-f">
+    <button class="btn" data-close>Cancel</button>
+    <button class="btn btn-primary" id="ap-confirm" data-od-id="approve-confirm">Approve &amp; notify Dev team</button>
+  </div>
+</div>
+
+<div class="dialog" id="dlg-export" role="dialog" aria-modal="true" data-od-id="export-dialog">
+  <div class="dialog-h">
+    <h2>Export design data</h2>
+    <p class="hint">Take the process maps and UML diagrams out of Transform.cx — as diagrams for documentation, or as structured data for your own tooling.</p>
+  </div>
+  <div class="dialog-b">
+    <div class="field">
+      <span class="label">What to export</span>
+      <div class="row" style="gap:8px;flex-wrap:wrap" data-chips data-od-id="export-scope">
+        <button class="chip" aria-pressed="true">Current map + UML</button>
+        <button class="chip" aria-pressed="false">All approved maps</button>
+        <button class="chip" aria-pressed="false">Full design bundle</button>
+      </div>
+    </div>
+    <div class="field">
+      <span class="label">Format</span>
+      <div class="row" style="gap:8px;flex-wrap:wrap" data-chips data-od-id="export-format">
+        <button class="chip" aria-pressed="true">PNG</button>
+        <button class="chip" aria-pressed="false">SVG</button>
+        <button class="chip" aria-pressed="false">PDF</button>
+        <button class="chip" aria-pressed="false">JSON</button>
+        <button class="chip" aria-pressed="false">CSV</button>
+      </div>
+      <span class="hint" id="export-hint">PNG raster of the current canvas at 2× resolution. JSON and CSV carry the structured map data (nodes, edges, tools, metrics).</span>
+    </div>
+    <div class="row" style="justify-content:space-between">
+      <div><div class="label">Include metrics &amp; call evidence</div><div class="hint">Volume, handle time and confidence columns where available.</div></div>
+      <span class="switch" role="switch" aria-checked="true"></span>
+    </div>
+    <div class="field">
+      <label class="label" for="export-name">File name</label>
+      <input class="input" id="export-name" value="billing-dispute-design-v3">
+    </div>
+  </div>
+  <div class="dialog-f">
+    <button class="btn" data-close>Cancel</button>
+    <button class="btn btn-primary" id="export-confirm" data-od-id="export-confirm"><svg class="i"><use href="#i-download"/></svg>Export</button>
+  </div>
+</div>
+
+<script src="assets/ui.js"></script>
+<script>
+(function(){
+  function pickMap(mi){
+    document.querySelectorAll(".maps-rail .mi").forEach(function(x){ x.classList.remove("on"); });
+    mi.classList.add("on");
+    var name = mi.querySelector("strong").textContent;
+    if (name.indexOf("Billing") !== 0){
+      TX.toast("'" + name + "' — sample geometry stays Billing for this demo", "i-info");
+    }
+  }
+  window.pickMap = pickMap;
+
+  var NODES = {
+    "pn-start":   { name:"START · Call connected", aht:"—", res:"—", tool:"ivr.entry(context)", desc:"Entry point. Caller is routed from the Genesys IVR. If phone number matches a CRM record, account context comes in with the call.", phrases:["—"] },
+    "pn-auth":    { name:"Authenticate caller", aht:"42s", res:"91% first-try", tool:"crm.verify_identity(msisdn, factor)", desc:"Verify identity with the registered number plus one secondary factor — email OTP or last billed amount. After two failed tries, hand off to a human with partial context.", phrases:["i forgot my customer id","verify me another way","why do you need that"] },
+    "pn-fetch":   { name:"Fetch invoice", aht:"3s", res:"99.4% success", tool:"crm.get_invoice(inv_98231)", desc:"Pull the current invoice for the verified account. If the number is on multiple lines, ask which line the dispute is about.", phrases:["my bill this month","the latest invoice","charges on my account"] },
+    "pn-valid":   { name:"Dispute valid?", aht:"—", res:"63% valid", tool:"policy.dispute_rules", desc:"Valid if the charge appeared after the cancellation effective date, or a promo credit is missing past 30 days. Borderline routes to Billing Specialist with a summary.", phrases:["—"] },
+    "pn-credit":  { name:"Issue credit", aht:"4s", res:"₹212 avg credit", tool:"billing.apply_credit(invoice_id, amount)", desc:"Apply credit to the invoice and note it on the account. Anything above ₹2,500 requires a supervisor token before release.", phrases:["—"] },
+    "pn-confirm": { name:"Send confirmation", aht:"12s", res:"98%", tool:"comms.send_receipt(sms, email, ref)", desc:"Summarise the adjustment verbally, send SMS and email with the reference number, and set a 7-day follow-up task.", phrases:["—"] },
+    "pn-end":     { name:"END · Case resolved", aht:"—", res:"—", tool:"wrapup.tag(disposition)", desc:"Close with a wrap-up code, trigger the CSAT prompt, and tag the disposition back into the intent ledger.", phrases:["—"] },
+    "pn-explain": { name:"Explain charges", aht:"1m 35s", res:"37% accept", tool:"kb.get_terms(plan_id)", desc:"Walk the caller through disputed lines in plain language. Offer a one-time goodwill adjustment when sentiment dips.", phrases:["that doesn't make sense","i disagree","never agreed to this"] },
+    "pn-retain":  { name:"Escalate to retention", aht:"handoff", res:"11% of calls", tool:"queue.route(retention)", desc:"Warm-transfer to the retention queue with full context and dispute summary. Only after the explanation is declined twice.", phrases:["i want to cancel then","just close it"] }
+  };
+
+  var curId = null;
+  var dName = document.getElementById("node-name");
+  var dAht  = document.getElementById("node-aht");
+  var dRes  = document.getElementById("node-res");
+  var dTool = document.getElementById("node-tool");
+  var dDesc = document.getElementById("node-desc");
+  var dPh   = document.getElementById("node-phrases");
+
+  document.querySelectorAll(".pmap-node[data-od-id]").forEach(function(g){
+    g.addEventListener("click", function(){
+      var id = g.getAttribute("data-od-id");
+      var d = NODES[id]; if(!d) return;
+      curId = id;
+      document.querySelectorAll(".pmap-node.active").forEach(function(x){ x.classList.remove("active"); });
+      g.classList.add("active");
+      dName.textContent = d.name;
+      dAht.textContent = d.aht;
+      dRes.textContent = d.res;
+      dTool.textContent = d.tool;
+      dDesc.value = d.desc;
+      dPh.innerHTML = "";
+      d.phrases.forEach(function(p){
+        var s = document.createElement("span");
+        s.className = "chip"; s.style.cursor = "default";
+        s.setAttribute("aria-pressed","false");
+        s.textContent = "“" + p + "”";
+        dPh.appendChild(s);
+      });
+      TX.openLayer("dw-node");
+    });
+  });
+
+  document.getElementById("node-save").addEventListener("click", function(){
+    TX.closeLayers();
+    TX.toast("Node saved — map v3.1 drafted, UML re-sync queued", "i-check");
+  });
+
+  document.getElementById("ch-send").addEventListener("click", function(){
+    TX.closeLayers();
+    var b = document.getElementById("map-status");
+    if (b){ b.className = "badge badge-warn badge-run"; b.innerHTML = '<span class="dot"></span>Changes requested'; }
+    TX.toast("Change request sent to Riya Menon (Analysis)", "i-mail");
+  });
+
+  document.getElementById("ap-confirm").addEventListener("click", function(){
+    TX.closeLayers();
+    var b = document.getElementById("map-status");
+    if (b){ b.className = "badge badge-ok"; b.innerHTML = '<span class="dot"></span>Approved · handed to Develop'; }
+    TX.toast("Approved — snapshot v3 shared with Develop (Develop is next in the sidebar)", "i-check");
+  });
+
+  /* ---------- export data ---------- */
+  var EX_HINT = {
+    PNG: "PNG raster of the current canvas at 2× resolution — good for slides and tickets.",
+    SVG: "SVG vector — editable in Figma or Illustrator, scales without loss.",
+    PDF: "PDF — map plus UML on separate pages, ready for sign-off packs.",
+    JSON: "JSON — structured map data: nodes, edges, bound tools, guardrails and metrics.",
+    CSV: "CSV — flat step table (node, type, tool, volume, handle time) for spreadsheets."
+  };
+  document.querySelectorAll("#export-format .chip").forEach(function(c){
+    c.addEventListener("click", function(){
+      document.getElementById("export-hint").textContent = EX_HINT[c.textContent.trim()] || EX_HINT.PNG;
+    });
+  });
+  document.getElementById("export-confirm").addEventListener("click", function(){
+    var fmt = document.querySelector('#export-format .chip[aria-pressed="true"]');
+    var name = document.getElementById("export-name").value.trim() || "design-export";
+    var ext = (fmt ? fmt.textContent.trim() : "PNG").toLowerCase();
+    TX.closeLayers();
+    TX.toast(name + "." + ext + " downloading", "i-download");
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Develop — Skyline Broadband · Transform.cx</title>
+<link rel="stylesheet" href="assets/tx.css">
+<style>
+  .tg-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px; }
+  .tg-card{ text-align:left; padding:14px; border:1px solid var(--border); border-radius:var(--r-md); background:var(--surface); cursor:pointer; transition:all .12s; display:flex; flex-direction:column; gap:7px; }
+  .tg-card:hover{ background:var(--surface-hover); }
+  .tg-card.on{ border-color:var(--accent-strong); box-shadow:0 0 0 3px var(--accent-soft); }
+  .tg-card .tick{ width:18px;height:18px;border-radius:50%;border:1.5px solid var(--border); display:grid;place-items:center;color:transparent; transition:all .12s; }
+  .tg-card.on .tick{ background:var(--accent-strong); border-color:var(--accent-strong); color:oklch(99% 0 0); }
+  .oc-outer{ display:grid; grid-template-columns:170px minmax(0,1fr); }
+  .ftree{ border-right:1px solid var(--border); padding:8px; background:var(--surface-inset); border-radius:0 0 0 var(--r-lg); }
+  .ftree button{ display:flex; align-items:center; gap:8px; width:100%; height:30px; padding:0 9px; border-radius:7px; font-size:12px; font-family:var(--font-mono); color:var(--fg); text-align:left; }
+  .ftree button:hover{ background:var(--surface-hover); }
+  .ftree button.on{ background:var(--fg); color:var(--surface); }
+  .ftree .i{ color:var(--muted); flex:none; }
+  .code-pane .codebox{ border-radius:0 0 var(--r-lg) 0; }
+  .code-pane pre{ max-height:430px; overflow:auto; min-height:380px; }
+  .gen-live{ display:none; }
+  .gen-live.on{ display:block; }
+  .bstep{ display:flex; align-items:center; gap:10px; padding:7px 0; font-size:13px; }
+  @media (max-width:1100px){ .tg-grid{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:760px){
+    .tg-grid{ grid-template-columns:1fr; }
+    .oc-outer{ grid-template-columns:minmax(0,1fr); }
+    .ftree{ display:flex; gap:6px; overflow-x:auto; border-right:0; border-bottom:1px solid var(--border); border-radius:0; }
+    .ftree button{ width:auto; flex:none; }
+    .code-pane .codebox{ border-radius:0 0 var(--r-lg) var(--r-lg); }
+    .code-pane pre{ min-height:260px; max-height:340px; }
+  }
+</style>
+</head>
+<body>
+<div class="app" data-od-id="app-shell">
+
+  <aside class="side" data-od-id="sidebar">
+    <div class="side-brand">
+      <img class="exl-logo" src="EXL_Service_logo.svg.webp" alt="EXL">
+      <span class="brand-div" aria-hidden="true"></span>
+      <div>
+        <div class="brand-prod">Transform.cx</div>
+        <div class="caps">Skyline workspace</div>
+      </div>
+    </div>
+    <nav class="nav" data-od-id="side-nav">
+      <a class="nlink" href="projects.html"><svg class="i"><use href="#i-grid"/></svg>Projects</a>
+      <div class="sec">Workspace</div>
+      <a class="nlink" href="jobs.html"><svg class="i"><use href="#i-clock"/></svg>Jobs</a>
+      <a class="nlink" href="dashboard.html"><svg class="i"><use href="#i-chart"/></svg>Dashboard</a>
+      <div class="sec">Pipeline · Skyline Broadband</div>
+      <a class="nlink" href="analysis.html"><svg class="i"><use href="#i-chart"/></svg>Analysis<span class="tail">68%</span></a>
+      <a class="nlink" href="design.html"><svg class="i"><use href="#i-flow"/></svg>Design<span class="tail">Approved</span></a>
+      <a class="nlink active" href="develop.html"><svg class="i"><use href="#i-code"/></svg>Develop<span class="tail">Now</span></a>
+      <div class="sec">Data</div>
+      <a class="nlink" href="connectors.html"><svg class="i"><use href="#i-plug"/></svg>Connectors<span class="tail">5</span></a>
+      <div class="sec">Admin</div>
+      <a class="nlink" href="settings.html"><svg class="i"><use href="#i-gear"/></svg>Settings</a>
+      <a class="nlink" href="rbac.html"><svg class="i"><use href="#i-users"/></svg>Team &amp; roles</a>
+      <a class="nlink" href="audit-log.html"><svg class="i"><use href="#i-scroll"/></svg>Audit log</a>
+    </nav>
+    <div class="side-foot">
+      <div class="listitem" style="border:0;padding:4px 8px">
+        <span class="avatar avatar-sm">AS</span>
+        <div style="min-width:0;flex:1"><div style="font-size:12.5px;font-weight:560">Arjun Shah</div><div class="hint" style="font-size:11px">Developer</div></div>
+        <a class="icon-btn" href="login.html" title="Sign out"><svg class="i"><use href="#i-out"/></svg></a>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar" data-od-id="topbar">
+      <div class="crumbs">
+        <span>Skyline workspace</span><span class="sep">/</span>
+        <span>Skyline Broadband — Winter CX</span><span class="sep">/</span>
+        <span class="here">Develop</span>
+      </div>
+      <div class="spacer"></div>
+      <span class="badge badge-ok"><span class="dot"></span>Snapshot v3 locked</span>
+      <button class="icon-btn" title="Notifications" onclick="TX.toast('No new notifications','i-bell')"><svg class="i"><use href="#i-bell"/></svg></button>
+    </header>
+
+    <div class="page" data-od-id="develop-page">
+      <div class="page-h">
+        <div style="flex:1">
+          <h1 data-od-id="page-title">Develop</h1>
+          <p class="sub">Generate production agent code from the approved process map and UML snapshot. Pick a target runtime, review the scaffold, then deploy to staging.</p>
+        </div>
+        <button class="btn" onclick="TX.toast('Runtime docs open in vendor documentation (stub for demo)','i-ext')"><svg class="i"><use href="#i-ext"/></svg>Runtime docs</button>
+        <button class="btn btn-primary" data-open="dlg-gen" data-od-id="generate-btn"><svg class="i"><use href="#i-bolt"/></svg>Generate agent build</button>
+      </div>
+
+      <div class="card card-b" style="margin-bottom:16px;padding:12px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap" data-od-id="handoff-banner">
+        <svg class="i" style="color:var(--success)"><use href="#i-check"/></svg>
+        <div style="font-size:12.5px;flex:1;min-width:220px">
+          <strong>From Design · approved 1 h ago by Devika Sharma</strong>
+          <div class="hint">Process map v3 (Billing Dispute Resolution) + UML sequence v3 — read-only snapshot. Source edits in Design queue a new snapshot.</div>
+        </div>
+        <div class="stage-flow">
+          <span class="snode done"><span class="glyph"><svg class="i" style="width:10px;height:10px"><use href="#i-check"/></svg></span>Analysis</span>
+          <span class="slink"></span>
+          <span class="snode done"><span class="glyph"><svg class="i" style="width:10px;height:10px"><use href="#i-check"/></svg></span>Design</span>
+          <span class="slink"></span>
+          <span class="snode live"><span class="glyph"><span class="mini"></span></span>Develop</span>
+        </div>
+      </div>
+
+      <h2 style="font-size:13.5px;font-weight:600;margin-bottom:10px" data-od-id="target-heading">1 · Choose target runtime</h2>
+      <div class="tg-grid" id="tg-grid" data-od-id="target-grid">
+        <button class="tg-card on" data-tg="Google ADK" data-od-id="tg-adk">
+          <div class="row" style="justify-content:space-between"><strong style="font-size:13px">Google ADK</strong><span class="tick"><svg class="i" style="width:11px;height:11px"><use href="#i-check"/></svg></span></div>
+          <span class="muted" style="font-size:12px">Python agents with FunctionTools, direct Vertex AI deploy.</span>
+          <span class="badge badge-acc" style="align-self:flex-start"><span class="dot"></span>Recommended</span>
+        </button>
+        <button class="tg-card" data-tg="CX Agent Studio" data-od-id="tg-cx">
+          <div class="row" style="justify-content:space-between"><strong style="font-size:13px">CX Agent Studio</strong><span class="tick"><svg class="i" style="width:11px;height:11px"><use href="#i-check"/></svg></span></div>
+          <span class="muted" style="font-size:12px">Google Contact Center AI flows and playbooks.</span>
+          <span class="badge" style="align-self:flex-start"><span class="dot"></span>Flows</span>
+        </button>
+        <button class="tg-card" data-tg="Amazon Bedrock" data-od-id="tg-bedrock">
+          <div class="row" style="justify-content:space-between"><strong style="font-size:13px">Amazon Bedrock</strong><span class="tick"><svg class="i" style="width:11px;height:11px"><use href="#i-check"/></svg></span></div>
+          <span class="muted" style="font-size:12px">Agents for Bedrock with action groups wired to Lambda tools.</span>
+          <span class="badge" style="align-self:flex-start"><span class="dot"></span>AWS stack</span>
+        </button>
+        <button class="tg-card" data-tg="LangGraph" data-od-id="tg-langgraph">
+          <div class="row" style="justify-content:space-between"><strong style="font-size:13px">LangGraph</strong><span class="tick"><svg class="i" style="width:11px;height:11px"><use href="#i-check"/></svg></span></div>
+          <span class="muted" style="font-size:12px">Stateful graph runtime, bring-your-own LLM with checkpoints.</span>
+          <span class="badge" style="align-self:flex-start"><span class="dot"></span>OSS</span>
+        </button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start" data-od-id="develop-grid">
+        <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+
+          <div class="card" data-od-id="builds-card">
+            <div class="card-h"><h3>2 · Generate &amp; track builds</h3></div>
+            <div class="gen-live card-b" id="gen-live" style="padding-top:12px">
+              <div class="row" style="justify-content:space-between;font-size:12.5px;margin-bottom:6px">
+                <strong id="gen-title">GEN-0143 — generating from snapshot v3</strong>
+                <span class="tabular muted" id="gen-pct">0%</span>
+              </div>
+              <div class="meter"><div class="track"><div class="fill" id="gen-fill" style="width:2%"></div></div></div>
+              <div class="divider" style="margin:12px 0 4px"></div>
+              <div class="bstep" data-step><span class="st run"><svg class="i"><use href="#i-sync"/></svg></span>Scaffold agent package<span class="tabular muted" style="font-size:12px">agent.py · state.py · tools.py</span></div>
+              <div class="bstep muted" data-step><span class="st"><svg class="i"><use href="#i-dot"/></svg></span>Wire tools and sub-agent routes<span class="tabular muted" style="font-size:12px">5 tools · 2 queues</span></div>
+              <div class="bstep muted" data-step><span class="st"><svg class="i"><use href="#i-dot"/></svg></span>Apply guardrails policy<span class="tabular muted" style="font-size:12px">credit cap + escalation rules</span></div>
+              <div class="bstep muted" data-step><span class="st"><svg class="i"><use href="#i-dot"/></svg></span>Unit tests<span class="tabular muted" style="font-size:12px">happy path + 3 edge cases</span></div>
+            </div>
+            <table class="table" style="margin-top:6px">
+              <thead><tr><th>Build</th><th>Runtime</th><th>From</th><th class="num">Tests</th><th>Status</th><th>Created</th><th style="width:84px"></th></tr></thead>
+              <tbody>
+                <tr id="row-143" hidden>
+                  <td class="mono">ADK-0143</td><td>Google ADK</td><td class="mono">map v3</td><td class="num">4/4</td>
+                  <td><span class="badge badge-ok"><span class="dot"></span>Ready</span></td><td class="muted">just now</td>
+                  <td><button class="btn btn-sm" data-deploy>Deploy</button></td>
+                </tr>
+                <tr>
+                  <td class="mono">ADK-0142</td><td>Google ADK</td><td class="mono">map v2</td><td class="num">4/4</td>
+                  <td><span class="badge badge-ok"><span class="dot"></span>Deployed · staging</span></td><td class="muted">2 days ago</td>
+                  <td><button class="btn btn-sm" onclick="TX.toast('Already live on staging — promote from Cloud Run','i-info')">Live</button></td>
+                </tr>
+                <tr>
+                  <td class="mono">LGR-0091</td><td>LangGraph</td><td class="mono">map v2</td><td class="num">3/4</td>
+                  <td><span class="badge badge-warn"><span class="dot"></span>1 flaky test</span></td><td class="muted">3 days ago</td>
+                  <td><button class="btn btn-sm" onclick="TX.toast('Rerun queued with fixed seed 42','i-sync')">Rerun</button></td>
+                </tr>
+                <tr>
+                  <td class="mono">BRK-0037</td><td>Amazon Bedrock</td><td class="mono">map v1</td><td class="num">2/4</td>
+                  <td><span class="badge badge-err"><span class="dot"></span>Failed · auth scope</span></td><td class="muted">last week</td>
+                  <td><button class="btn btn-sm" onclick="TX.toast('Fix: allow bedrock:InvokeModel on the tool role, then rerun','i-info')">Fix</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card" data-od-id="code-card">
+            <div class="card-h" style="justify-content:space-between">
+              <h3>3 · Review generated scaffold</h3>
+              <div class="row" style="gap:8px">
+                <button class="btn btn-sm" data-copy="# Agent script copied (demo clipboard)" data-copy-msg="agent.py copied to clipboard"><svg class="i"><use href="#i-copy"/></svg>Copy</button>
+                <button class="btn btn-sm" onclick="TX.toast('Package downloaded as adk-billing-dispute-v3.zip','i-download')"><svg class="i"><use href="#i-download"/></svg>Download .zip</button>
+              </div>
+            </div>
+            <div class="oc-outer">
+              <div class="ftree" data-od-id="file-tree">
+                <button class="on" data-file="agent"><svg class="i"><use href="#i-file"/></svg>agent.py</button>
+                <button data-file="tools"><svg class="i"><use href="#i-file"/></svg>tools.py</button>
+                <button data-file="policy"><svg class="i"><use href="#i-file"/></svg>policies.py</button>
+                <button data-file="test"><svg class="i"><use href="#i-file"/></svg>test_flow.py</button>
+              </div>
+              <div class="code-pane codebox"><pre id="code-view"></pre></div>
+            </div>
+          </div>
+
+          <div class="card" data-tab-scope data-od-id="deploy-test-card">
+            <div class="card-h" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+              <div>
+                <h3>4 · Deploy, test &amp; improve</h3>
+                <div class="hint" style="font-size:11.5px;margin-top:2px">Ship a ready build to staging, chat with the live agent, then mark the gaps you want fixed.</div>
+              </div>
+              <div class="row" style="gap:8px">
+                <span class="badge" id="deploy-badge"><span class="dot"></span>Not deployed</span>
+                <button class="btn btn-sm" id="deploy-btn" data-od-id="deploy-btn"><svg class="i"><use href="#i-rocket"/></svg>Deploy to staging</button>
+              </div>
+            </div>
+
+            <div class="card-b" id="pre-deploy" style="padding-top:12px">
+              <div style="display:flex;gap:10px;align-items:flex-start">
+                <svg class="i" style="color:var(--muted);margin-top:1px"><use href="#i-info"/></svg>
+                <p class="hint" style="font-size:12.5px">Pick a completed build and deploy it to staging to test the real conversation. Deploys are logged in the audit trail and roll back to the previous revision in one click.</p>
+              </div>
+              <div class="row" style="gap:8px;margin-top:12px;flex-wrap:wrap">
+                <span class="badge"><span class="dot"></span>ADK-0143 · 4/4 tests</span>
+                <span class="badge"><span class="dot"></span>snapshot v3</span>
+                <span class="badge"><span class="dot"></span>asia-south1 (Mumbai)</span>
+              </div>
+            </div>
+
+            <div id="console" hidden>
+              <div class="tabs" data-tabs style="padding:0 12px">
+                <button role="tab" aria-selected="true" data-tab="chat" data-od-id="tab-chat">Chat <span class="count" id="chat-count">0</span></button>
+                <button role="tab" aria-selected="false" data-tab="gaps" data-od-id="tab-gaps">Improvement gaps <span class="count" id="gap-count">0</span></button>
+              </div>
+              <div data-panel="chat" data-od-id="panel-chat">
+                <div class="row" style="padding:10px 14px;gap:8px;border-bottom:1px solid var(--border);flex-wrap:wrap">
+                  <span class="badge badge-ok badge-run"><span class="dot"></span>Live on staging</span>
+                  <span class="hint" style="font-size:11.5px">revision adk-billing-dispute-00014 · gemini-2.0-flash</span>
+                  <span style="flex:1"></span>
+                  <button class="chip" id="improve-btn" aria-pressed="false" data-od-id="improve-btn"><svg class="i" style="width:13px;height:13px"><use href="#i-flag"/></svg>Improve experience</button>
+                </div>
+                <div class="chat" id="chat-log" role="log" aria-label="Conversation with the deployed agent"></div>
+                <div class="chat-bar">
+                  <input class="input" id="chat-input" placeholder="Chat with the deployed agent…" aria-label="Message the deployed agent">
+                  <button class="btn" id="chat-send" data-od-id="chat-send" aria-label="Send message"><svg class="i"><use href="#i-send"/></svg><span>Send</span></button>
+                </div>
+                <div class="hint" style="padding:0 16px 12px;font-size:11.5px" id="improve-hint">Turn on “Improve experience”, then click any agent reply to attach a gap pointer.</div>
+              </div>
+              <div data-panel="gaps" hidden data-od-id="panel-gaps">
+                <div style="padding:14px 16px 4px" class="hint">Gaps you mark while testing. Send them to Design to update the process map, or to Analysis to add a missing intent.</div>
+                <div id="gap-list"></div>
+                <div class="row" style="padding:12px 16px;gap:8px;flex-wrap:wrap">
+                  <button class="btn btn-sm" id="gap-send"><svg class="i"><use href="#i-flow"/></svg>Send to Design</button>
+                  <button class="btn btn-sm" id="gap-analysis"><svg class="i"><use href="#i-chart"/></svg>Send to Analysis</button>
+                  <span style="flex:1"></span>
+                  <span class="hint" id="gap-empty">No gaps marked yet.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+          <div class="card" data-od-id="guardrails-card">
+            <div class="card-h"><h3>Guardrails in this build</h3></div>
+            <div class="card-b" style="display:flex;flex-direction:column;gap:10px;font-size:12.5px">
+              <div class="row" style="gap:9px"><svg class="i" style="color:var(--muted)"><use href="#i-shield"/></svg><span>Credit cap ₹2,500 without supervisor token</span></div>
+              <div class="row" style="gap:9px"><svg class="i" style="color:var(--muted)"><use href="#i-branch"/></svg><span>Retention escalation after 2 declined offers</span></div>
+              <div class="row" style="gap:9px"><svg class="i" style="color:var(--muted)"><use href="#i-lock"/></svg><span>PII redaction on every outbound message</span></div>
+              <div class="row" style="gap:9px"><svg class="i" style="color:var(--muted)"><use href="#i-clock"/></svg><span>Hard stop at 14 agent turns</span></div>
+            </div>
+          </div>
+
+          <div class="card" data-od-id="snapshot-card">
+            <div class="card-h"><h3>Snapshot inputs</h3></div>
+            <div class="card-b" style="display:flex;flex-direction:column;gap:8px;font-size:12.5px">
+              <div class="row" style="justify-content:space-between"><span class="muted">Process map</span><span class="mono">billing-dispute@v3</span></div>
+              <div class="row" style="justify-content:space-between"><span class="muted">UML sequence</span><span class="mono">billing-dispute-uml@v3</span></div>
+              <div class="row" style="justify-content:space-between"><span class="muted">Tools bound</span><span class="tabular">5</span></div>
+              <div class="row" style="justify-content:space-between"><span class="muted">Sub-agent routes</span><span class="tabular">2</span></div>
+              <div class="divider" style="margin:4px 0"></div>
+              <a class="row" href="design.html" style="gap:7px;font-size:12.5px"><svg class="i"><use href="#i-flow"/></svg>Open source in Design<svg class="i" style="margin-left:auto"><use href="#i-chevr"/></svg></a>
+            </div>
+          </div>
+
+          <details class="adv" data-od-id="adv-gen-settings">
+            <summary><svg class="i"><use href="#i-gear"/></svg>Advanced generation<svg class="i chev"><use href="#i-chev"/></svg></summary>
+            <div class="adv-body" style="display:flex;flex-direction:column;gap:12px">
+              <div class="field"><label class="label">Model</label><select class="input"><option>gemini-2.0-flash</option><option>gemini-2.5-pro</option><option>claude-sonnet via Bedrock</option></select></div>
+              <div class="grid-2">
+                <div class="field"><label class="label">Temperature</label><input class="input" value="0.2" inputmode="decimal"></div>
+                <div class="field"><label class="label">Max turns</label><input class="input" value="14" inputmode="numeric"></div>
+              </div>
+              <div class="field"><label class="label">Deploy region</label><select class="input"><option>asia-south1 (Mumbai)</option><option>us-central1</option></select></div>
+              <div class="field"><span class="label">Eval harness</span>
+                <div class="row" style="gap:6px;flex-wrap:wrap" data-chips-multi>
+                  <button class="chip" aria-pressed="true">Golden set · 24</button>
+                  <button class="chip" aria-pressed="false">Adversarial · 40</button>
+                </div>
+              </div>
+            </div>
+          </details>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="overlay" data-overlay></div>
+
+<div class="dialog" id="dlg-gen" role="dialog" aria-modal="true" data-od-id="gen-dialog">
+  <div class="dialog-h">
+    <h2>Generate agent build</h2>
+    <p class="hint">From approved snapshot v3 · target: <span class="mono" id="gen-target-label">Google ADK</span></p>
+  </div>
+  <div class="dialog-b">
+    <div class="row" style="justify-content:space-between">
+      <div><div class="label">Include unit tests</div><div class="hint">4 scenarios incl. supervisor-token edge case.</div></div>
+      <span class="switch" role="switch" aria-checked="true"></span>
+    </div>
+    <div class="row" style="justify-content:space-between">
+      <div><div class="label">Apply guardrails policy</div><div class="hint">₹2,500 credit cap · escalate after 2 declines.</div></div>
+      <span class="switch" role="switch" aria-checked="true"></span>
+    </div>
+    <div class="field">
+      <label class="label" for="gen-env">Environment</label>
+      <select class="input" id="gen-env"><option>staging (default)</option><option>production</option></select>
+    </div>
+  </div>
+  <div class="dialog-f">
+    <button class="btn" data-close>Cancel</button>
+    <button class="btn btn-primary" id="gen-start" data-od-id="gen-start-btn"><svg class="i"><use href="#i-bolt"/></svg>Start generation</button>
+  </div>
+</div>
+
+<div class="dialog" id="dlg-gap" role="dialog" aria-modal="true" data-od-id="gap-dialog">
+  <div class="dialog-h">
+    <h2>Attach improvement pointer</h2>
+    <p class="hint" id="gap-quote">—</p>
+  </div>
+  <div class="dialog-b">
+    <div class="field">
+      <span class="label">Gap type</span>
+      <div class="row" style="gap:8px;flex-wrap:wrap" data-chips data-od-id="gap-sev">
+        <button class="chip" aria-pressed="true">Wording</button>
+        <button class="chip" aria-pressed="false">Missing step</button>
+        <button class="chip" aria-pressed="false">Wrong tool / data</button>
+        <button class="chip" aria-pressed="false">Guardrail gap</button>
+      </div>
+    </div>
+    <div class="field">
+      <label class="label" for="gap-note">What should the agent do instead?</label>
+      <textarea class="input" id="gap-note" rows="3" placeholder="e.g. Ask for the cancellation date before quoting the credit amount."></textarea>
+    </div>
+  </div>
+  <div class="dialog-f">
+    <button class="btn" data-close>Cancel</button>
+    <button class="btn btn-primary" id="gap-save" data-od-id="gap-save">Add pointer</button>
+  </div>
+</div>
+
+<script src="assets/ui.js"></script>
+<script>
+(function(){
+  var cur = "Google ADK";
+  document.querySelectorAll(".tg-card").forEach(function(c){
+    c.addEventListener("click", function(){
+      document.querySelectorAll(".tg-card").forEach(function(x){ x.classList.remove("on"); });
+      c.classList.add("on");
+      cur = c.getAttribute("data-tg");
+      document.getElementById("gen-target-label").textContent = cur;
+    });
+  });
+
+  var FILES = {
+    agent: '<span class="c-c"># Generated from process map v3 — Billing Dispute Resolution</span>\n' +
+      '<span class="c-c"># Snapshot: approved by Devika Sharma · UML v3 · 5 tools · 2 sub-agent routes</span>\n\n' +
+      '<span class="c-k">from</span> google.adk <span class="c-k">import</span> Agent\n' +
+      '<span class="c-k">from</span> google.adk.tools <span class="c-k">import</span> FunctionTool\n' +
+      '<span class="c-k">from</span> policies <span class="c-k">import</span> GUARDRAILS\n\n' +
+      'billing_dispute_agent = <span class="c-f">Agent</span>(\n' +
+      '    name=<span class="c-s">"billing_dispute_agent"</span>,\n' +
+      '    model=<span class="c-s">"gemini-2.0-flash"</span>,\n' +
+      '    instruction=<span class="c-s">"""Resolve billing disputes. Verify identity, fetch the\n       invoice, check dispute_rules, apply credit inside guardrails.\n       Escalate to retention after two declined offers."""</span>,\n' +
+      '    tools=GUARDRAILS.wired_tools,\n' +
+      ')',
+    tools: '<span class="c-c"># tools.py — bound tools with scopes from the UML diagram</span>\n\n' +
+      '<span class="c-k">async def</span> <span class="c-f">get_invoice</span>(msisdn: <span class="c-t">str</span>) -> <span class="c-t">dict</span>:\n' +
+      '    <span class="c-c">"""Fetch the current invoice for the verified account."""</span>\n' +
+      '    <span class="c-k">return</span> crm.invoices.latest(msisdn=msisdn)\n\n' +
+      '<span class="c-k">async def</span> <span class="c-f">apply_credit</span>(invoice_id: <span class="c-t">str</span>, amount: <span class="c-t">float</span>) -> <span class="c-t">dict</span>:\n' +
+      '    <span class="c-k">if</span> amount > <span class="c-n">2500</span>:\n' +
+      '        <span class="c-k">return</span> <span class="c-f">escalate</span>(reason=<span class="c-s">"supervisor_token_required"</span>)\n' +
+      '    <span class="c-k">return</span> billing.credit(invoice_id=invoice_id, amount=amount)\n\n' +
+      '<span class="c-k">async def</span> <span class="c-f">route_retention</span>(context: <span class="c-t">dict</span>) -> <span class="c-t">dict</span>:\n' +
+      '    <span class="c-k">return</span> queue.route(<span class="c-s">"retention"</span>, context=context)',
+    policy: '<span class="c-c"># policies.py — guardrails baked into the build</span>\n\n' +
+      'GUARDRAILS = <span class="c-t">dict</span>(\n' +
+      '    credit_cap_inr=<span class="c-n">2500</span>,\n' +
+      '    max_agent_turns=<span class="c-n">14</span>,\n' +
+      '    redact_pii=<span class="c-k">True</span>,\n' +
+      '    escalation=<span class="c-t">dict</span>(\n' +
+      '        after_declined_offers=<span class="c-n">2</span>,\n' +
+      '        queue=<span class="c-s">"retention"</span>,\n' +
+      '        carry_context=<span class="c-k">True</span>,\n' +
+      '    ),\n' +
+      ')',
+    test: '<span class="c-c"># tests/test_flow.py — happy path + 3 edge cases</span>\n\n' +
+      '<span class="c-k">class</span> <span class="c-t">TestBillingDispute</span>:\n\n' +
+      '    <span class="c-k">def</span> <span class="c-f">test_valid_dispute_gets_credit</span>(self):\n' +
+      '        out = run_scenario(<span class="c-s">"charged_after_cancel"</span>)\n' +
+      '        <span class="c-k">assert</span> out.tool_calls[<span class="c-s">"apply_credit"</span>].amount == <span class="c-n">412.0</span>\n\n' +
+      '    <span class="c-k">def</span> <span class="c-f">test_over_cap_escalates</span>(self):\n' +
+      '        out = run_scenario(<span class="c-s">"credit_above_2500"</span>)\n' +
+      '        <span class="c-k">assert</span> out.last_action == <span class="c-s">"escalate"</span>\n\n' +
+      '    <span class="c-k">def</span> <span class="c-f">test_two_declines_route_retention</span>(self):\n' +
+      '        out = run_scenario(<span class="c-s">"declined_twice"</span>)\n' +
+      '        <span class="c-k">assert</span> out.queue == <span class="c-s">"retention"</span>'
+  };
+
+  var view = document.getElementById("code-view");
+  function showFile(key){ view.innerHTML = FILES[key]; }
+  document.querySelectorAll(".ftree button").forEach(function(b){
+    b.addEventListener("click", function(){
+      document.querySelectorAll(".ftree button").forEach(function(x){ x.classList.remove("on"); });
+      b.classList.add("on");
+      showFile(b.getAttribute("data-file"));
+    });
+  });
+  showFile("agent");
+
+  /* generation simulation */
+  document.getElementById("gen-start").addEventListener("click", function(){
+    TX.closeLayers();
+    var box = document.getElementById("gen-live");
+    box.classList.add("on");
+    var fill = document.getElementById("gen-fill");
+    var pct = document.getElementById("gen-pct");
+    var steps = box.querySelectorAll("[data-step]");
+    document.getElementById("gen-title").textContent = "GEN-0143 — generating " + cur + " build from snapshot v3";
+    var p = 2;
+    function tick(){
+      p += Math.floor(3 + Math.random() * 5);
+      if (p > 100) p = 100;
+      fill.style.width = p + "%";
+      pct.textContent = p + "%";
+      var stage = p < 30 ? 0 : p < 62 ? 1 : p < 86 ? 2 : 3;
+      steps.forEach(function(s, i){
+        s.classList.toggle("muted", i > stage);
+        var ic = s.querySelector(".st");
+        ic.className = "st " + (i < stage ? "done" : i === stage ? "run" : "");
+        ic.innerHTML = '<svg class="i"><use href="#' + (i < stage ? "i-check" : i === stage ? "i-sync" : "i-dot") + '"/></svg>';
+      });
+      if (p < 100){
+        setTimeout(tick, 200);
+      } else {
+        steps.forEach(function(s){
+          s.classList.remove("muted");
+          s.querySelector(".st").className = "st done";
+          s.querySelector(".st").innerHTML = '<svg class="i"><use href="#i-check"/></svg>';
+        });
+        document.getElementById("row-143").hidden = false;
+        TX.toast("ADK-0143 ready — 4/4 tests passing", "i-check");
+        setTimeout(function(){ box.classList.remove("on"); }, 1800);
+      }
+    }
+    setTimeout(tick, 220);
+  });
+
+  /* ---------- items 8, 9, 17 · deploy → test → improve ---------- */
+  var log = document.getElementById("chat-log");
+  var improve = false, gaps = [], pendingGap = null;
+
+  function decoratePick(){
+    log.querySelectorAll(".msg-bot").forEach(function(d){ d.classList.toggle("pick", improve); });
+  }
+  function addMsg(who, text, isBot){
+    var d = document.createElement("div");
+    d.className = "msg " + (isBot ? "msg-bot" : "msg-user");
+    d.innerHTML = '<div class="bubble"><div class="who"></div><div class="body"></div></div>';
+    d.querySelector(".who").textContent = who;
+    d.querySelector(".body").textContent = text;
+    if (isBot){
+      d.addEventListener("click", function(){ if (improve) markGap(text); });
+    }
+    log.appendChild(d);
+    log.scrollTop = log.scrollHeight;
+    document.getElementById("chat-count").textContent = log.querySelectorAll(".msg").length;
+    decoratePick();
+  }
+  function agentReply(q){
+    var s = q.toLowerCase();
+    if (s.indexOf("hi") > -1 || s.indexOf("hello") > -1) return "Hello — you’re through to the Skyline billing agent. I can help with invoice disputes, credits and cancellations. What’s the issue today?";
+    if (s.indexOf("cancel") > -1 || s.indexOf("still") > -1) return "I can see the line was cancelled on 12 June, but billing continued to 31 July. I can apply a pro-rata credit of ₹412.00 to invoice INV-98231 — shall I go ahead?";
+    if (s.indexOf("credit") > -1 || s.indexOf("refund") > -1 || s.indexOf("apply") > -1) return "Credit of ₹412.00 applied to invoice INV-98231. A confirmation is on its way by SMS and email with reference SBB-2026-44817.";
+    if (s.indexOf("supervisor") > -1 || s.indexOf("human") > -1 || s.indexOf("escalate") > -1) return "I’ll pass this to a supervisor with the full transcript and the invoice in context so you don’t have to repeat anything.";
+    if (s.indexOf("port") > -1) return "Port-out needs a UPC code. I can generate one valid for 30 days and email it, or hold the port if you’d like to talk about retention first.";
+    return "Let me check the account. I can see the last invoice and the plan history — could you confirm the phone number the account is under?";
+  }
+  function sendChat(){
+    var inp = document.getElementById("chat-input");
+    var q = inp.value.trim();
+    if (!q) return;
+    addMsg("You", q, false);
+    inp.value = "";
+    var t = document.createElement("div");
+    t.className = "msg msg-bot";
+    t.innerHTML = '<div class="bubble"><div class="who">Skyline billing agent</div><div class="typing"><span></span><span></span><span></span></div></div>';
+    log.appendChild(t);
+    log.scrollTop = log.scrollHeight;
+    setTimeout(function(){ t.remove(); addMsg("Skyline billing agent", agentReply(q), true); }, 850);
+  }
+  document.getElementById("chat-send").addEventListener("click", sendChat);
+  document.getElementById("chat-input").addEventListener("keydown", function(e){
+    if (e.key === "Enter"){ e.preventDefault(); sendChat(); }
+  });
+  document.getElementById("improve-btn").addEventListener("click", function(){
+    improve = !improve;
+    this.setAttribute("aria-pressed", improve ? "true" : "false");
+    document.getElementById("improve-hint").textContent = improve
+      ? "Improve experience ON — click any agent reply to attach a gap pointer."
+      : "Turn on “Improve experience”, then click any agent reply to attach a gap pointer.";
+    decoratePick();
+    TX.toast(improve ? "Improve experience on — click an agent reply to flag a gap" : "Improve experience off", "i-flag");
+  });
+  function markGap(text){
+    pendingGap = text;
+    document.getElementById("gap-quote").textContent = "“" + text.slice(0, 120) + (text.length > 120 ? "…" : "") + "”";
+    document.getElementById("gap-note").value = "";
+    TX.openLayer("dlg-gap");
+  }
+  function renderGaps(){
+    var list = document.getElementById("gap-list");
+    list.innerHTML = "";
+    document.getElementById("gap-empty").style.display = gaps.length ? "none" : "";
+    gaps.forEach(function(g, i){
+      var d = document.createElement("div");
+      d.className = "pointer";
+      d.style.margin = "10px 16px";
+      d.innerHTML = '<svg class="i" style="color:var(--warn-fg);margin-top:1px"><use href="#i-flag"/></svg>' +
+        '<div style="flex:1;min-width:0"><div class="row" style="gap:8px"><span class="sev" style="color:var(--warn-fg)"></span><span class="hint" style="font-size:11px">from staging chat</span></div>' +
+        '<div class="g-note" style="font-size:12.5px;margin-top:3px"></div><div class="g-quote hint" style="font-size:11.5px;margin-top:3px"></div></div>' +
+        '<button class="icon-btn" aria-label="Remove pointer"><svg class="i"><use href="#i-x"/></svg></button>';
+      d.querySelector(".sev").textContent = g.sev;
+      d.querySelector(".g-note").textContent = g.note;
+      d.querySelector(".g-quote").textContent = "On: “" + String(g.quote || "").slice(0, 74) + "…”";
+      d.querySelector("button").addEventListener("click", function(){ gaps.splice(i, 1); renderGaps(); });
+      list.appendChild(d);
+    });
+    document.getElementById("gap-count").textContent = gaps.length;
+  }
+  document.getElementById("gap-save").addEventListener("click", function(){
+    var sev = document.querySelector('#gap-sev .chip[aria-pressed="true"]');
+    gaps.push({
+      sev: sev ? sev.textContent.trim() : "Wording",
+      note: document.getElementById("gap-note").value.trim() || "(no note added)",
+      quote: pendingGap
+    });
+    renderGaps();
+    TX.closeLayers();
+    TX.toast("Pointer added — send gaps to Design when you’re done", "i-flag");
+  });
+  document.getElementById("gap-send").addEventListener("click", function(){
+    if (!gaps.length){ TX.toast("Mark at least one gap first", "i-info"); return; }
+    TX.toast(gaps.length + " gap" + (gaps.length > 1 ? "s" : "") + " sent to Design — map v3.1 queued", "i-flow");
+  });
+  document.getElementById("gap-analysis").addEventListener("click", function(){
+    if (!gaps.length){ TX.toast("Mark at least one gap first", "i-info"); return; }
+    TX.toast(gaps.length + " gap" + (gaps.length > 1 ? "s" : "") + " sent to Analysis — filed against the review queue", "i-chart");
+  });
+  renderGaps();
+
+  function startDeploy(){
+    if (document.getElementById("deploy-badge").className.indexOf("badge-ok") > -1){
+      TX.toast("Already live on staging — use Redeploy for a new revision", "i-info");
+      return;
+    }
+    var btn = document.getElementById("deploy-btn");
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner" style="border-color:oklch(18% 0.012 250 / .3);border-top-color:var(--fg)"></span>Deploying…';
+    var badge = document.getElementById("deploy-badge");
+    badge.className = "badge badge-warn badge-run";
+    badge.innerHTML = '<span class="dot"></span>Deploying to staging…';
+    setTimeout(function(){
+      badge.className = "badge badge-ok";
+      badge.innerHTML = '<span class="dot"></span>Live on staging';
+      document.getElementById("pre-deploy").hidden = true;
+      document.getElementById("console").hidden = false;
+      btn.innerHTML = '<svg class="i"><use href="#i-rocket"/></svg>Redeploy';
+      btn.disabled = false;
+      addMsg("Skyline billing agent", "Hello — you’re through to the Skyline billing agent. I can help with invoice disputes, credits and cancellations. What’s the issue today?", true);
+      TX.toast("ADK-0143 deployed to staging — revision 00014 live", "i-rocket");
+    }, 1600);
+  }
+  document.getElementById("deploy-btn").addEventListener("click", startDeploy);
+  document.addEventListener("click", function(e){
+    if (e.target.closest("[data-deploy]")){ startDeploy(); }
+  });
+})();
+</script>
+</body>
+</html>

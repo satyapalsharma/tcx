@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Team &amp; roles — Transform.cx</title>
+<link rel="stylesheet" href="assets/tx.css">
+<style>
+  .roles-grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:18px; }
+  .role-card{ padding:14px; display:flex; flex-direction:column; gap:8px; }
+  .perm{ width:14px; height:14px; border-radius:50%; display:inline-block; vertical-align:-2.5px; }
+  .perm-f{ background:var(--fg); }
+  .perm-p{ background:var(--warn); border:3px solid var(--warn-soft); box-shadow:0 0 0 1px var(--warn); }
+  .perm-n{ background:transparent; border:1.5px solid var(--border); }
+  .pm-legend{ font-size:12px; color:var(--muted); display:flex; gap:16px; align-items:center; }
+  .pm-legend .row{ gap:6px; }
+  .um-chip{ font-size:11px; padding:2.5px 8px; border-radius:99px; background:var(--surface-inset); color:var(--fg); border:1px solid var(--border); }
+  .um-chip.off{ opacity:.45; }
+  .matrix td:first-child{ font-weight:520; }
+  .matrix td:not(:first-child), .matrix th:not(:first-child){ text-align:center; }
+  @media (max-width:1100px){ .roles-grid{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:560px){ .roles-grid{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="app" data-od-id="app-shell">
+
+  <aside class="side" data-od-id="sidebar">
+    <div class="side-brand">
+      <img class="exl-logo" src="EXL_Service_logo.svg.webp" alt="EXL">
+      <span class="brand-div" aria-hidden="true"></span>
+      <div>
+        <div class="brand-prod">Transform.cx</div>
+        <div class="caps">Skyline workspace</div>
+      </div>
+    </div>
+    <nav class="nav" data-od-id="side-nav">
+      <a class="nlink" href="projects.html"><svg class="i"><use href="#i-grid"/></svg>Projects</a>
+      <div class="sec">Workspace</div>
+      <a class="nlink" href="jobs.html"><svg class="i"><use href="#i-clock"/></svg>Jobs</a>
+      <a class="nlink" href="dashboard.html"><svg class="i"><use href="#i-chart"/></svg>Dashboard</a>
+      <div class="sec">Pipeline · Skyline Broadband</div>
+      <a class="nlink" href="analysis.html"><svg class="i"><use href="#i-chart"/></svg>Analysis</a>
+      <a class="nlink" href="design.html"><svg class="i"><use href="#i-flow"/></svg>Design</a>
+      <a class="nlink" href="develop.html"><svg class="i"><use href="#i-code"/></svg>Develop</a>
+      <div class="sec">Data</div>
+      <a class="nlink" href="connectors.html"><svg class="i"><use href="#i-plug"/></svg>Connectors</a>
+      <div class="sec">Admin</div>
+      <a class="nlink" href="settings.html"><svg class="i"><use href="#i-gear"/></svg>Settings</a>
+      <a class="nlink active" href="rbac.html"><svg class="i"><use href="#i-users"/></svg>Team &amp; roles</a>
+      <a class="nlink" href="audit-log.html"><svg class="i"><use href="#i-scroll"/></svg>Audit log</a>
+    </nav>
+    <div class="side-foot">
+      <div class="listitem" style="border:0;padding:4px 8px">
+        <span class="avatar avatar-sm">PN</span>
+        <div style="min-width:0;flex:1"><div style="font-size:12.5px;font-weight:560">Priya Nair</div><div class="hint" style="font-size:11px">Admin</div></div>
+        <a class="icon-btn" href="login.html" title="Sign out"><svg class="i"><use href="#i-out"/></svg></a>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar" data-od-id="topbar">
+      <div class="crumbs"><span>Skyline workspace</span><span class="sep">/</span><span class="here">Team &amp; roles</span></div>
+      <div class="spacer"></div>
+      <button class="icon-btn" title="Notifications" onclick="TX.toast('No new notifications','i-bell')"><svg class="i"><use href="#i-bell"/></svg></button>
+    </header>
+
+    <div class="page" data-od-id="rbac-page">
+      <div class="page-h">
+        <div style="flex:1">
+          <h1 data-od-id="page-title">Team &amp; roles</h1>
+          <p class="sub">Roles map to umbrellas — Analysts own Analysis, Designers own Design, Developers own Develop. Everyone else watches. Access changes apply on next sign-in and are logged in the audit log.</p>
+        </div>
+        <button class="btn" id="new-role-btn" data-od-id="new-role-btn"><svg class="i"><use href="#i-plus"/></svg>New role</button>
+        <button class="btn" onclick="TX.toast('Role report exported as roles-skyline.csv','i-download')"><svg class="i"><use href="#i-download"/></svg>Export roles</button>
+        <button class="btn btn-primary" data-open="dlg-invite" data-od-id="invite-btn"><svg class="i"><use href="#i-plus"/></svg>Invite member</button>
+      </div>
+
+      <div class="roles-grid" data-od-id="roles-strip">
+        <div class="card role-card" data-od-id="role-admin">
+          <div class="row" style="gap:7px"><svg class="i"><use href="#i-shield"/></svg><strong style="font-size:13px">Admin</strong></div>
+          <span class="muted" style="font-size:12px">Full workspace control, connectors, billing, users.</span>
+          <span class="hint" style="font-size:11.5px">1 member</span>
+        </div>
+        <div class="card role-card" data-od-id="role-analyst">
+          <div class="row" style="gap:7px"><svg class="i"><use href="#i-chart"/></svg><strong style="font-size:13px">Business Analyst</strong></div>
+          <span class="muted" style="font-size:12px">Runs pipelines, curates intents, approves clusters.</span>
+          <span class="hint" style="font-size:11.5px">1 member</span>
+        </div>
+        <div class="card role-card" data-od-id="role-designer">
+          <div class="row" style="gap:7px"><svg class="i"><use href="#i-flow"/></svg><strong style="font-size:13px">CX Designer</strong></div>
+          <span class="muted" style="font-size:12px">Edits process maps &amp; UML, manages the review queue.</span>
+          <span class="hint" style="font-size:11.5px">1 member</span>
+        </div>
+        <div class="card role-card" data-od-id="role-developer">
+          <div class="row" style="gap:7px"><svg class="i"><use href="#i-code"/></svg><strong style="font-size:13px">Developer</strong></div>
+          <span class="muted" style="font-size:12px">Generates builds, deploys to staging, reads approved maps.</span>
+          <span class="hint" style="font-size:11.5px">1 member</span>
+        </div>
+        <div class="card role-card" data-od-id="role-viewer">
+          <div class="row" style="gap:7px"><svg class="i"><use href="#i-eye"/></svg><strong style="font-size:13px">Viewer</strong></div>
+          <span class="muted" style="font-size:12px">Read-only across all stages. Good for leadership reviews.</span>
+          <span class="hint" style="font-size:11.5px">1 member</span>
+        </div>
+      </div>
+
+      <div class="card" data-od-id="members-card">
+        <div class="card-h" style="justify-content:space-between">
+          <h3>Members <span class="muted" style="font-weight:460">· 6</span></h3>
+          <div style="position:relative">
+            <svg class="i" style="position:absolute;left:9px;top:8px;color:var(--muted)"><use href="#i-search"/></svg>
+            <input class="input" style="height:30px;padding-left:30px;width:220px" placeholder="Search members" aria-label="Search members" data-filter-target="#members-table" data-filter-count="#members-count" data-filter-empty="#members-empty">
+          </div>
+        </div>
+        <table class="table" id="members-table" style="margin-top:8px">
+          <thead><tr><th>Member</th><th style="width:170px">Role</th><th>Umbrella access</th><th>Last active</th><th>Status</th><th style="width:84px"></th></tr></thead>
+          <tbody id="members-body">
+            <tr data-filter-row data-od-id="mem-priya">
+              <td><div class="row" style="gap:9px"><span class="avatar avatar-sm">PN</span><div><div style="font-weight:540">Priya Nair</div><div class="hint" style="font-size:11.5px">priya@skyline-broadband.com</div></div></div></td>
+              <td><select class="input" style="height:30px" data-role-select><option selected>Admin</option><option>Business Analyst</option><option>CX Designer</option><option>Developer</option><option>Viewer</option></select></td>
+              <td><span class="um-chip">Analysis</span> <span class="um-chip">Design</span> <span class="um-chip">Develop</span> <span class="um-chip">Admin</span></td>
+              <td class="muted">now</td>
+              <td><span class="badge badge-ok"><span class="dot"></span>Active</span></td>
+              <td><button class="icon-btn" title="Reset password" onclick="TX.toast('Reset link sent to Priya','i-mail')"><svg class="i"><use href="#i-key"/></svg></button></td>
+            </tr>
+            <tr data-filter-row data-od-id="mem-riya">
+              <td><div class="row" style="gap:9px"><span class="avatar avatar-sm">RM</span><div><div style="font-weight:540">Riya Menon</div><div class="hint" style="font-size:11.5px">riya.m@skyline-broadband.com</div></div></div></td>
+              <td><select class="input" style="height:30px" data-role-select><option>Admin</option><option selected>Business Analyst</option><option>CX Designer</option><option>Developer</option><option>Viewer</option></select></td>
+              <td><span class="um-chip">Analysis</span> <span class="um-chip off">Design · view</span> <span class="um-chip off">Develop · —</span></td>
+              <td class="muted">12 min ago</td>
+              <td><span class="badge badge-ok"><span class="dot"></span>Active</span></td>
+              <td><button class="icon-btn" title="Reset password" onclick="TX.toast('Reset link sent to Riya','i-mail')"><svg class="i"><use href="#i-key"/></svg></button></td>
+            </tr>
+            <tr data-filter-row data-od-id="mem-devika">
+              <td><div class="row" style="gap:9px"><span class="avatar avatar-sm">DS</span><div><div style="font-weight:540">Devika Sharma</div><div class="hint" style="font-size:11.5px">devika.s@skyline-broadband.com</div></div></div></td>
+              <td><select class="input" style="height:30px" data-role-select><option>Admin</option><option>Business Analyst</option><option selected>CX Designer</option><option>Developer</option><option>Viewer</option></select></td>
+              <td><span class="um-chip off">Analysis · view</span> <span class="um-chip">Design</span> <span class="um-chip off">Develop · —</span></td>
+              <td class="muted">1 h ago</td>
+              <td><span class="badge badge-ok"><span class="dot"></span>Active</span></td>
+              <td><button class="icon-btn" title="Reset password" onclick="TX.toast('Reset link sent to Devika','i-mail')"><svg class="i"><use href="#i-key"/></svg></button></td>
+            </tr>
+            <tr data-filter-row data-od-id="mem-arjun">
+              <td><div class="row" style="gap:9px"><span class="avatar avatar-sm">AS</span><div><div style="font-weight:540">Arjun Shah</div><div class="hint" style="font-size:11.5px">arjun.sh@skyline-broadband.com</div></div></div></td>
+              <td><select class="input" style="height:30px" data-role-select><option>Admin</option><option>Business Analyst</option><option>CX Designer</option><option selected>Developer</option><option>Viewer</option></select></td>
+              <td><span class="um-chip off">Analysis · —</span> <span class="um-chip off">Design · view</span> <span class="um-chip">Develop</span></td>
+              <td class="muted">24 min ago</td>
+              <td><span class="badge badge-ok"><span class="dot"></span>Active</span></td>
+              <td><button class="icon-btn" title="Reset password" onclick="TX.toast('Reset link sent to Arjun','i-mail')"><svg class="i"><use href="#i-key"/></svg></button></td>
+            </tr>
+            <tr data-filter-row data-od-id="mem-karan">
+              <td><div class="row" style="gap:9px"><span class="avatar avatar-sm">KM</span><div><div style="font-weight:540">Karan Mehta</div><div class="hint" style="font-size:11.5px">k.mehhta@partner.skylinebb.com</div></div></div></td>
+              <td><select class="input" style="height:30px" data-role-select><option>Admin</option><option>Business Analyst</option><option>CX Designer</option><option>Developer</option><option selected>Viewer</option></select></td>
+              <td><span class="um-chip off">Analysis · view</span> <span class="um-chip off">Design · view</span> <span class="um-chip off">Develop · view</span></td>
+              <td class="muted">2 days ago</td>
+              <td><span class="badge badge-warn"><span class="dot"></span>Invite pending</span></td>
+              <td><button class="icon-btn" title="Resend invite" onclick="TX.toast('Invite resent to Karan','i-mail')"><svg class="i"><use href="#i-sync"/></svg></button></td>
+            </tr>
+            <tr data-filter-row data-od-id="mem-svc">
+              <td><div class="row" style="gap:9px"><span class="avatar avatar-sm" style="background:var(--muted)">SC</span><div><div style="font-weight:540">svc-transform-bot</div><div class="hint" style="font-size:11.5px">service account · deploy CI</div></div></div></td>
+              <td><select class="input" style="height:30px" data-role-select disabled><option selected>Developer</option></select></td>
+              <td><span class="um-chip off">Develop · deploy only</span></td>
+              <td class="muted">via CI</td>
+              <td><span class="badge"><span class="dot"></span>Service acct</span></td>
+              <td><button class="icon-btn" title="Rotate token" onclick="TX.toast('Token rotation started — old token valid for 24 h','i-key')"><svg class="i"><use href="#i-key"/></svg></button></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="empty" id="members-empty" hidden data-od-id="members-empty">
+          <div style="margin-bottom:8px"><svg class="i i-lg"><use href="#i-filter"/></svg></div>
+          No members match this search.
+        </div>
+        <div class="row" style="padding:10px 16px;justify-content:flex-end"><span class="hint"><span id="members-count">6</span> shown</span></div>
+      </div>
+
+      <div class="card" style="margin-top:16px" data-od-id="matrix-card">
+        <div class="card-h" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <h3>Permission matrix</h3>
+          <div class="pm-legend">
+            <span class="row"><span class="perm perm-f"></span>Full</span>
+            <span class="row"><span class="perm perm-p"></span>Limited</span>
+            <span class="row"><span class="perm perm-n"></span>None</span>
+          </div>
+        </div>
+        <table class="table matrix" style="margin-top:8px" data-od-id="perm-matrix">
+          <thead><tr><th>Capability</th><th>Admin</th><th>Business Analyst</th><th>CX Designer</th><th>Developer</th><th>Viewer</th></tr></thead>
+          <tbody>
+            <tr><td>Upload data &amp; run intent pipeline</td><td><span class="perm perm-f"></span></td><td><span class="perm perm-f"></span></td><td><span class="perm perm-n"></span></td><td><span class="perm perm-n"></span></td><td><span class="perm perm-n"></span></td></tr>
+            <tr><td>Edit / merge intents, curate taxonomy</td><td><span class="perm perm-f"></span></td><td><span class="perm perm-f"></span></td><td><span class="perm perm-p"></span></td><td><span class="perm perm-n"></span></td><td><span class="perm perm-n"></span></td></tr>
+            <tr><td>Approve clusters &amp; hand to Design</td><td><span class="perm perm-f"></span></td><td><span class="perm perm-f"></span></td><td><span class="perm perm-n"></span></td><td><span class="perm perm-n"></span></td><td><span class="perm perm-n"></span></td></tr>
+            <tr><td>Edit process maps &amp; UML diagrams</td><td><span class="perm perm-f"></span></td><td><span class="perm perm-p"></span></td><td><span class="perm perm-f"></span></td><td><span class="perm perm-n"></span></td><td><span class="perm perm-n"></span></td></tr>
+            <tr><td>Approve maps / request changes</td><td><span class="perm perm-f"></span></td><td><span class="perm perm-p"></span></td><td><span class="perm perm-f"></span></td><td><span class="perm perm-n"></span></td><td><span class="perm perm-n"></span></td></tr>
+            <tr><td>Generate agent builds</td><td><span class="perm perm-f"></span></td><td><span class="perm perm-n"></span></td><td><span class="perm perm-p"></span></td><td><span class="perm perm-f"></span></td><td><span class="perm perm-n"></span></td></tr>
+            <tr><td>Deploy to staging / production</td><td><span class="perm perm-f"></span></td><td><span class="perm perm-n"></span></td><td><span class="perm perm-n"></span></td><td><span class="perm perm-p"></span></td><td><span class="perm perm-n"></span></td></tr>
+            <tr><td>Manage connectors &amp; credentials</td><td><span class="perm perm-f"></span></td><td><span class="perm perm-p"></span></td><td><span class="perm perm-n"></span></td><td><span class="perm perm-n"></span></td><td><span class="perm perm-n"></span></td></tr>
+            <tr><td>Invite users &amp; change roles</td><td><span class="perm perm-f"></span></td><td><span class="perm perm-n"></span></td><td><span class="perm perm-n"></span></td><td><span class="perm perm-n"></span></td><td><span class="perm perm-n"></span></td></tr>
+            <tr><td>View audit log</td><td><span class="perm perm-f"></span></td><td><span class="perm perm-p"></span></td><td><span class="perm perm-p"></span></td><td><span class="perm perm-p"></span></td><td><span class="perm perm-p"></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" data-overlay></div>
+
+<div class="dialog" id="dlg-invite" role="dialog" aria-modal="true" data-od-id="invite-dialog">
+  <div class="dialog-h">
+    <h2>Invite member</h2>
+    <p class="hint">They get an email with a sign-in link. Access starts on first sign-in.</p>
+  </div>
+  <div class="dialog-b">
+    <div class="field">
+      <label class="label" for="inv-name">Full name</label>
+      <input class="input" id="inv-name" placeholder="e.g. Sneha Kulkarni">
+    </div>
+    <div class="field">
+      <label class="label" for="inv-email">Work email</label>
+      <input class="input" id="inv-email" type="email" placeholder="name@company.com">
+    </div>
+    <div class="field">
+      <label class="label" for="inv-role">Role</label>
+      <select class="input" id="inv-role">
+        <option>Business Analyst</option><option>CX Designer</option><option>Developer</option><option>Viewer</option><option>Admin</option>
+      </select>
+    </div>
+    <div class="field">
+      <span class="label">Umbrella access</span>
+      <div class="row" style="gap:6px;flex-wrap:wrap" data-chips-multi data-od-id="inv-umbrellas">
+        <button class="chip" aria-pressed="true">Analysis</button>
+        <button class="chip" aria-pressed="false">Design</button>
+        <button class="chip" aria-pressed="false">Develop</button>
+      </div>
+    </div>
+  </div>
+  <div class="dialog-f">
+    <button class="btn" data-close>Cancel</button>
+    <button class="btn btn-primary" id="inv-send" data-od-id="invite-send">Send invite</button>
+  </div>
+</div>
+
+<div class="dialog" id="dlg-role" role="dialog" aria-modal="true" data-od-id="role-dialog">
+  <div class="dialog-h">
+    <h2 id="role-title">New role</h2>
+    <p class="hint">Roles decide which umbrella a teammate can work in and which pipeline actions they can take. Changes are written to the audit log.</p>
+  </div>
+  <div class="dialog-b">
+    <div class="field">
+      <label class="label" for="role-name">Role name</label>
+      <input class="input" id="role-name" placeholder="e.g. QA Reviewer">
+    </div>
+    <div class="field">
+      <label class="label" for="role-desc">Description</label>
+      <input class="input" id="role-desc" placeholder="What this role can do">
+    </div>
+    <div class="field">
+      <span class="label">Umbrella access</span>
+      <div class="row" style="gap:6px;flex-wrap:wrap" data-chips-multi id="role-umbs">
+        <button class="chip" aria-pressed="true">Analysis</button>
+        <button class="chip" aria-pressed="false">Design</button>
+        <button class="chip" aria-pressed="false">Develop</button>
+      </div>
+    </div>
+    <div class="field">
+      <span class="label">Capabilities</span>
+      <div style="display:flex;flex-direction:column;gap:8px;max-height:170px;overflow-y:auto;padding-right:4px">
+        <label class="row" style="gap:8px;font-size:12.5px"><input type="checkbox" checked> Upload data &amp; run intent pipeline</label>
+        <label class="row" style="gap:8px;font-size:12.5px"><input type="checkbox" checked> Edit / merge intents and clusters</label>
+        <label class="row" style="gap:8px;font-size:12.5px"><input type="checkbox"> Edit process maps &amp; UML diagrams</label>
+        <label class="row" style="gap:8px;font-size:12.5px"><input type="checkbox"> Generate agent builds</label>
+        <label class="row" style="gap:8px;font-size:12.5px"><input type="checkbox"> Deploy to staging / production</label>
+        <label class="row" style="gap:8px;font-size:12.5px"><input type="checkbox"> View audit log</label>
+      </div>
+    </div>
+  </div>
+  <div class="dialog-f">
+    <button class="btn" data-close>Cancel</button>
+    <button class="btn btn-primary" id="role-save" data-od-id="role-save">Save role</button>
+  </div>
+</div>
+
+<div class="dialog" id="dlg-confirm" role="dialog" aria-modal="true" data-od-id="confirm-dialog">
+  <div class="dialog-h">
+    <h2 id="cf-title">Confirm</h2>
+    <p class="hint" id="cf-body">—</p>
+  </div>
+  <div class="dialog-f">
+    <button class="btn" data-close>Cancel</button>
+    <button class="btn" id="cf-ok" style="color:var(--danger-fg);border-color:oklch(87% 0.05 27);background:var(--danger-soft)" data-od-id="confirm-ok">Delete</button>
+  </div>
+</div>
+
+<script src="assets/ui.js"></script>
+<script>
+(function(){
+  document.querySelectorAll("[data-role-select]").forEach(function(sel){
+    sel.addEventListener("change", function(){
+      if (!sel.disabled){ TX.toast("Role updated — applies on next sign-in", "i-users"); }
+    });
+  });
+  document.getElementById("inv-send").addEventListener("click", function(){
+    var name = document.getElementById("inv-name").value.trim() || "New member";
+    var email = document.getElementById("inv-email").value.trim() || "—";
+    var role = document.getElementById("inv-role").value;
+    var initials = name.split(" ").map(function(w){ return w[0]; }).join("").slice(0,2).toUpperCase() || "NM";
+    var tr = document.createElement("tr");
+    tr.setAttribute("data-filter-row", "");
+    tr.innerHTML = '<td><div class="row" style="gap:9px"><span class="avatar avatar-sm">' + initials + '</span><div><div style="font-weight:540">' + name + '</div><div class="hint" style="font-size:11.5px">' + email + '</div></div></div></td>' +
+      '<td><select class="input" style="height:30px" disabled><option selected>' + role + '</option></select></td>' +
+      '<td><span class="um-chip off">Umbrella · pending</span></td>' +
+      '<td class="muted">—</td>' +
+      '<td><span class="badge badge-warn"><span class="dot"></span>Invite pending</span></td>' +
+      '<td><button class="icon-btn" title="Resend invite" onclick="TX.toast(\'Invite resent\',\'i-mail\')"><svg class="i"><use href="#i-sync"/></svg></button></td>';
+    document.getElementById("members-body").appendChild(tr);
+    attachMemberActions(tr);
+    TX.closeLayers();
+    TX.toast("Invite sent to " + email, "i-mail");
+    updateMemberCount();
+  });
+
+  /* ---------- item 11 · delete a user ---------- */
+  function memberName(tr){
+    var nm = tr.querySelector("td div div div");
+    return nm ? nm.textContent.trim() : "this member";
+  }
+  function askConfirm(title, body, okLabel, onOk){
+    document.getElementById("cf-title").textContent = title;
+    document.getElementById("cf-body").textContent = body;
+    document.getElementById("cf-ok").textContent = okLabel;
+    TX.openLayer("dlg-confirm");
+    var ok = document.getElementById("cf-ok");
+    var fresh = ok.cloneNode(true);
+    ok.replaceWith(fresh);
+    fresh.addEventListener("click", function(){ TX.closeLayers(); onOk(); });
+  }
+  function attachMemberActions(tr){
+    if (tr.querySelector("[data-del-member]")) return;
+    var td = tr.cells[tr.cells.length - 1];
+    /* wrap the actions in a flex row — never turn the <td> itself into a flex box,
+       that drops its table-cell role and breaks column alignment */
+    var wrap = td.querySelector(".row");
+    if (!wrap) {
+      wrap = document.createElement("div");
+      wrap.className = "row";
+      wrap.style.gap = "2px";
+      while (td.firstChild) wrap.appendChild(td.firstChild);
+      td.appendChild(wrap);
+    }
+    var service = !!tr.querySelector('select[disabled]');
+    var b = document.createElement("button");
+    b.className = "icon-btn";
+    b.setAttribute("data-del-member", "");
+    b.setAttribute("aria-label", "Delete member");
+    b.innerHTML = '<svg class="i"><use href="#i-trash"/></svg>';
+    b.addEventListener("click", function(e){
+      e.stopPropagation();
+      var nm = memberName(tr);
+      if (service){
+        TX.toast("Service accounts are revoked from Connectors, not deleted here", "i-info");
+        return;
+      }
+      askConfirm("Delete " + nm + "?", "They lose access immediately. Existing work they own stays in the workspace and is reassigned to the workspace admin. This is logged in the audit log.", "Delete member", function(){
+        tr.remove();
+        updateMemberCount();
+        TX.toast(nm + " removed — access revoked", "i-trash");
+      });
+    });
+    wrap.appendChild(b);
+  }
+  function updateMemberCount(){
+    var n = document.querySelectorAll("#members-body [data-filter-row]").length;
+    var chip = document.querySelector('#members-card .card-h h3 .muted');
+    if (chip) chip.textContent = "· " + n;
+    var shown = document.getElementById("members-count");
+    if (shown) shown.textContent = n;
+  }
+  document.querySelectorAll("#members-body tr").forEach(attachMemberActions);
+
+  /* ---------- item 12 · add / edit / delete roles ---------- */
+  document.querySelectorAll(".role-card").forEach(function(card){
+    var id = card.getAttribute("data-od-id");
+    var acts = document.createElement("div");
+    acts.className = "role-acts";
+    acts.style.marginTop = "auto";
+    acts.innerHTML = '<button class="icon-btn" data-role-edit aria-label="Edit role"><svg class="i"><use href="#i-edit"/></svg></button>' +
+      (id === "role-admin" ? '' : '<button class="icon-btn" data-role-del aria-label="Delete role"><svg class="i"><use href="#i-trash"/></svg></button>');
+    card.appendChild(acts);
+    acts.querySelector("[data-role-edit]").addEventListener("click", function(e){
+      e.stopPropagation();
+      openRole(card.querySelector("strong").textContent.trim(), card.querySelector(".muted").textContent.trim());
+    });
+    var del = acts.querySelector("[data-role-del]");
+    if (del) del.addEventListener("click", function(e){
+      e.stopPropagation();
+      var nm = card.querySelector("strong").textContent.trim();
+      askConfirm("Delete the " + nm + " role?", "Members holding this role fall back to Viewer. Connectors, builds and maps created by them are unaffected.", "Delete role", function(){
+        card.remove();
+        TX.toast(nm + " role deleted — holders moved to Viewer", "i-trash");
+      });
+    });
+  });
+  var editingRoleCard = null;
+  function openRole(name, desc){
+    editingRoleCard = name && name !== "New role" ? name : null;
+    document.getElementById("role-title").textContent = editingRoleCard ? "Edit " + editingRoleCard : "New role";
+    document.getElementById("role-name").value = editingRoleCard ? editingRoleCard : "";
+    document.getElementById("role-desc").value = editingRoleCard ? desc : "";
+    TX.openLayer("dlg-role");
+  }
+  document.getElementById("new-role-btn").addEventListener("click", function(){ openRole("", ""); });
+  document.getElementById("role-save").addEventListener("click", function(){
+    var name = document.getElementById("role-name").value.trim() || "Untitled role";
+    TX.closeLayers();
+    TX.toast(editingRoleCard ? 'Role "' + name + '" updated' : 'Role "' + name + '" created', "i-users");
+  });
+})();
+</script>
+</body>
+</html>

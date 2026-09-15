@@ -1,0 +1,26 @@
+# dependencies & builds
+node_modules/
+dist/
+.next/
+out/
+build/
+*.tsbuildinfo
+
+# env & secrets
+.env
+.env.*
+!.env.example
+
+# editor / OS
+.DS_Store
+*.local
+.idea/
+.vscode/
+
+# Open Design tooling (not app source)
+.file-versions/
+.od-skills/
+*.artifact.json
+
+# leftover reference dumps (not used by the apps)
+WhatsApp-Image-*.jpeg

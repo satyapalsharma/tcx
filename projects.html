@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Projects — Transform.cx</title>
+<link rel="stylesheet" href="assets/tx.css">
+<style>
+  .proj-row{ cursor:pointer; }
+  .proj-row .go{ opacity:0; transition:opacity .1s; color:var(--muted); }
+  .proj-row:hover .go{ opacity:1; }
+  .umb-card{ padding:18px; display:flex; flex-direction:column; gap:8px; transition:border-color .12s; }
+  .umb-card:hover{ border-color:oklch(85% 0.008 250); }
+  .umb-card .who{ font-size:12px; color:var(--muted); }
+  .proj-stage{ transform:scale(.92); transform-origin:left center; }
+</style>
+</head>
+<body>
+<div class="app" data-od-id="app-shell">
+
+  <aside class="side" data-od-id="sidebar">
+    <div class="side-brand">
+      <img class="exl-logo" src="EXL_Service_logo.svg.webp" alt="EXL">
+      <span class="brand-div" aria-hidden="true"></span>
+      <div>
+        <div class="brand-prod">Transform.cx</div>
+        <div class="caps" style="margin-top:0">Skyline workspace</div>
+      </div>
+    </div>
+    <nav class="nav" data-od-id="side-nav">
+      <a class="nlink active" href="projects.html"><svg class="i"><use href="#i-grid"/></svg>Projects</a>
+      <div class="sec">Workspace</div>
+      <a class="nlink" href="jobs.html"><svg class="i"><use href="#i-clock"/></svg>Jobs</a>
+      <a class="nlink" href="dashboard.html"><svg class="i"><use href="#i-chart"/></svg>Dashboard</a>
+      <div class="sec">Pipeline · Skyline Broadband</div>
+      <a class="nlink" href="analysis.html"><svg class="i"><use href="#i-chart"/></svg>Analysis<span class="tail">68%</span></a>
+      <a class="nlink" href="design.html"><svg class="i"><use href="#i-flow"/></svg>Design<span class="tail">Review</span></a>
+      <a class="nlink" href="develop.html"><svg class="i"><use href="#i-code"/></svg>Develop<span class="tail">Ready</span></a>
+      <div class="sec">Data</div>
+      <a class="nlink" href="connectors.html"><svg class="i"><use href="#i-plug"/></svg>Connectors<span class="tail">5</span></a>
+      <div class="sec">Admin</div>
+      <a class="nlink" href="settings.html"><svg class="i"><use href="#i-gear"/></svg>Settings</a>
+      <a class="nlink" href="rbac.html"><svg class="i"><use href="#i-users"/></svg>Team &amp; roles</a>
+      <a class="nlink" href="audit-log.html"><svg class="i"><use href="#i-scroll"/></svg>Audit log</a>
+    </nav>
+    <div class="side-foot">
+      <div class="listitem" style="border:0;padding:4px 8px">
+        <span class="avatar avatar-sm">PN</span>
+        <div style="min-width:0;flex:1">
+          <div style="font-size:12.5px;font-weight:560">Priya Nair</div>
+          <div class="hint" style="font-size:11px">Admin</div>
+        </div>
+        <a class="icon-btn" href="login.html" title="Sign out"><svg class="i"><use href="#i-out"/></svg></a>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar" data-od-id="topbar">
+      <div class="crumbs">
+        <span>Skyline workspace</span><span class="sep">/</span><span class="here">Projects</span>
+      </div>
+      <div class="spacer"></div>
+      <div class="row" style="gap:8px">
+        <span class="badge badge-run badge-warn"><span class="dot"></span>RUN-4821 · clustering 68%</span>
+        <button class="icon-btn" title="Notifications" onclick="TX.toast('No new notifications','i-bell')"><svg class="i"><use href="#i-bell"/></svg></button>
+      </div>
+    </header>
+
+    <div class="page" data-od-id="projects-page">
+      <div class="page-h">
+        <div style="flex:1">
+          <h1 data-od-id="page-title">Projects</h1>
+          <p class="sub">Each project is one CX transformation. Teams pick up the pipeline at the stage they own — Analysis, Design, or Develop — and build on approved work from the last stage.</p>
+        </div>
+        <button class="btn btn-primary" data-open="dlg-new-project" data-od-id="new-project-btn"><svg class="i"><use href="#i-plus"/></svg>New project</button>
+      </div>
+
+      <div class="grid-4" style="margin-bottom:22px" data-od-id="kpi-row">
+        <div class="card kpi" data-od-id="kpi-projects"><div class="k">Active projects</div><div class="v">3</div><div class="d">2 running pipelines</div></div>
+        <div class="card kpi" data-od-id="kpi-records"><div class="k">Records processed</div><div class="v">24.7k</div><div class="d">calls · emails · CRM notes</div></div>
+        <div class="card kpi" data-od-id="kpi-intents"><div class="k">Canonical intents</div><div class="v">286</div><div class="d">across 6 L1 clusters</div></div>
+        <div class="card kpi" data-od-id="kpi-builds"><div class="k">Agent builds</div><div class="v">9</div><div class="d">ADK · Bedrock · LangGraph</div></div>
+      </div>
+
+      <div class="grid-3" style="margin-bottom:26px" data-od-id="umbrella-strip">
+        <a class="card umb-card" href="analysis.html" data-od-id="umb-analysis">
+          <div class="row" style="gap:8px"><svg class="i i-lg"><use href="#i-chart"/></svg><strong style="font-size:14px;font-weight:620">Analysis</strong><span class="badge badge-ok" style="margin-left:auto"><span class="dot"></span>4 clusters approved</span></div>
+          <p class="who">Upload interactions → extract intents, resolutions and pain points → shape L1 / L2 / L3 clusters. Owned by Business Analysts.</p>
+          <span class="row muted" style="font-size:12.5px;gap:6px">Open workspace<svg class="i"><use href="#i-arrowr"/></svg></span>
+        </a>
+        <a class="card umb-card" href="design.html" data-od-id="umb-design">
+          <div class="row" style="gap:8px"><svg class="i i-lg"><use href="#i-flow"/></svg><strong style="font-size:14px;font-weight:620">Design</strong><span class="badge badge-acc" style="margin-left:auto"><span class="dot"></span>2 maps in review</span></div>
+          <p class="who">Verify and edit process maps generated from approved clusters, then trace information flow in UML sequence diagrams. Owned by CX Designers.</p>
+          <span class="row muted" style="font-size:12.5px;gap:6px">Open workspace<svg class="i"><use href="#i-arrowr"/></svg></span>
+        </a>
+        <a class="card umb-card" href="develop.html" data-od-id="umb-develop">
+          <div class="row" style="gap:8px"><svg class="i i-lg"><use href="#i-code"/></svg><strong style="font-size:14px;font-weight:620">Develop</strong><span class="badge" style="margin-left:auto"><span class="dot"></span>Next handoff</span></div>
+          <p class="who">Generate production agent code — Google ADK, CX Agent Studio, Amazon Bedrock, LangGraph — from approved maps. Owned by Developers.</p>
+          <span class="row muted" style="font-size:12.5px;gap:6px">Open workspace<svg class="i"><use href="#i-arrowr"/></svg></span>
+        </a>
+      </div>
+
+      <div class="card" data-od-id="project-list">
+        <div class="card-h" style="justify-content:space-between">
+          <h3>All projects</h3>
+          <div class="row" style="gap:8px">
+            <div class="field" style="position:relative">
+              <svg class="i" style="position:absolute;left:9px;top:9px;color:var(--muted)"><use href="#i-search"/></svg>
+              <input class="input" style="height:30px;padding-left:30px;width:210px" placeholder="Search projects" aria-label="Search projects"
+                     data-filter-target="#proj-table" data-filter-count="#proj-count" data-filter-empty="#proj-empty">
+            </div>
+            <span class="hint"><span id="proj-count">3</span> of 3</span>
+          </div>
+        </div>
+        <table class="table" id="proj-table" style="margin-top:10px">
+          <thead>
+            <tr><th>Project</th><th>Pipeline stage</th><th class="num">Records</th><th class="num">Intents</th><th>Owner</th><th>Last activity</th><th>Status</th><th style="width:36px"></th></tr>
+          </thead>
+          <tbody>
+            <tr class="proj-row" data-filter-row data-href="analysis.html" data-od-id="proj-row-skyline">
+              <td>
+                <div style="font-weight:580">Skyline Broadband — Winter CX Automation</div>
+                <div class="hint">Genesys + Zendesk · quarterly intent refresh</div>
+              </td>
+              <td>
+                <div class="stage-flow proj-stage">
+                  <span class="snode live"><span class="glyph"><span class="mini"></span></span>Analysis</span>
+                  <span class="slink"></span>
+                  <span class="snode done"><span class="glyph"><svg class="i" style="width:9px;height:9px"><use href="#i-check"/></svg></span>Design</span>
+                  <span class="slink"></span>
+                  <span class="snode"><span class="glyph"></span>Develop</span>
+                </div>
+              </td>
+              <td class="num">18,442</td>
+              <td class="num">286</td>
+              <td><div class="row" style="gap:7px"><span class="avatar avatar-sm">PN</span><span>Priya N.</span></div></td>
+              <td class="muted">12 min ago</td>
+              <td><span class="badge badge-warn badge-run"><span class="dot"></span>RUN-4821 68%</span></td>
+              <td><svg class="i go"><use href="#i-chevr"/></svg></td>
+            </tr>
+            <tr class="proj-row" data-filter-row data-href="analysis.html" data-od-id="proj-row-netops">
+              <td>
+                <div style="font-weight:580">Network Ops Copilot — outage triage</div>
+                <div class="hint">Analysis only · NICE CXone calls · pilot scope</div>
+              </td>
+              <td>
+                <div class="stage-flow proj-stage">
+                  <span class="snode live"><span class="glyph"><span class="mini"></span></span>Analysis</span>
+                  <span class="slink"></span><span class="snode"><span class="glyph"></span>—</span>
+                  <span class="slink"></span><span class="snode"><span class="glyph"></span>—</span>
+                </div>
+              </td>
+              <td class="num">6,211</td>
+              <td class="num">118</td>
+              <td><div class="row" style="gap:7px"><span class="avatar avatar-sm">RM</span><span>Riya M.</span></div></td>
+              <td class="muted">1 h ago</td>
+              <td><span class="badge badge-acc"><span class="dot"></span>Intents ready</span></td>
+              <td><svg class="i go"><use href="#i-chevr"/></svg></td>
+            </tr>
+            <tr class="proj-row" data-filter-row data-href="design.html" data-od-id="proj-row-playbooks">
+              <td>
+                <div style="font-weight:580">Escalation Playbooks refresh</div>
+                <div class="hint">Design only · imported maps (CSV) · maintained by CX team</div>
+              </td>
+              <td>
+                <div class="stage-flow proj-stage">
+                  <span class="snode"><span class="glyph"></span>—</span><span class="slink"></span>
+                  <span class="snode done"><span class="glyph"><svg class="i" style="width:9px;height:9px"><use href="#i-check"/></svg></span>Design</span>
+                  <span class="slink"></span><span class="snode"><span class="glyph"></span>—</span>
+                </div>
+              </td>
+              <td class="num muted">—</td>
+              <td class="num muted">—</td>
+              <td><div class="row" style="gap:7px"><span class="avatar avatar-sm">DS</span><span>Devika S.</span></div></td>
+              <td class="muted">3 days ago</td>
+              <td><span class="badge badge-ok"><span class="dot"></span>5 maps approved</span></td>
+              <td><svg class="i go"><use href="#i-chevr"/></svg></td>
+            </tr>
+            </tbody>
+          </table>
+          <div class="empty" id="proj-empty" hidden data-od-id="proj-empty">
+            <div style="margin-bottom:8px"><svg class="i i-lg"><use href="#i-filter"/></svg></div>
+            No projects match this search.
+          </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" data-overlay></div>
+<div class="dialog" id="dlg-new-project" role="dialog" aria-modal="true" aria-labelledby="np-title" data-od-id="new-project-dialog">
+  <div class="dialog-h">
+    <h2 id="np-title">New project</h2>
+    <p class="hint">Projects hold one customer's pipeline — you can run the full flow or start at any stage.</p>
+  </div>
+  <div class="dialog-b">
+    <div class="field">
+      <label class="label" for="np-name">Project name</label>
+      <input class="input" id="np-name" placeholder="e.g. Retention Desk — Q3 automation">
+    </div>
+    <div class="field">
+      <label class="label" for="np-client">Client <span class="muted" style="font-weight:460">· required for cost tagging</span></label>
+      <div class="row" style="gap:8px">
+        <select class="input" id="np-client" data-od-id="np-client">
+          <option>Skyline Broadband</option>
+          <option>Northwind Retail</option>
+          <option>Helios Health</option>
+          <option value="__new__">+ Add new client…</option>
+        </select>
+        <a class="btn btn-sm" href="settings.html" title="Manage clients"><svg class="i"><use href="#i-gear"/></svg>Manage</a>
+      </div>
+      <span class="hint">Every job run under this project is tagged to this client so cost reporting stays accurate.</span>
+    </div>
+    <div class="field">
+      <span class="label">Where does this team start?</span>
+      <div class="row" style="gap:8px;flex-wrap:wrap" data-chips data-od-id="np-start-chips">
+        <button class="chip" aria-pressed="true" data-val="full">Full pipeline</button>
+        <button class="chip" aria-pressed="false" data-val="analysis">Analysis only</button>
+        <button class="chip" aria-pressed="false" data-val="design">Design only</button>
+        <button class="chip" aria-pressed="false" data-val="develop">Develop only</button>
+      </div>
+    </div>
+    <div class="field">
+      <label class="label" for="np-source">First data source</label>
+      <select class="input" id="np-source">
+        <option>Genesys Cloud — call recordings</option>
+        <option>Zendesk — conversations export</option>
+        <option>Amazon S3 — transcripts bucket</option>
+        <option>Google Cloud Storage — bucket prefix</option>
+        <option>CSV / manual upload</option>
+      </select>
+    </div>
+    <div class="row" style="justify-content:space-between;border:1px solid var(--border);border-radius:var(--r-md);padding:11px 12px;background:var(--surface-inset)">
+      <div><div class="label">Express mode</div><div class="hint">Auto-runs intent extraction → clustering → process map → UML with no manual review gates.</div></div>
+      <span class="switch" role="switch" aria-checked="false" id="np-express" data-od-id="np-express"></span>
+    </div>
+  </div>
+  <div class="dialog-f">
+    <button class="btn" data-close>Cancel</button>
+    <button class="btn btn-primary" id="np-create" data-od-id="np-create-btn">Create project</button>
+  </div>
+</div>
+
+<script src="assets/ui.js"></script>
+<script>
+  document.querySelectorAll(".proj-row").forEach(function (r) {
+    r.addEventListener("click", function () { location.href = r.getAttribute("data-href"); });
+  });
+  var clientSel = document.getElementById("np-client");
+  clientSel.addEventListener("change", function () {
+    if (clientSel.value === "__new__") {
+      clientSel.value = clientSel.options[0].value;
+      location.href = "settings.html#clients";
+    }
+  });
+  document.getElementById("np-create").addEventListener("click", function () {
+    var name = document.getElementById("np-name").value.trim() || "Untitled project";
+    var client = clientSel.value === "__new__" ? clientSel.options[0].text : clientSel.options[clientSel.selectedIndex].text;
+    var express = document.getElementById("np-express").getAttribute("aria-checked") === "true";
+    TX.closeLayers();
+    TX.toast('"' + name + '" created · client ' + client + (express ? " · express mode on" : ""), "i-plus");
+  });
+</script>
+</body>
+</html>

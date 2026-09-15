@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Analysis — Skyline Broadband · Transform.cx</title>
+<link rel="stylesheet" href="assets/tx.css">
+<style>
+  .ua-grid{ display:grid; grid-template-columns:minmax(0,1fr) 330px; gap:16px; align-items:start; }
+  .rag-row{ display:flex; gap:10px; align-items:flex-start; padding:12px 0; border-bottom:1px solid var(--border); }
+  .rag-row:last-of-type{ border-bottom:0; }
+  .quote{ border-left:2px solid var(--border); padding:2px 0 2px 12px; color:var(--muted); font-size:12.5px; font-style:italic; }
+  .rv-card{ padding:14px 16px; border-bottom:1px solid var(--border); }
+  .rv-card:last-child{ border-bottom:0; }
+  .rv-card.resolved{ opacity:.55; }
+  .drop{ border:1.5px dashed oklch(82% 0.02 250); border-radius:10px; padding:28px 16px; text-align:center; color:var(--muted); transition:all .15s; }
+  .drop.over{ border-color:var(--accent-strong); background:var(--accent-soft); color:var(--fg); }
+  .src-row{ display:flex; align-items:center; gap:10px; padding:9px 0; }
+  .src-row + .src-row{ border-top:1px solid var(--border); }
+  .tr-line{ display:grid; grid-template-columns:62px 1fr; gap:10px; padding:7px 8px; border-radius:6px; font-size:12.5px; line-height:1.5; }
+  .tr-line:hover{ background:var(--surface-hover); }
+  .tr-line .sp{ font-size:10.5px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); padding-top:2px; }
+  .tr-line.cust .sp{ color:var(--accent-strong); }
+  .tr-line.hit{ background:var(--warn-soft); box-shadow:inset 2px 0 0 var(--warn); }
+  .tr-tabs{ display:flex; gap:6px; flex-wrap:wrap; }
+  .cl-map-wrap{ padding:12px 14px 16px; overflow-x:auto; }
+  .cluster-map{ min-width:660px; }
+</style>
+</head>
+<body>
+<div class="app" data-od-id="app-shell">
+
+  <aside class="side" data-od-id="sidebar">
+    <div class="side-brand">
+      <img class="exl-logo" src="EXL_Service_logo.svg.webp" alt="EXL">
+      <span class="brand-div" aria-hidden="true"></span>
+      <div>
+        <div class="brand-prod">Transform.cx</div>
+        <div class="caps">Skyline workspace</div>
+      </div>
+    </div>
+    <nav class="nav" data-od-id="side-nav">
+      <a class="nlink" href="projects.html"><svg class="i"><use href="#i-grid"/></svg>Projects</a>
+      <div class="sec">Workspace</div>
+      <a class="nlink" href="jobs.html"><svg class="i"><use href="#i-clock"/></svg>Jobs</a>
+      <a class="nlink" href="dashboard.html"><svg class="i"><use href="#i-chart"/></svg>Dashboard</a>
+      <div class="sec">Pipeline · Skyline Broadband</div>
+      <a class="nlink active" href="analysis.html"><svg class="i"><use href="#i-chart"/></svg>Analysis<span class="tail">68%</span></a>
+      <a class="nlink" href="design.html"><svg class="i"><use href="#i-flow"/></svg>Design<span class="tail">Review</span></a>
+      <a class="nlink" href="develop.html"><svg class="i"><use href="#i-code"/></svg>Develop<span class="tail">Ready</span></a>
+      <div class="sec">Data</div>
+      <a class="nlink" href="connectors.html"><svg class="i"><use href="#i-plug"/></svg>Connectors<span class="tail">5</span></a>
+      <div class="sec">Admin</div>
+      <a class="nlink" href="settings.html"><svg class="i"><use href="#i-gear"/></svg>Settings</a>
+      <a class="nlink" href="rbac.html"><svg class="i"><use href="#i-users"/></svg>Team &amp; roles</a>
+      <a class="nlink" href="audit-log.html"><svg class="i"><use href="#i-scroll"/></svg>Audit log</a>
+    </nav>
+    <div class="side-foot">
+      <div class="listitem" style="border:0;padding:4px 8px">
+        <span class="avatar avatar-sm">RM</span>
+        <div style="min-width:0;flex:1"><div style="font-size:12.5px;font-weight:560">Riya Menon</div><div class="hint" style="font-size:11px">Business Analyst</div></div>
+        <a class="icon-btn" href="login.html" title="Sign out"><svg class="i"><use href="#i-out"/></svg></a>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar" data-od-id="topbar">
+      <div class="crumbs" data-od-id="crumbs">
+        <span>Skyline workspace</span><span class="sep">/</span>
+        <select aria-label="Switch project" id="proj-select">
+          <option>Skyline Broadband — Winter CX Automation</option>
+          <option>Network Ops Copilot — outage triage</option>
+        </select>
+        <span class="sep">/</span><span class="here">Analysis</span>
+      </div>
+      <div class="spacer"></div>
+      <span class="badge badge-run badge-warn"><span class="dot"></span>RUN-4821 · 68% · ETA 14 min</span>
+      <button class="icon-btn" title="Notifications" onclick="TX.toast('No new notifications','i-bell')"><svg class="i"><use href="#i-bell"/></svg></button>
+    </header>
+
+    <div class="page" data-od-id="analysis-page">
+      <div class="page-h">
+        <div style="flex:1">
+          <h1 data-od-id="page-title">Analysis</h1>
+          <p class="sub">Customer interactions flow in from connectors, intents get extracted, then clustered into L1 → L2 → L3. Approve clusters to unblock the Design team.</p>
+        </div>
+        <button class="btn" data-open="dlg-upload" data-od-id="upload-btn"><svg class="i"><use href="#i-upload"/></svg>Upload data</button>
+        <button class="btn btn-primary" data-open="dlg-run" data-od-id="run-btn"><svg class="i"><use href="#i-play"/></svg>Run pipeline</button>
+      </div>
+
+      <div class="card card-b" style="margin-bottom:18px;padding:14px 16px 12px" data-od-id="stage-strip">
+        <div class="stage-flow" style="justify-content:space-between">
+          <span class="snode done"><span class="glyph"><svg class="i" style="width:10px;height:10px"><use href="#i-check"/></svg></span>Upload &amp; connect</span>
+          <span class="slink" style="flex:1"></span>
+          <span class="snode done"><span class="glyph"><svg class="i" style="width:10px;height:10px"><use href="#i-check"/></svg></span>Intent extraction</span>
+          <span class="slink" style="flex:1"></span>
+          <span class="snode live"><span class="glyph"><span class="mini"></span></span>Clustering</span>
+          <span class="slink" style="flex:1"></span>
+          <span class="snode"><span class="glyph"></span>Review &amp; approve</span>
+        </div>
+      </div>
+
+      <div class="grid-4" style="margin-bottom:18px" data-od-id="kpi-row">
+        <div class="card kpi" data-od-id="kpi-records"><div class="k">Records in dataset</div><div class="v">18,442</div><div class="d">3 sources · updated 12 min ago</div></div>
+        <div class="card kpi" data-od-id="kpi-intents"><div class="k">Canonical intents</div><div class="v">286</div><div class="d">3,214 raw → deduped</div></div>
+        <div class="card kpi" data-od-id="kpi-coverage"><div class="k">Cluster coverage</div><div class="v">94.6%</div><div class="d">of volume assigned to a cluster</div></div>
+        <div class="card kpi" data-od-id="kpi-escalation"><div class="k">Escalation-flagged</div><div class="v">1,244</div><div class="d">6.7% of all interactions</div></div>
+      </div>
+
+      <div class="ua-grid">
+        <div class="card" data-tab-scope data-od-id="work-area">
+          <div class="tabs" data-tabs style="padding:0 8px">
+            <button role="tab" aria-selected="true" data-tab="intents" data-od-id="tab-intents">Intents <span class="count">286</span></button>
+            <button role="tab" aria-selected="false" data-tab="clusters" data-od-id="tab-clusters">Clusters <span class="count">6 L1</span></button>
+            <button role="tab" aria-selected="false" data-tab="review" data-od-id="tab-review">Review queue <span class="count">3</span></button>
+          </div>
+
+          <div data-panel="intents" data-od-id="panel-intents">
+            <div class="row" style="gap:8px;padding:12px 16px 0;flex-wrap:wrap">
+              <div style="position:relative;flex:1;min-width:180px">
+                <svg class="i" style="position:absolute;left:9px;top:9px;color:var(--muted)"><use href="#i-search"/></svg>
+                <input class="input" style="height:30px;padding-left:30px" placeholder="Search intents" aria-label="Search intents" data-filter-target="#intent-table" data-filter-count="#intent-count" data-filter-empty="#intent-empty">
+              </div>
+              <select class="input" style="height:30px;width:150px">
+                <option>All confidence</option><option>High (≥ 0.9)</option><option>Medium</option><option>Low (&lt; 0.7)</option>
+              </select>
+              <span class="hint"><span id="intent-count">8</span> shown · click a row for transcripts</span>
+            </div>
+            <table class="table" id="intent-table" style="margin-top:8px">
+              <thead><tr><th>Intent</th><th>L1 cluster</th><th class="num">Volume</th><th class="num">Share</th><th class="num">Conf.</th><th class="num">Escalation</th><th>Status</th><th style="width:40px"></th></tr></thead>
+              <tbody>
+                <tr data-filter-row><td style="font-weight:520">Charged for a cancelled service line</td><td class="muted">Billing &amp; Payments</td><td class="num">1,842</td><td class="num">10.0%</td><td class="num">0.96</td><td class="num">41%</td><td><span class="badge badge-ok"><span class="dot"></span>Canonical</span></td></tr>
+                <tr data-filter-row><td style="font-weight:520">Invoice higher than agreed promo price</td><td class="muted">Billing &amp; Payments</td><td class="num">1,631</td><td class="num">8.8%</td><td class="num">0.94</td><td class="num">33%</td><td><span class="badge badge-ok"><span class="dot"></span>Canonical</span></td></tr>
+                <tr data-filter-row><td style="font-weight:520">Internet down — area outage (NOIA)</td><td class="muted">Connectivity &amp; Outages</td><td class="num">1,530</td><td class="num">8.3%</td><td class="num">0.97</td><td class="num">22%</td><td><span class="badge badge-ok"><span class="dot"></span>Canonical</span></td></tr>
+                <tr data-filter-row><td style="font-weight:520">Slow speeds at peak hours</td><td class="muted">Connectivity &amp; Outages</td><td class="num">1,118</td><td class="num">6.1%</td><td class="num">0.92</td><td class="num">18%</td><td><span class="badge badge-acc"><span class="dot"></span>New · wk26</span></td></tr>
+                <tr data-filter-row><td style="font-weight:520">Book new fiber installation slot</td><td class="muted">New Installation</td><td class="num">1,043</td><td class="num">5.7%</td><td class="num">0.95</td><td class="num">9%</td><td><span class="badge badge-ok"><span class="dot"></span>Canonical</span></td></tr>
+                <tr data-filter-row><td style="font-weight:520">Port number out to another provider</td><td class="muted">Cancellation &amp; Port-out</td><td class="num">976</td><td class="num">5.3%</td><td class="num">0.93</td><td class="num">57%</td><td><span class="badge badge-acc"><span class="dot"></span>New · wk26</span></td></tr>
+                <tr data-filter-row><td style="font-weight:520">Auto-pay failed but card is valid</td><td class="muted">Billing &amp; Payments</td><td class="num">892</td><td class="num">4.8%</td><td class="num">0.91</td><td class="num">26%</td><td><span class="badge badge-ok"><span class="dot"></span>Canonical</span></td></tr>
+                <tr data-filter-row><td style="font-weight:520">Router returns after plan upgrade</td><td class="muted">Plan Changes</td><td class="num">640</td><td class="num">3.5%</td><td class="num">0.89</td><td class="num">12%</td><td><span class="badge badge-ok"><span class="dot"></span>Canonical</span></td></tr>
+              </tbody>
+            </table>
+            <div class="empty" id="intent-empty" hidden data-od-id="intent-empty">
+              <div style="margin-bottom:8px"><svg class="i i-lg"><use href="#i-filter"/></svg></div>
+              No intents match this search.
+            </div>
+          </div>
+
+          <div data-panel="clusters" hidden data-od-id="panel-clusters">
+            <div class="row toolbar" style="padding:14px 16px 8px;gap:8px">
+              <div class="hint" style="flex:1;min-width:180px">L1 → L2 → L3. Open a cluster to inspect breakdowns, rename or merge it, then approve the handoff to Design.</div>
+              <div class="row" style="gap:6px" data-chips data-swap="cview" data-od-id="cluster-view-toggle">
+                <button class="chip" aria-pressed="true" data-val="tree">Tree</button>
+                <button class="chip" aria-pressed="false" data-val="map">Cluster map</button>
+              </div>
+              <button class="btn btn-sm" id="new-cluster" data-od-id="new-cluster-btn"><svg class="i"><use href="#i-plus"/></svg>New cluster</button>
+              <button class="btn btn-sm" id="approve-design" data-od-id="approve-clusters-btn"><svg class="i"><use href="#i-check"/></svg>Approve clusters &amp; send to Design</button>
+            </div>
+            <div class="rag-row" style="border:1px solid var(--border);background:var(--surface-inset);border-radius:8px;padding:10px 12px;gap:9px;margin:0 16px 6px" data-od-id="cluster-threshold">
+              <svg class="i" style="color:var(--muted)"><use href="#i-info"/></svg>
+              <div style="font-size:12px;flex:1;min-width:200px"><strong>Auto-clustering runs at ≥50 canonical intents.</strong> This run extracted 286 → clustering ran and produced 6 L1 clusters. Projects below the threshold (e.g. Network Ops Copilot · 41 intents) <strong>skip clustering</strong> and go straight to review with a flat intent list.</div>
+              <span class="badge badge-ok"><span class="dot"></span>Eligible · 286</span>
+            </div>
+            <div data-swap-panel="cview-tree" style="padding:10px 12px 14px">
+              <div class="tree-item" data-od-id="cluster-billing">
+                <div class="trow" aria-expanded="true">
+                  <svg class="i chev" style="transform:rotate(180deg)"><use href="#i-chev"/></svg>
+                  <strong style="font-size:13px">Billing &amp; Payments</strong>
+                  <span class="badge badge-ok" style="margin-left:2px"><span class="dot"></span>Approved</span>
+                  <span style="flex:1"></span>
+                  <span class="muted tabular" style="font-size:12px">7,045 · 38.2%</span>
+                  <div class="meter" style="width:110px"><div class="track"><div class="fill fill-ok" style="width:38.2%"></div></div></div>
+                </div>
+                <div class="tree-kids open">
+                  <div class="tree-item" style="background:var(--surface-inset)">
+                    <div class="trow" aria-expanded="true">
+                      <svg class="i chev" style="transform:rotate(180deg)"><use href="#i-chev"/></svg>
+                      <span>Invoice Disputes</span>
+                      <span style="flex:1"></span><span class="muted tabular" style="font-size:12px">2,847</span>
+                    </div>
+                    <div class="tree-kids open">
+                      <div class="rag-row" style="border-bottom:0"><svg class="i" style="margin:2px;color:var(--muted)"><use href="#i-dot"/></svg><div>Charged for cancelled service line<br><span class="hint">1,842 calls · conf 0.96</span></div></div>
+                      <div class="rag-row" style="border-bottom:0"><svg class="i" style="margin:2px;color:var(--muted)"><use href="#i-dot"/></svg><div>Promotional credit missing<br><span class="hint">641 calls · conf 0.92</span></div></div>
+                      <div class="rag-row" style="border-bottom:0"><svg class="i" style="margin:2px;color:var(--muted)"><use href="#i-dot"/></svg><div>Prorated amount mismatch<br><span class="hint">364 calls · conf 0.88</span></div></div>
+                    </div>
+                  </div>
+                  <div class="tree-item" style="background:var(--surface-inset)">
+                    <div class="trow" aria-expanded="false"><svg class="i chev"><use href="#i-chev"/></svg><span>Late fees &amp; credits</span><span style="flex:1"></span><span class="muted tabular" style="font-size:12px">1,206</span></div>
+                    <div class="tree-kids"></div>
+                  </div>
+                  <div class="tree-item" style="background:var(--surface-inset)">
+                    <div class="trow" aria-expanded="false"><svg class="i chev"><use href="#i-chev"/></svg><span>Auto-pay failures</span><span style="flex:1"></span><span class="muted tabular" style="font-size:12px">1,033</span></div>
+                    <div class="tree-kids"></div>
+                  </div>
+                  <div class="tree-item" style="background:var(--surface-inset)">
+                    <div class="trow" aria-expanded="false"><svg class="i chev"><use href="#i-chev"/></svg><span>Refunds &amp; reversals</span><span style="flex:1"></span><span class="muted tabular" style="font-size:12px">958</span></div>
+                    <div class="tree-kids"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="tree-item" data-od-id="cluster-connectivity">
+                <div class="trow" aria-expanded="false"><svg class="i chev"><use href="#i-chev"/></svg><strong style="font-size:13px">Connectivity &amp; Outages</strong><span style="flex:1"></span><span class="muted tabular" style="font-size:12px">4,445 · 24.1%</span><div class="meter" style="width:110px"><div class="track"><div class="fill" style="width:24.1%"></div></div></div></div>
+                <div class="tree-kids"><div class="hint" style="padding:8px 0 4px">5 L2 · 18 L3 — expand fetched on demand in production.</div></div>
+              </div>
+              <div class="tree-item" data-od-id="cluster-install">
+                <div class="trow" aria-expanded="false"><svg class="i chev"><use href="#i-chev"/></svg><strong style="font-size:13px">New Installation &amp; Provisioning</strong><span style="flex:1"></span><span class="muted tabular" style="font-size:12px">2,545 · 13.8%</span><div class="meter" style="width:110px"><div class="track"><div class="fill" style="width:13.8%"></div></div></div></div>
+                <div class="tree-kids"></div>
+              </div>
+              <div class="tree-item" data-od-id="cluster-upgrade">
+                <div class="trow" aria-expanded="false"><svg class="i chev"><use href="#i-chev"/></svg><strong style="font-size:13px">Plan Changes &amp; Upgrades</strong><span style="flex:1"></span><span class="muted tabular" style="font-size:12px">1,697 · 9.2%</span><div class="meter" style="width:110px"><div class="track"><div class="fill" style="width:9.2%"></div></div></div></div>
+                <div class="tree-kids"></div>
+              </div>
+              <div class="tree-item" data-od-id="cluster-cancel">
+                <div class="trow" aria-expanded="false"><svg class="i chev"><use href="#i-chev"/></svg><strong style="font-size:13px">Cancellation &amp; Port-out</strong><span style="flex:1"></span><span class="muted tabular" style="font-size:12px">1,550 · 8.4%</span><div class="meter" style="width:110px"><div class="track"><div class="fill" style="width:8.4%"></div></div></div></div>
+                <div class="tree-kids"></div>
+              </div>
+              <div class="tree-item" data-od-id="cluster-account">
+                <div class="trow" aria-expanded="false"><svg class="i chev"><use href="#i-chev"/></svg><strong style="font-size:13px">Account &amp; Identity</strong><span style="flex:1"></span><span class="muted tabular" style="font-size:12px">1,160 · 6.3%</span><div class="meter" style="width:110px"><div class="track"><div class="fill" style="width:6.3%"></div></div></div></div>
+                <div class="tree-kids"></div>
+              </div>
+            </div>
+
+            <div data-swap-panel="cview-map" hidden class="cl-map-wrap" data-od-id="cluster-map">
+              <svg class="cluster-map" viewBox="0 0 940 430" role="img" aria-label="Cluster map: 286 canonical intents grouped into 6 L1 clusters sized by share of volume">
+                <g class="cm-hub" transform="translate(24,160)">
+                  <rect width="196" height="96" rx="12"/>
+                  <text x="98" y="40" text-anchor="middle" font-size="30" font-weight="640">286</text>
+                  <text x="98" y="62" text-anchor="middle" font-size="12">canonical intents</text>
+                  <text x="98" y="80" text-anchor="middle" font-size="11" fill="oklch(80% 0.02 250)">6 L1 · 19 L2 · 57 L3</text>
+                </g>
+
+                <path class="cm-link" d="M220 208 C260 208 260 35 300 35"/>
+                <path class="cm-link" d="M220 208 C260 208 260 103 300 103"/>
+                <path class="cm-link" d="M220 208 C260 208 260 171 300 171"/>
+                <path class="cm-link" d="M220 208 C260 208 260 239 300 239"/>
+                <path class="cm-link" d="M220 208 C260 208 260 307 300 307"/>
+                <path class="cm-link" d="M220 208 C260 208 260 375 300 375"/>
+
+                <g class="cm-l1 on" transform="translate(300,8)">
+                  <rect width="616" height="54" rx="10"/>
+                  <text x="16" y="22" font-size="12.5" font-weight="580">Billing &amp; Payments</text>
+                  <text x="296" y="22" font-size="11" fill="var(--muted)">4 L2 · 12 L3</text>
+                  <text x="600" y="22" text-anchor="end" font-size="11.5" fill="var(--muted)" class="tabular">7,045 · 38.2%</text>
+                  <rect class="cm-bar" x="16" y="32" width="584" height="6" rx="3"/>
+                  <rect class="cm-bar-fill" x="16" y="32" width="584" height="6" rx="3"/>
+                </g>
+                <g class="cm-l1" transform="translate(300,76)">
+                  <rect width="616" height="54" rx="10"/>
+                  <text x="16" y="22" font-size="12.5" font-weight="580">Connectivity &amp; Outages</text>
+                  <text x="296" y="22" font-size="11" fill="var(--muted)">5 L2 · 18 L3</text>
+                  <text x="600" y="22" text-anchor="end" font-size="11.5" fill="var(--muted)" class="tabular">4,445 · 24.1%</text>
+                  <rect class="cm-bar" x="16" y="32" width="584" height="6" rx="3"/>
+                  <rect class="cm-bar-fill" x="16" y="32" width="368.5" height="6" rx="3"/>
+                </g>
+                <g class="cm-l1" transform="translate(300,144)">
+                  <rect width="616" height="54" rx="10"/>
+                  <text x="16" y="22" font-size="12.5" font-weight="580">New Installation &amp; Provisioning</text>
+                  <text x="296" y="22" font-size="11" fill="var(--muted)">3 L2 · 9 L3</text>
+                  <text x="600" y="22" text-anchor="end" font-size="11.5" fill="var(--muted)" class="tabular">2,545 · 13.8%</text>
+                  <rect class="cm-bar" x="16" y="32" width="584" height="6" rx="3"/>
+                  <rect class="cm-bar-fill" x="16" y="32" width="211" height="6" rx="3"/>
+                </g>
+                <g class="cm-l1" transform="translate(300,212)">
+                  <rect width="616" height="54" rx="10"/>
+                  <text x="16" y="22" font-size="12.5" font-weight="580">Plan Changes &amp; Upgrades</text>
+                  <text x="296" y="22" font-size="11" fill="var(--muted)">3 L2 · 7 L3</text>
+                  <text x="600" y="22" text-anchor="end" font-size="11.5" fill="var(--muted)" class="tabular">1,697 · 9.2%</text>
+                  <rect class="cm-bar" x="16" y="32" width="584" height="6" rx="3"/>
+                  <rect class="cm-bar-fill" x="16" y="32" width="140.6" height="6" rx="3"/>
+                </g>
+                <g class="cm-l1" transform="translate(300,280)">
+                  <rect width="616" height="54" rx="10"/>
+                  <text x="16" y="22" font-size="12.5" font-weight="580">Cancellation &amp; Port-out</text>
+                  <text x="296" y="22" font-size="11" fill="var(--muted)">2 L2 · 6 L3</text>
+                  <text x="600" y="22" text-anchor="end" font-size="11.5" fill="var(--muted)" class="tabular">1,550 · 8.4%</text>
+                  <rect class="cm-bar" x="16" y="32" width="584" height="6" rx="3"/>
+                  <rect class="cm-bar-fill" x="16" y="32" width="128.4" height="6" rx="3"/>
+                </g>
+                <g class="cm-l1" transform="translate(300,348)">
+                  <rect width="616" height="54" rx="10"/>
+                  <text x="16" y="22" font-size="12.5" font-weight="580">Account &amp; Identity</text>
+                  <text x="296" y="22" font-size="11" fill="var(--muted)">2 L2 · 5 L3</text>
+                  <text x="600" y="22" text-anchor="end" font-size="11.5" fill="var(--muted)" class="tabular">1,160 · 6.3%</text>
+                  <rect class="cm-bar" x="16" y="32" width="584" height="6" rx="3"/>
+                  <rect class="cm-bar-fill" x="16" y="32" width="96.3" height="6" rx="3"/>
+                </g>
+              </svg>
+              <p class="hint" style="margin-top:10px">Hub = 286 canonical intents. Node width and the filled bar show each L1 cluster's share of labelled volume; L2 / L3 counts sit inside each node.</p>
+            </div>
+          </div>
+
+          <div data-panel="review" hidden data-od-id="panel-review">
+            <div style="padding:14px 16px 6px" class="hint">Low-confidence extractions that need an analyst decision before they enter the taxonomy.</div>
+            <div class="rv-card" data-rv data-od-id="rv-1">
+              <div class="row" style="gap:10px">
+                <strong style="font-size:13px">“Duplicate charge after plan change”</strong>
+                <span class="badge"><span class="dot"></span>214 records</span>
+                <span style="flex:1"></span>
+                <div class="meter" style="width:130px"><div class="track"><div class="fill fill-warn" style="width:71%"></div></div><span class="tabular muted" style="font-size:12px">0.71</span></div>
+              </div>
+              <p class="quote" style="margin:8px 0 10px">“…I only asked to upgrade the plan, why is the old line still billed — this is the second month…”</p>
+              <div class="row rv-actions" style="gap:8px">
+                <button class="btn btn-sm" data-rv-act="new">Accept as new</button>
+                <button class="btn btn-sm" data-rv-act="merge">Merge with “Invoice higher than promo”</button>
+                <button class="btn btn-sm btn-danger" data-rv-act="reject">Reject</button>
+              </div>
+            </div>
+            <div class="rv-card" data-rv data-od-id="rv-2">
+              <div class="row" style="gap:10px">
+                <strong style="font-size:13px">“Static line noise on VoIP desk phone”</strong>
+                <span class="badge"><span class="dot"></span>86 records</span>
+                <span style="flex:1"></span>
+                <div class="meter" style="width:130px"><div class="track"><div class="fill fill-warn" style="width:66%"></div></div><span class="tabular muted" style="font-size:12px">0.66</span></div>
+              </div>
+              <p class="quote" style="margin:8px 0 10px">“…the wired phone crackles whenever the broadband syncs, it started after the firmware push…”</p>
+              <div class="row rv-actions" style="gap:8px">
+                <button class="btn btn-sm" data-rv-act="new">Accept as new</button>
+                <button class="btn btn-sm" data-rv-act="merge">Merge with “Connectivity &amp; Outages”</button>
+                <button class="btn btn-sm btn-danger" data-rv-act="reject">Reject</button>
+              </div>
+            </div>
+            <div class="rv-card" data-rv data-od-id="rv-3">
+              <div class="row" style="gap:10px">
+                <strong style="font-size:13px">“Installation technician no-show”</strong>
+                <span class="badge"><span class="dot"></span>147 records</span>
+                <span style="flex:1"></span>
+                <div class="meter" style="width:130px"><div class="track"><div class="fill" style="width:79%"></div></div><span class="tabular muted" style="font-size:12px">0.79</span></div>
+              </div>
+              <p class="quote" style="margin:8px 0 10px">“…the engineer never turned up in the 9–1 window and nobody called, we still have no internet upstairs…”</p>
+              <div class="row rv-actions" style="gap:8px">
+                <button class="btn btn-sm" data-rv-act="new">Accept as new</button>
+                <button class="btn btn-sm" data-rv-act="merge">Merge with “Book installation slot”</button>
+                <button class="btn btn-sm btn-danger" data-rv-act="reject">Reject</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+          <div class="card" data-od-id="live-run-card">
+            <div class="card-h">
+              <h3>Live run</h3>
+              <span class="badge badge-warn badge-run" id="run-badge"><span class="dot"></span>RUN-4821</span>
+              <span style="flex:1"></span>
+              <button class="btn btn-sm" id="run-toggle">Pause</button>
+            </div>
+            <div class="card-b" style="padding-top:12px">
+              <div class="row" style="justify-content:space-between;font-size:12.5px">
+                <span style="font-weight:560">Week-26 clustering refresh</span>
+                <span class="tabular muted" id="run-pct">0%</span>
+              </div>
+              <div class="meter" style="margin:8px 0 4px"><div class="track"><div class="fill" id="run-fill" style="width:0%"></div></div></div>
+              <div class="hint" style="font-size:11.5px" id="run-eta">ETA ~14 min · new wave of records only</div>
+              <div class="divider" style="margin:12px 0 4px"></div>
+              <div class="job-line"><span class="st done"><svg class="i"><use href="#i-check"/></svg></span>Ingestion <span class="tabular muted" style="font-size:12px">18,442 rows</span></div>
+              <div class="job-line"><span class="st done"><svg class="i"><use href="#i-check"/></svg></span>PII redaction <span class="tabular muted" style="font-size:12px">3,104 fields masked</span></div>
+              <div class="job-line"><span class="st done"><svg class="i"><use href="#i-check"/></svg></span>Embedding <span class="tabular muted" style="font-size:12px">768-dim vectors</span></div>
+              <div class="job-line"><span class="st run" id="js-cluster"><svg class="i"><use href="#i-sync"/></svg></span>Clustering <span class="tabular muted" style="font-size:12px">68% · 24,190 vectors done</span></div>
+              <div class="job-line muted"><span class="st"><svg class="i"><use href="#i-dot"/></svg></span>Coverage report <span style="font-size:12px">queued</span></div>
+            </div>
+          </div>
+
+          <div class="card" data-od-id="sources-card">
+            <div class="card-h"><h3>Sources</h3><span style="flex:1"></span><a class="btn btn-sm" href="connectors.html">Manage</a></div>
+            <div class="card-b" style="padding-top:8px">
+               <div class="src-row"><span class="badge badge-ok"><span class="dot"></span>Live</span><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:540">Genesys Cloud — calls</div><div class="hint" style="font-size:11.5px">4,812 transcripts · synced 12 min ago</div></div><button class="icon-btn" title="Download as .xlsx" onclick="TX.toast('genesys-calls-w26.xlsx downloading','i-download')"><svg class="i"><use href="#i-download"/></svg></button><button class="icon-btn" title="Sync now" onclick="TX.toast('Sync requested for Genesys Cloud','i-sync')"><svg class="i"><use href="#i-sync"/></svg></button></div>
+               <div class="src-row"><span class="badge badge-ok"><span class="dot"></span>Live</span><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:540">Zendesk — conversations</div><div class="hint" style="font-size:11.5px">9,205 threads · synced 38 min ago</div></div><button class="icon-btn" title="Download as .xlsx" onclick="TX.toast('zendesk-threads-w26.xlsx downloading','i-download')"><svg class="i"><use href="#i-download"/></svg></button><button class="icon-btn" title="Sync now" onclick="TX.toast('Sync requested for Zendesk','i-sync')"><svg class="i"><use href="#i-sync"/></svg></button></div>
+               <div class="src-row"><span class="badge badge-warn"><span class="dot"></span>Re-auth</span><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:540">CSV — CRM notes batch</div><div class="hint" style="font-size:11.5px">4,425 rows · manual upload · wk25</div></div><button class="icon-btn" title="Download as .xlsx" onclick="TX.toast('crm-notes-wk25.xlsx downloading','i-download')"><svg class="i"><use href="#i-download"/></svg></button><button class="icon-btn" title="Re-upload" data-open="dlg-upload"><svg class="i"><use href="#i-upload"/></svg></button></div>
+            </div>
+          </div>
+
+          <details class="adv" data-od-id="adv-settings">
+            <summary><svg class="i"><use href="#i-gear"/></svg>Advanced pipeline settings<svg class="i chev"><use href="#i-chev"/></svg></summary>
+            <div class="adv-body" style="display:flex;flex-direction:column;gap:12px">
+              <div class="field"><label class="label" for="adv-model">Extraction model</label>
+                <select class="input" id="adv-model"><option>tx-intent-v3.2 (recommended)</option><option>tx-intent-v3.1 — pinned</option><option>claude-sonnet — sandbox</option></select>
+              </div>
+              <div class="field"><label class="label" for="adv-conf">Min. clustering confidence</label><input class="input" id="adv-conf" value="0.72" inputmode="decimal"><span class="hint">Records below this go to the review queue.</span></div>
+              <div class="field"><span class="label">Languages</span>
+                <div class="row" style="gap:6px;flex-wrap:wrap" data-chips-multi>
+                  <button class="chip" aria-pressed="true">English</button>
+                  <button class="chip" aria-pressed="true">Hindi · transliterated</button>
+                  <button class="chip" aria-pressed="false">Regional mixed</button>
+                </div>
+              </div>
+              <div class="row" style="justify-content:space-between">
+                <div><div class="label">PII redaction before embedding</div><div class="hint">Numbers, IDs and addresses are masked.</div></div>
+                <span class="switch" role="switch" aria-checked="true"></span>
+              </div>
+              <button class="btn btn-sm" style="align-self:flex-start" onclick="TX.toast('Advanced settings saved for next run','i-gear')">Save for next run</button>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" data-overlay></div>
+
+<div class="dialog" id="dlg-upload" role="dialog" aria-modal="true" data-od-id="upload-dialog">
+  <div class="dialog-h"><h2>Upload interaction data</h2><p class="hint">Files land in a staging bucket, get PII-redacted, then join the next pipeline run.</p></div>
+  <div class="dialog-b">
+    <div class="field">
+      <span class="label">Where is the data?</span>
+      <div class="row" style="gap:8px;flex-wrap:wrap" data-chips data-swap="upsrc" data-od-id="upload-source">
+        <button class="chip" aria-pressed="true" data-val="local"><svg class="i" style="width:13px;height:13px"><use href="#i-upload"/></svg>Upload files</button>
+        <button class="chip" aria-pressed="false" data-val="s3">Amazon S3</button>
+        <button class="chip" aria-pressed="false" data-val="gcs">Google Cloud Storage</button>
+      </div>
+    </div>
+
+    <div data-swap-panel="upsrc-local" data-od-id="upload-local">
+      <div class="drop" id="drop-zone" data-od-id="drop-zone">
+        <svg class="i i-lg" style="margin-bottom:6px"><use href="#i-upload"/></svg>
+        <div style="font-size:13px;font-weight:540">Drop exports here, or <button type="button" class="link" style="color:var(--accent-strong)" id="browse-btn">browse files</button></div>
+        <div class="hint" style="margin-top:4px">CSV · JSON · JSONL · PDF · DOC · DOCX · WAV/MP3 — up to 2 GB per file</div>
+      </div>
+    </div>
+
+    <div data-swap-panel="upsrc-s3" hidden data-od-id="upload-s3">
+      <div class="field">
+        <label class="label" for="up-s3-bucket">Bucket</label>
+        <select class="input" id="up-s3-bucket">
+          <option>s3://skyline-cx-exports (ap-south-1)</option>
+          <option>s3://skyline-genesys-recordings (ap-south-1)</option>
+          <option>s3://skyline-nuance-sops (us-east-1)</option>
+        </select>
+      </div>
+      <div class="field" style="margin-top:12px">
+        <label class="label" for="up-s3-prefix">Prefix</label>
+        <input class="input" id="up-s3-prefix" value="zendesk/2026-w26/">
+      </div>
+      <div class="row" style="gap:8px;margin-top:12px">
+        <button class="btn btn-sm" id="up-s3-scan"><svg class="i"><use href="#i-sync"/></svg>Scan bucket</button>
+        <span class="hint">Read-only via the IAM role attached on the Connectors page.</span>
+      </div>
+      <div class="hint" style="margin-top:10px" id="up-s3-result">Not scanned yet.</div>
+    </div>
+
+    <div data-swap-panel="upsrc-gcs" hidden data-od-id="upload-gcs">
+      <div class="field">
+        <label class="label" for="up-gcs-bucket">Bucket</label>
+        <select class="input" id="up-gcs-bucket">
+          <option>gs://skyline-cx-archive (asia-south1)</option>
+          <option>gs://skyline-nuance-docs (asia-south1)</option>
+        </select>
+      </div>
+      <div class="field" style="margin-top:12px">
+        <label class="label" for="up-gcs-prefix">Folder prefix</label>
+        <input class="input" id="up-gcs-prefix" value="cx/sops/2026/">
+      </div>
+      <div class="row" style="gap:8px;margin-top:12px">
+        <button class="btn btn-sm" id="up-gcs-scan"><svg class="i"><use href="#i-sync"/></svg>Scan bucket</button>
+        <span class="hint">Uses a service account with objectViewer on this bucket.</span>
+      </div>
+      <div class="hint" style="margin-top:10px" id="up-gcs-result">Not scanned yet.</div>
+    </div>
+
+    <div class="field" data-od-id="nuance-flow">
+      <span class="label">Nuance document flow <span class="muted" style="font-weight:460">· PDF / DOC / DOCX only</span></span>
+      <div class="row" style="gap:8px;flex-wrap:wrap" data-chips data-od-id="nuance-choice">
+        <button class="chip" aria-pressed="true" data-val="synth">Synthetic calls</button>
+        <button class="chip" aria-pressed="false" data-val="doc">Document process</button>
+      </div>
+      <span class="hint" id="nuance-hint">Synthetic calls: convert SOPs and policy docs into representative call audio, then run the normal intent pipeline over them.</span>
+    </div>
+
+    <div class="row" style="justify-content:space-between">
+      <div><div class="label">Redact PII on ingest</div><div class="hint">Recommended for calls with card numbers.</div></div>
+      <span class="switch" role="switch" aria-checked="true"></span>
+    </div>
+  </div>
+  <div class="dialog-f">
+    <button class="btn" data-close>Cancel</button>
+    <button class="btn btn-primary" id="upload-confirm" data-od-id="upload-confirm">Add to staging</button>
+  </div>
+</div>
+
+<div class="dialog" id="dlg-run" role="dialog" aria-modal="true" data-od-id="run-dialog">
+  <div class="dialog-h"><h2>Run pipeline</h2><p class="hint">Long-running — you’ll get live progress in this panel and in the top bar.</p></div>
+  <div class="dialog-b">
+    <div class="field">
+      <span class="label">Scope</span>
+      <div class="row" style="gap:8px" data-chips data-od-id="run-scope">
+        <button class="chip" aria-pressed="true">New records only</button>
+        <button class="chip" aria-pressed="false">Full re-cluster</button>
+      </div>
+    </div>
+    <div class="row" style="justify-content:space-between;border:1px solid var(--border);border-radius:var(--r-md);padding:11px 12px;background:var(--surface-inset)">
+      <div><div class="label">Express mode</div><div class="hint">Runs intent extraction → clustering → process map → UML end-to-end with no manual review gates.</div></div>
+      <span class="switch" role="switch" aria-checked="false" id="run-express" data-od-id="run-express"></span>
+    </div>
+    <div class="field">
+      <label class="label" for="run-note">Run note (shows in audit log)</label>
+      <input class="input" id="run-note" placeholder="e.g. Week-27 refresh after retention campaign">
+    </div>
+  </div>
+  <div class="dialog-f">
+    <button class="btn" data-close>Cancel</button>
+    <button class="btn btn-primary" id="run-confirm" data-od-id="run-confirm">Start run</button>
+  </div>
+</div>
+
+<div class="drawer" id="dw-transcript" role="dialog" aria-modal="true" aria-label="Intent transcript evidence" data-od-id="transcript-drawer">
+  <div class="drawer-h">
+    <div style="min-width:0;flex:1">
+      <div class="caps">Intent · transcript evidence</div>
+      <div id="tr-title" style="font-size:14.5px;font-weight:620;letter-spacing:-0.01em;margin-top:2px;line-height:1.35">—</div>
+    </div>
+    <button class="icon-btn" data-close aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="drawer-b">
+    <div class="grid-2" style="margin-bottom:14px">
+      <div class="card" style="padding:10px 12px"><div class="caps" style="font-size:10px">Matching calls</div><div class="tabular" id="tr-count" style="font-size:15px;font-weight:620;margin-top:3px">—</div></div>
+      <div class="card" style="padding:10px 12px"><div class="caps" style="font-size:10px">Avg. confidence</div><div class="tabular" id="tr-conf" style="font-size:15px;font-weight:620;margin-top:3px">—</div></div>
+    </div>
+    <div class="field" style="margin-bottom:12px">
+      <span class="label">Sample call</span>
+      <div class="row tr-tabs" id="tr-picker" data-chips data-od-id="tr-picker"></div>
+      <span class="hint">Highlighted line is the span the classifier matched to this intent.</span>
+    </div>
+    <div class="row" style="gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <span class="badge"><span class="dot"></span>Genesys Cloud · recording</span>
+      <span class="badge"><span class="dot"></span>PII redacted</span>
+      <button class="btn btn-sm" id="tr-play"><svg class="i"><use href="#i-play"/></svg><span id="tr-dur">Play 3:41</span></button>
+      <button class="btn btn-sm" onclick="TX.toast('Transcript exported as call-98231.txt','i-download')"><svg class="i"><use href="#i-download"/></svg>Download .txt</button>
+    </div>
+    <div id="tr-thread"></div>
+  </div>
+  <div class="drawer-f">
+    <button class="btn" data-close>Close</button>
+    <button class="btn btn-primary" id="tr-confirm" data-od-id="tr-confirm">Confirm intent match</button>
+  </div>
+</div>
+
+<div class="dialog" id="dlg-cluster" role="dialog" aria-modal="true" data-od-id="cluster-dialog">
+  <div class="dialog-h">
+    <h2 id="cl-title">Rename cluster</h2>
+    <p class="hint">Renaming keeps the cluster ID stable. Merging folds volume and L2 / L3 nodes into the target, then archives this cluster — the change is written to the audit log.</p>
+  </div>
+  <div class="dialog-b">
+    <div class="field">
+      <label class="label" for="cl-name">Cluster name</label>
+      <input class="input" id="cl-name" placeholder="e.g. Billing &amp; Payments">
+    </div>
+    <div class="field">
+      <label class="label" for="cl-level">Level</label>
+      <select class="input" id="cl-level"><option>L1 · top-level cluster</option><option>L2 · sub-cluster</option><option>L3 · leaf node</option></select>
+    </div>
+    <div class="field">
+      <label class="label" for="cl-merge">Merge into (optional)</label>
+      <select class="input" id="cl-merge">
+        <option value="">— Don't merge —</option>
+        <option>Connectivity &amp; Outages</option>
+        <option>New Installation &amp; Provisioning</option>
+        <option>Plan Changes &amp; Upgrades</option>
+        <option>Cancellation &amp; Port-out</option>
+        <option>Account &amp; Identity</option>
+      </select>
+      <span class="hint">All L3 nodes and their volume move to the target cluster.</span>
+    </div>
+  </div>
+  <div class="dialog-f">
+    <button class="btn btn-danger" id="cl-delete" data-od-id="cluster-delete"><svg class="i"><use href="#i-trash"/></svg>Delete</button>
+    <span style="flex:1"></span>
+    <button class="btn" data-close>Cancel</button>
+    <button class="btn btn-primary" id="cl-save" data-od-id="cluster-save">Save cluster</button>
+  </div>
+</div>
+
+<script src="assets/ui.js"></script>
+<script>
+(function(){
+  /* animate live run progress */
+  var pct = 0, fill = document.getElementById("run-fill"),
+      label = document.getElementById("run-pct"),
+      badge = document.getElementById("run-badge"),
+      tgl = document.getElementById("run-toggle");
+  var paused = false;
+  function step(){
+    if(!paused && pct < 68){ pct += 1; fill.style.width = pct + "%"; label.textContent = pct + "%"; }
+    if(pct < 68){ setTimeout(step, 26); }
+  }
+  setTimeout(step, 350);
+  tgl.addEventListener("click", function(){
+    paused = !paused;
+    tgl.textContent = paused ? "Resume" : "Pause";
+    badge.className = paused ? "badge" : "badge badge-warn badge-run";
+    badge.innerHTML = '<span class="dot"></span>' + (paused ? "Paused" : "RUN-4821");
+    if(!paused){ step(); }
+  });
+
+  /* review queue decisions */
+  document.querySelectorAll("[data-rv-act]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var card = b.closest("[data-rv]");
+      var act = b.getAttribute("data-rv-act");
+      card.classList.add("resolved");
+      var labels = { new:"Kept as a new intent — queued for naming", merge:"Merged — taxonomy updated", reject:"Rejected — excluded from taxonomy" };
+      card.querySelector(".rv-actions").innerHTML = '<span class="badge badge-ok"><span class="dot"></span>' + labels[act] + "</span>";
+      TX.toast(labels[act], act === "reject" ? "i-x" : "i-check");
+    });
+  });
+
+  /* upload demo */
+  var dz = document.getElementById("drop-zone");
+  ["dragover","dragenter"].forEach(function(ev){ dz.addEventListener(ev, function(e){ e.preventDefault(); dz.classList.add("over"); }); });
+  ["dragleave","drop"].forEach(function(ev){ dz.addEventListener(ev, function(e){ e.preventDefault(); dz.classList.remove("over"); if(ev==="drop"){ dz.querySelector("div").textContent = "genesys_Aug_w26.jsonl staged — 4,120 rows detected"; } }); });
+  document.getElementById("browse-btn").addEventListener("click", function(){ TX.toast("File picker is stubbed in this demo", "i-info"); });
+  document.getElementById("upload-confirm").addEventListener("click", function(){ TX.closeLayers(); TX.toast("1 file added to staging — joins the next run", "i-upload"); });
+
+  /* cluster handoff to Design */
+  document.getElementById("approve-design").addEventListener("click", function(){
+    TX.toast("4 clusters locked & shared with Design umbrella", "i-check");
+    var strip = document.querySelector("#stage-strip .snode:last-child");
+    if (strip){ strip.className = "snode live"; strip.querySelector(".glyph").innerHTML = '<span class="mini"></span>'; }
+  });
+
+  document.getElementById("run-confirm").addEventListener("click", function(){
+    TX.closeLayers();
+    var express = document.getElementById("run-express").getAttribute("aria-checked") === "true";
+    TX.toast(express
+      ? "Express run queued — full pipeline completes without manual gates"
+      : "RUN-4822 queued behind RUN-4821", "i-play");
+  });
+
+  document.getElementById("proj-select").addEventListener("change", function(){
+    TX.toast("Demo keeps Skyline scope — project switch renders same workspace", "i-info");
+  });
+
+  /* ---------- item 1 · transcript evidence per intent ---------- */
+  var CUST = {
+    "Charged for a cancelled service line": "I cancelled the line back in June, but this month’s bill still shows the 799 plan and two rental charges.",
+    "Invoice higher than agreed promo price": "The promo you sold me was 599 for six months, but the invoice shows 899 plus a setup fee I never agreed to.",
+    "Internet down — area outage (NOIA)": "The whole street has been down since last night — there’s no sync light on the router at all.",
+    "Slow speeds at peak hours": "Every evening between eight and eleven the speed drops to a crawl and streaming just buffers.",
+    "Book new fiber installation slot": "I want to book the fibre install — the society office says the ducting is ready now.",
+    "Port number out to another provider": "I’m moving to another provider and need to port this number out — please give me the UPC code.",
+    "Auto-pay failed but card is valid": "Auto-pay failed again this month but the card is fine — I used the same card at a store an hour ago.",
+    "Router returns after plan upgrade": "Since the upgrade the old router has to go back — how do I return it and get the deposit adjusted?"
+  };
+  function buildThread(name, variant){
+    var cust = CUST[name] || ("Hi, I need help with " + name.charAt(0).toLowerCase() + name.slice(1) + ".");
+    var f = [
+      ["Agent", "Thanks for calling Skyline Broadband, this is Neha. Can I take the number you’re calling about?"],
+      ["Customer", cust],
+      ["Agent", "Thanks — account verified. Let me pull up the account and the last two invoices."],
+      ["Tool · crm.get_invoice", "inv_98231 · 2 lines · outstanding ₹1,384.00"],
+      ["Agent", "I can see the discrepancy you’re describing. I’m checking the applicable plan terms before I action anything."],
+      ["Customer", "Okay — I just want it corrected, I’ve been going back and forth on this."],
+      ["Agent", "Understood. I’ve raised the correction and it will reflect on the next statement with a reference you can track."],
+      ["Tool · comms.send_receipt", "SMS + email sent · ref SBB-2026-44817"]
+    ];
+    if (variant === 1){
+      f[1] = ["Customer", "Same issue as my last call — nobody has fixed it and I’m not paying for a service I cancelled."];
+      f[4] = ["Agent", "I can see the previous case from last week. I’m sorry it reopened — I’ll keep it on the same case and escalate the credit today."];
+    }
+    if (variant === 2){
+      f[1] = ["Customer", "Before you start — I’ve spent forty minutes on this across two calls. Please just tell me the fix."];
+      f[4] = ["Agent", "You’re right to be frustrated. I’m applying the correction now and waiving the late fee that was added in error."];
+    }
+    return f;
+  }
+  var trTitle = document.getElementById("tr-title"), trCount = document.getElementById("tr-count"),
+      trConf = document.getElementById("tr-conf"), trThread = document.getElementById("tr-thread"),
+      trPicker = document.getElementById("tr-picker");
+  var curIntent = null, curVar = 0;
+  function renderTranscript(){
+    trThread.innerHTML = "";
+    buildThread(curIntent, curVar).forEach(function(l, i){
+      var d = document.createElement("div");
+      d.className = "tr-line" + (l[0] === "Customer" ? " cust" : "") + (i === 1 ? " hit" : "");
+      d.innerHTML = '<div class="sp">' + l[0] + '</div><div></div>';
+      d.lastChild.textContent = l[1];
+      trThread.appendChild(d);
+    });
+  }
+  function openTranscript(name, count, conf){
+    curIntent = name; curVar = 0;
+    trTitle.textContent = "“" + name + "”";
+    trCount.textContent = count;
+    trConf.textContent = conf;
+    trPicker.innerHTML = "";
+    ["Call 1", "Call 2", "Call 3"].forEach(function(v, i){
+      var b = document.createElement("button");
+      b.className = "chip";
+      b.setAttribute("aria-pressed", i === 0 ? "true" : "false");
+      b.textContent = v;
+      b.addEventListener("click", function(){
+        trPicker.querySelectorAll(".chip").forEach(function(c){ c.setAttribute("aria-pressed", "false"); });
+        b.setAttribute("aria-pressed", "true");
+        curVar = i; renderTranscript();
+      });
+      trPicker.appendChild(b);
+    });
+    renderTranscript();
+    TX.openLayer("dw-transcript");
+  }
+  document.querySelectorAll("#intent-table tbody tr").forEach(function(tr){
+    var td = document.createElement("td");
+    td.innerHTML = '<button class="icon-btn" aria-label="View transcripts"><svg class="i"><use href="#i-eye"/></svg></button>';
+    tr.appendChild(td);
+    var name = tr.cells[0].textContent.trim(), count = tr.cells[2].textContent.trim(), conf = tr.cells[4].textContent.trim();
+    tr.style.cursor = "pointer";
+    tr.addEventListener("click", function(){ openTranscript(name, count, conf); });
+  });
+  document.getElementById("tr-confirm").addEventListener("click", function(){
+    TX.closeLayers();
+    TX.toast("Intent match confirmed — evidence attached to the taxonomy", "i-check");
+  });
+  document.getElementById("tr-play").addEventListener("click", function(){
+    TX.toast("Recording playback is stubbed in this demo", "i-info");
+  });
+
+  /* ---------- item 3 · rename / merge clusters ---------- */
+  var clTarget = null;
+  function addClusterActions(){
+    document.querySelectorAll('#panel-clusters .tree-item[data-od-id^="cluster-"] > .trow').forEach(function(row){
+      if (row.querySelector("[data-cl-edit]")) return;
+      var btn = document.createElement("button");
+      btn.className = "icon-btn";
+      btn.setAttribute("data-cl-edit", "");
+      btn.setAttribute("aria-label", "Rename or merge cluster");
+      btn.innerHTML = '<svg class="i"><use href="#i-edit"/></svg>';
+      btn.addEventListener("click", function(e){
+        e.stopPropagation();
+        clTarget = row.closest(".tree-item");
+        var strong = row.querySelector("strong");
+        document.getElementById("cl-title").textContent = "Rename cluster";
+        document.getElementById("cl-name").value = strong ? strong.textContent.trim() : "";
+        document.getElementById("cl-merge").value = "";
+        TX.openLayer("dlg-cluster");
+      });
+      row.appendChild(btn);
+    });
+  }
+  addClusterActions();
+  document.getElementById("new-cluster").addEventListener("click", function(){
+    clTarget = null;
+    document.getElementById("cl-title").textContent = "New cluster";
+    document.getElementById("cl-name").value = "";
+    document.getElementById("cl-merge").value = "";
+    TX.openLayer("dlg-cluster");
+  });
+  document.getElementById("cl-save").addEventListener("click", function(){
+    var name = document.getElementById("cl-name").value.trim() || "Untitled cluster";
+    var merge = document.getElementById("cl-merge").value;
+    TX.closeLayers();
+    if (clTarget && merge){
+      clTarget.style.display = "none";
+      TX.toast('Merged into "' + merge + '" — L2/L3 nodes and volume moved', "i-merge");
+    } else if (clTarget){
+      clTarget.querySelector(".trow strong").textContent = name;
+      TX.toast('Cluster renamed to "' + name + '"', "i-edit");
+    } else {
+      var wrap = document.querySelector('#panel-clusters [data-swap-panel="cview-tree"]');
+      var item = document.createElement("div");
+      item.className = "tree-item";
+      item.setAttribute("data-od-id", "cluster-new");
+      item.innerHTML = '<div class="trow" aria-expanded="false"><svg class="i chev"><use href="#i-chev"/></svg><strong style="font-size:13px"></strong><span style="flex:1"></span><span class="muted tabular" style="font-size:12px">0 · 0.0%</span><div class="meter" style="width:110px"><div class="track"><div class="fill" style="width:0%"></div></div></div></div><div class="tree-kids"></div>';
+      item.querySelector("strong").textContent = name;
+      wrap.appendChild(item);
+      addClusterActions();
+      TX.toast('New cluster "' + name + '" created as a draft', "i-plus");
+    }
+  });
+  document.getElementById("cl-delete").addEventListener("click", function(){
+    TX.closeLayers();
+    if (clTarget){ clTarget.style.display = "none"; }
+    TX.toast("Cluster archived — moved to the review queue", "i-trash");
+  });
+
+  /* ---------- item 16 · nuance document flow choice ---------- */
+  document.querySelectorAll("#nuance-choice .chip").forEach(function(c){
+    c.addEventListener("click", function(){
+      document.getElementById("nuance-hint").textContent = c.getAttribute("data-val") === "synth"
+        ? "Synthetic calls: convert SOPs and policy docs into representative call audio, then run the normal intent pipeline over them."
+        : "Document process: extract the process steps straight from the SOPs — no call audio and clustering is skipped.";
+    });
+  });
+
+  /* ---------- item 6 · bucket sources ---------- */
+  function scanBucket(btnId, resId, bucketId){
+    document.getElementById(btnId).addEventListener("click", function(){
+      var res = document.getElementById(resId);
+      res.textContent = "Scanning " + document.getElementById(bucketId).value + "…";
+      setTimeout(function(){
+        res.innerHTML = "<strong>14 files found</strong> · 8 PDF · 3 DOCX · 3 JSONL · 1.9 GB · ready to stage";
+        TX.toast("Bucket scan complete — 14 files ready to stage", "i-cloud");
+      }, 700);
+    });
+  }
+  scanBucket("up-s3-scan", "up-s3-result", "up-s3-bucket");
+  scanBucket("up-gcs-scan", "up-gcs-result", "up-gcs-bucket");
+})();
+</script>
+</body>
+</html>
