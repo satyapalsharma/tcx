@@ -22,5 +22,6 @@ build/
 .od-skills/
 *.artifact.json
 
-# leftover reference dumps (not used by the apps)
-WhatsApp-Image-*.jpeg
+# WhatsApp reference screenshots (not used by the apps)
+WhatsApp-Image-*
+WhatsApp Image *
