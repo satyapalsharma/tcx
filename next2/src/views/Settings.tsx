@@ -197,7 +197,7 @@ export default function Settings() {
 
                 {filtered.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-12 text-center text-xs text-muted" data-od-id="clients-empty">
-                    <div className="mb-2 text-muted"><Icon name="filter" className="i-lg" /></div>
+                    <div className="mb-2 text-muted"><Icon name="filter" large className="w-4.5 h-4.5" /></div>
                     No clients match this search.
                   </div>
                 )}

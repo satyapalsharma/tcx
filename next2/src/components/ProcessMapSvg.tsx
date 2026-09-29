@@ -90,7 +90,7 @@ export function ProcessMapSvg({ activeNode, onNodeClick }: ProcessMapSvgProps) {
       <text x="694" y="282" fontSize="11" fill="var(--muted)" textAnchor="end">declines ×1 → retry explain</text>
       <g transform="translate(40,382)">
         <rect width="620" height="118" rx="10" fill="var(--surface)" stroke="var(--border)" />
-        <text x="16" y="26" className="seg-label">Conversation pattern — what the map was trained on</text>
+        <text x="16" y="26" fontSize="11" fontWeight="600" letterSpacing="0.04em" fill="var(--fg)">Conversation pattern — what the map was trained on</text>
         <text x="16" y="50" fontSize="12" fill="var(--fg)">Caller → “I cancelled last month but I’m still being charged”</text>
         <text x="16" y="70" fontSize="12" fill="var(--muted)">Agent → verifies cancellation effective date → compares plan terms → decides refund path.</text>
         <text x="16" y="98" fontSize="11.5" fill="var(--muted)">2,847 real calls clustered into this flow · avg handle 3m 40s · 41% reach an agent</text>

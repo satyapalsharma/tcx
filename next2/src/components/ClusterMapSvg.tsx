@@ -17,7 +17,7 @@ export function ClusterMapSvg() {
         <rect width="616" height="54" rx="10" />
         <text x="16" y="22" fontSize="12.5" fontWeight="580">Billing &amp; Payments</text>
         <text x="296" y="22" fontSize="11" fill="var(--muted)">4 L2 · 12 L3</text>
-        <text x="600" y="22" textAnchor="end" fontSize="11.5" fill="var(--muted)" className="tabular">7,045 · 38.2%</text>
+        <text x="600" y="22" textAnchor="end" fontSize="11.5" fill="var(--muted)" className="tabular-nums font-mono">7,045 · 38.2%</text>
         <rect className="cm-bar" x="16" y="32" width="584" height="6" rx="3" />
         <rect className="cm-bar-fill" x="16" y="32" width="584" height="6" rx="3" />
       </g>
@@ -25,7 +25,7 @@ export function ClusterMapSvg() {
         <rect width="616" height="54" rx="10" />
         <text x="16" y="22" fontSize="12.5" fontWeight="580">Connectivity &amp; Outages</text>
         <text x="296" y="22" fontSize="11" fill="var(--muted)">5 L2 · 18 L3</text>
-        <text x="600" y="22" textAnchor="end" fontSize="11.5" fill="var(--muted)" className="tabular">4,445 · 24.1%</text>
+        <text x="600" y="22" textAnchor="end" fontSize="11.5" fill="var(--muted)" className="tabular-nums font-mono">4,445 · 24.1%</text>
         <rect className="cm-bar" x="16" y="32" width="584" height="6" rx="3" />
         <rect className="cm-bar-fill" x="16" y="32" width="368.5" height="6" rx="3" />
       </g>
@@ -33,7 +33,7 @@ export function ClusterMapSvg() {
         <rect width="616" height="54" rx="10" />
         <text x="16" y="22" fontSize="12.5" fontWeight="580">New Installation &amp; Provisioning</text>
         <text x="296" y="22" fontSize="11" fill="var(--muted)">3 L2 · 9 L3</text>
-        <text x="600" y="22" textAnchor="end" fontSize="11.5" fill="var(--muted)" className="tabular">2,545 · 13.8%</text>
+        <text x="600" y="22" textAnchor="end" fontSize="11.5" fill="var(--muted)" className="tabular-nums font-mono">2,545 · 13.8%</text>
         <rect className="cm-bar" x="16" y="32" width="584" height="6" rx="3" />
         <rect className="cm-bar-fill" x="16" y="32" width="211" height="6" rx="3" />
       </g>
@@ -41,7 +41,7 @@ export function ClusterMapSvg() {
         <rect width="616" height="54" rx="10" />
         <text x="16" y="22" fontSize="12.5" fontWeight="580">Plan Changes &amp; Upgrades</text>
         <text x="296" y="22" fontSize="11" fill="var(--muted)">3 L2 · 7 L3</text>
-        <text x="600" y="22" textAnchor="end" fontSize="11.5" fill="var(--muted)" className="tabular">1,697 · 9.2%</text>
+        <text x="600" y="22" textAnchor="end" fontSize="11.5" fill="var(--muted)" className="tabular-nums font-mono">1,697 · 9.2%</text>
         <rect className="cm-bar" x="16" y="32" width="584" height="6" rx="3" />
         <rect className="cm-bar-fill" x="16" y="32" width="140.6" height="6" rx="3" />
       </g>
@@ -49,7 +49,7 @@ export function ClusterMapSvg() {
         <rect width="616" height="54" rx="10" />
         <text x="16" y="22" fontSize="12.5" fontWeight="580">Cancellation &amp; Port-out</text>
         <text x="296" y="22" fontSize="11" fill="var(--muted)">2 L2 · 6 L3</text>
-        <text x="600" y="22" textAnchor="end" fontSize="11.5" fill="var(--muted)" className="tabular">1,550 · 8.4%</text>
+        <text x="600" y="22" textAnchor="end" fontSize="11.5" fill="var(--muted)" className="tabular-nums font-mono">1,550 · 8.4%</text>
         <rect className="cm-bar" x="16" y="32" width="584" height="6" rx="3" />
         <rect className="cm-bar-fill" x="16" y="32" width="128.4" height="6" rx="3" />
       </g>
@@ -57,7 +57,7 @@ export function ClusterMapSvg() {
         <rect width="616" height="54" rx="10" />
         <text x="16" y="22" fontSize="12.5" fontWeight="580">Account &amp; Identity</text>
         <text x="296" y="22" fontSize="11" fill="var(--muted)">2 L2 · 5 L3</text>
-        <text x="600" y="22" textAnchor="end" fontSize="11.5" fill="var(--muted)" className="tabular">1,160 · 6.3%</text>
+        <text x="600" y="22" textAnchor="end" fontSize="11.5" fill="var(--muted)" className="tabular-nums font-mono">1,160 · 6.3%</text>
         <rect className="cm-bar" x="16" y="32" width="584" height="6" rx="3" />
         <rect className="cm-bar-fill" x="16" y="32" width="96.3" height="6" rx="3" />
       </g>

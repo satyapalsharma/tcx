@@ -21,12 +21,12 @@ type Conn = {
 };
 
 const CONNECTORS: Conn[] = [
-  { id: 's3', name: 'Amazon S3', kind: 'Storage · bulk ingest', mark: 'S3', badge: 'badge-ok', badgeText: 'Live', desc: 'Transcript and media bucket for the weekly ingest wave.', kvs: [['Bucket', 'tx-skyline-exports'], ['Objects', '18,442 files'], ['Last sync', '12 min ago']] },
-  { id: 'genesys', name: 'Genesys Cloud', kind: 'Voice · recordings API', mark: 'G', badge: 'badge-ok', badgeText: 'Live', desc: 'Call recordings and transcripts via the recording API.', kvs: [['Region', 'mypurecloud.in'], ['Queue coverage', '14 of 16'], ['Last sync', '12 min ago']] },
-  { id: 'salesforce', name: 'Salesforce', kind: 'CRM · cases & contacts', mark: 'SF', badge: 'badge-warn', badgeText: 'Re-auth', desc: 'Case notes, call logs and contact objects with field mapping.', kvs: [['Instance', 'skyline-bb.my.salesforce.com'], ['Objects', 'Case · Contact · Task'], ['Token', 'expired 3 days ago']] },
-  { id: 'zendesk', name: 'Zendesk', kind: 'Support · tickets API', mark: 'Z', badge: 'badge-ok', badgeText: 'Live', desc: 'Tickets and conversations — the email-side wave.', kvs: [['Subdomain', 'skyline.zendesk.com'], ['Threads', '9,205 threads'], ['Last sync', '38 min ago']] },
-  { id: 'hubspot', name: 'HubSpot', kind: 'CRM · marketing side', mark: 'HS', alt: true, badge: 'badge', badgeText: 'Not connected', desc: 'Churn-trigger workflows from the marketing-side CRM.', kvs: [['Objects', 'Ticket · Contact'], ['Direction', 'Bidirectional']] },
-  { id: 'nice', name: 'NICE CXone', kind: 'Voice · inContact', mark: 'in', alt: true, badge: 'badge', badgeText: 'Not connected', desc: 'Voice + digital recordings with routing metadata.', kvs: [['Channels', 'Voice · Chat · Email']] },
+  { id: 's3', name: 'Amazon S3', kind: 'Storage · bulk ingest', mark: 'S3', badge: 'ok', badgeText: 'Live', desc: 'Transcript and media bucket for the weekly ingest wave.', kvs: [['Bucket', 'tx-skyline-exports'], ['Objects', '18,442 files'], ['Last sync', '12 min ago']] },
+  { id: 'genesys', name: 'Genesys Cloud', kind: 'Voice · recordings API', mark: 'G', badge: 'ok', badgeText: 'Live', desc: 'Call recordings and transcripts via the recording API.', kvs: [['Region', 'mypurecloud.in'], ['Queue coverage', '14 of 16'], ['Last sync', '12 min ago']] },
+  { id: 'salesforce', name: 'Salesforce', kind: 'CRM · cases & contacts', mark: 'SF', badge: 'warn', badgeText: 'Re-auth', desc: 'Case notes, call logs and contact objects with field mapping.', kvs: [['Instance', 'skyline-bb.my.salesforce.com'], ['Objects', 'Case · Contact · Task'], ['Token', 'expired 3 days ago']] },
+  { id: 'zendesk', name: 'Zendesk', kind: 'Support · tickets API', mark: 'Z', badge: 'ok', badgeText: 'Live', desc: 'Tickets and conversations — the email-side wave.', kvs: [['Subdomain', 'skyline.zendesk.com'], ['Threads', '9,205 threads'], ['Last sync', '38 min ago']] },
+  { id: 'hubspot', name: 'HubSpot', kind: 'CRM · marketing side', mark: 'HS', alt: true, badge: 'muted', badgeText: 'Not connected', desc: 'Churn-trigger workflows from the marketing-side CRM.', kvs: [['Objects', 'Ticket · Contact'], ['Direction', 'Bidirectional']] },
+  { id: 'nice', name: 'NICE CXone', kind: 'Voice · inContact', mark: 'in', alt: true, badge: 'muted', badgeText: 'Not connected', desc: 'Voice + digital recordings with routing metadata.', kvs: [['Channels', 'Voice · Chat · Email']] },
 ];
 
 function connMark(name: string) {
@@ -61,8 +61,8 @@ export default function Connectors() {
   };
 
   const getBadgeClass = (badge: string) => {
-    if (badge === 'badge-ok') return 'bg-success-soft text-success-fg';
-    if (badge === 'badge-warn') return 'bg-warn-soft text-warn-fg';
+    if (badge === 'ok' || badge === 'badge-ok') return 'bg-success-soft text-success-fg';
+    if (badge === 'warn' || badge === 'badge-warn') return 'bg-warn-soft text-warn-fg';
     return 'bg-surface-inset text-muted';
   };
 
@@ -159,7 +159,7 @@ export default function Connectors() {
 
         {filtered.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-center text-sm text-muted border border-dashed border-border rounded-xl bg-surface/40" data-od-id="conn-empty">
-            <div className="mb-2 text-muted"><Icon name="filter" className="i-lg" /></div>
+            <div className="mb-2 text-muted"><Icon name="filter" large className="w-4.5 h-4.5" /></div>
             No connectors match this search.
           </div>
         )}

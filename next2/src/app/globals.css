@@ -25,6 +25,7 @@
   --color-fg: oklch(18% 0.012 250);
   --color-muted: oklch(54% 0.012 250);
   --color-border: oklch(92% 0.005 250);
+  --color-border-strong: oklch(82% 0.008 250);
   --color-accent: oklch(66.2% 0.218 37); /* EXL orange #FB4E0B */
 
   /* Derived accent (L-shift only, hue held at 35–45) */

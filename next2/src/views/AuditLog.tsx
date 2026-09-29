@@ -279,7 +279,7 @@ export default function AuditLog() {
           ))}
           {visibleCount === 0 && (
             <div className="flex flex-col items-center justify-center py-14 text-center text-xs text-muted p-4" data-od-id="audit-empty">
-              <Icon name="search" className="i-lg mb-2 text-muted" />
+              <Icon name="search" large className="w-4.5 h-4.5 mb-2 text-muted" />
               <div className="font-semibold text-foreground text-sm">No events match these filters</div>
               <div className="text-muted mt-0.5">Try a different actor, scope, date range, or search term.</div>
               <button

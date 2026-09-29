@@ -44,35 +44,35 @@ const INITIAL_MEMBERS: Member[] = [
   {
     id: 'priya', odId: 'mem-priya', name: 'Priya Nair', email: 'priya@skyline-broadband.com', role: 'Admin',
     chips: [{ label: 'Analysis' }, { label: 'Design' }, { label: 'Develop' }, { label: 'Admin' }],
-    lastActive: 'now', statusLabel: 'Active', statusBadge: 'badge badge-ok',
+    lastActive: 'now', statusLabel: 'Active', statusBadge: 'ok',
     actionTitle: 'Reset password', actionIcon: 'key', actionToast: 'Reset link sent to Priya',
     initials: 'PN',
   },
   {
     id: 'riya', odId: 'mem-riya', name: 'Riya Menon', email: 'riya.m@skyline-broadband.com', role: 'Business Analyst',
     chips: [{ label: 'Analysis' }, { label: 'Design · view', off: true }, { label: 'Develop · —', off: true }],
-    lastActive: '12 min ago', statusLabel: 'Active', statusBadge: 'badge badge-ok',
+    lastActive: '12 min ago', statusLabel: 'Active', statusBadge: 'ok',
     actionTitle: 'Reset password', actionIcon: 'key', actionToast: 'Reset link sent to Riya',
     initials: 'RM',
   },
   {
     id: 'devika', odId: 'mem-devika', name: 'Devika Sharma', email: 'devika.s@skyline-broadband.com', role: 'CX Designer',
     chips: [{ label: 'Analysis · view', off: true }, { label: 'Design' }, { label: 'Develop · —', off: true }],
-    lastActive: '1 h ago', statusLabel: 'Active', statusBadge: 'badge badge-ok',
+    lastActive: '1 h ago', statusLabel: 'Active', statusBadge: 'ok',
     actionTitle: 'Reset password', actionIcon: 'key', actionToast: 'Reset link sent to Devika',
     initials: 'DS',
   },
   {
     id: 'arjun', odId: 'mem-arjun', name: 'Arjun Shah', email: 'arjun.sh@skyline-broadband.com', role: 'Developer',
     chips: [{ label: 'Analysis · —', off: true }, { label: 'Design · view', off: true }, { label: 'Develop' }],
-    lastActive: '24 min ago', statusLabel: 'Active', statusBadge: 'badge badge-ok',
+    lastActive: '24 min ago', statusLabel: 'Active', statusBadge: 'ok',
     actionTitle: 'Reset password', actionIcon: 'key', actionToast: 'Reset link sent to Arjun',
     initials: 'AS',
   },
   {
     id: 'karan', odId: 'mem-karan', name: 'Karan Mehta', email: 'k.mehhta@partner.skylinebb.com', role: 'Viewer',
     chips: [{ label: 'Analysis · view', off: true }, { label: 'Design · view', off: true }, { label: 'Develop · view', off: true }],
-    lastActive: '2 days ago', statusLabel: 'Invite pending', statusBadge: 'badge badge-warn',
+    lastActive: '2 days ago', statusLabel: 'Invite pending', statusBadge: 'warn',
     actionTitle: 'Resend invite', actionIcon: 'sync', actionToast: 'Invite resent to Karan',
     initials: 'KM',
   },
@@ -80,7 +80,7 @@ const INITIAL_MEMBERS: Member[] = [
     id: 'svc', odId: 'mem-svc', name: 'svc-transform-bot', email: 'service account · deploy CI', role: 'Developer',
     roleDisabled: true, roleOptions: ['Developer'], service: true,
     chips: [{ label: 'Develop · deploy only', off: true }],
-    lastActive: 'via CI', statusLabel: 'Service acct', statusBadge: 'badge',
+    lastActive: 'via CI', statusLabel: 'Service acct', statusBadge: 'default',
     actionTitle: 'Rotate token', actionIcon: 'key', actionToast: 'Token rotation started — old token valid for 24 h',
     initials: 'SC', avatarMuted: true,
   },
@@ -185,7 +185,7 @@ export default function Rbac() {
       chips: [{ label: 'Umbrella · pending', off: true }],
       lastActive: '—',
       statusLabel: 'Invite pending',
-      statusBadge: 'badge badge-warn',
+      statusBadge: 'warn',
       actionTitle: 'Resend invite',
       actionIcon: 'sync',
       actionToast: 'Invite resent',
@@ -385,9 +385,9 @@ export default function Rbac() {
                     <td className="px-4 py-3 whitespace-nowrap text-muted">{m.lastActive}</td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <span className={`inline-flex items-center gap-1.5 h-5 px-2 rounded-full text-[11px] font-medium ${
-                        m.statusBadge.includes('badge-ok')
+                        m.statusBadge === 'ok' || m.statusBadge.includes('badge-ok')
                           ? 'bg-success-soft text-success-fg'
-                          : m.statusBadge.includes('badge-warn')
+                          : m.statusBadge === 'warn' || m.statusBadge.includes('badge-warn')
                           ? 'bg-warn-soft text-warn-fg'
                           : 'bg-surface-inset text-muted'
                       }`}>
@@ -424,7 +424,7 @@ export default function Rbac() {
 
           {filtered.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12 text-center text-xs text-muted" id="members-empty" data-od-id="members-empty">
-              <div className="mb-2 text-muted"><Icon name="filter" className="i-lg" /></div>
+              <div className="mb-2 text-muted"><Icon name="filter" large className="w-4.5 h-4.5" /></div>
               No members match this search.
             </div>
           )}

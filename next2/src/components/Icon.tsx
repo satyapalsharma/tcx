@@ -71,7 +71,13 @@ type Props = SVGProps<SVGSVGElement> & { name: IconName; large?: boolean };
 
 export function Icon({ name, large, className = '', ...rest }: Props) {
   return (
-    <svg className={`i${large ? ' i-lg' : ''} ${className}`.trim()} aria-hidden="true" {...rest}>
+    <svg
+      className={`i shrink-0 stroke-current fill-none [stroke-width:1.7] [stroke-linecap:round] [stroke-linejoin:round] align-[-2px] ${
+        large ? 'w-[17px] h-[17px] i-lg' : 'w-[15px] h-[15px]'
+      } ${className}`.trim()}
+      aria-hidden="true"
+      {...rest}
+    >
       {PATHS[name]}
     </svg>
   );
