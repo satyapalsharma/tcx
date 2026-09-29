@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @import "../tx.css";
-@import "../pages.css";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 /*
@@ -16,7 +15,7 @@
  * Transform.cx — Tailwind v4 theme (CSS-first).
  * Tailwind v4 is configured here via @theme instead of tailwind.config.ts.
  * Every value mirrors brand-spec.md / tx.css 1:1 so the port stays pixel-identical.
- * The legacy tx.css + pages.css are imported above as the base component layer;
+ * The legacy tx.css is imported above as the base layer;
  * @theme re-exposes the same values as Tailwind utilities (bg-surface, text-fg, …).
  */
 @theme {

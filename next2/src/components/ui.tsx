@@ -8,19 +8,27 @@ export function Tabs({ tabs, panels, defaultTab }: {
   const [active, setActive] = useState(defaultTab ?? tabs[0]?.id);
   return (
     <div data-tab-scope>
-      <div className="tabs" data-tabs>
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            role="tab"
-            aria-selected={active === t.id}
-            data-tab={t.id}
-            onClick={() => setActive(t.id)}
-          >
-            {t.label}
-          </button>
-        ))}
+      <div className="flex items-center gap-1 border-b border-border overflow-x-auto scrollbar-none" data-tabs>
+        {tabs.map((t) => {
+          const isSelected = active === t.id;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={isSelected}
+              data-tab={t.id}
+              onClick={() => setActive(t.id)}
+              className={`h-9 px-3.5 text-xs sm:text-[13px] font-medium border-b-2 -mb-px flex items-center gap-2 transition-colors whitespace-nowrap cursor-pointer ${
+                isSelected
+                  ? 'border-foreground text-foreground font-semibold'
+                  : 'border-transparent text-muted hover:text-foreground'
+              }`}
+            >
+              {t.label}
+            </button>
+          );
+        })}
       </div>
       {Object.entries(panels).map(([id, panel]) => (
         <div key={id} data-panel={id} hidden={active !== id}>{panel}</div>
@@ -37,19 +45,26 @@ export function ChipGroup({ options, value, onChange, swapPrefix }: {
 }) {
   return (
     <>
-      <div className="chips" data-chips data-swap={swapPrefix}>
-        {options.map((o) => (
-          <button
-            key={o.val}
-            type="button"
-            className="chip"
-            data-val={o.val}
-            aria-pressed={value === o.val}
-            onClick={() => onChange(o.val)}
-          >
-            {o.label}
-          </button>
-        ))}
+      <div className="flex flex-wrap items-center gap-1.5" data-chips data-swap={swapPrefix}>
+        {options.map((o) => {
+          const isSelected = value === o.val;
+          return (
+            <button
+              key={o.val}
+              type="button"
+              data-val={o.val}
+              aria-pressed={isSelected}
+              onClick={() => onChange(o.val)}
+              className={`inline-flex items-center gap-1.5 h-6.5 px-2.5 text-xs font-medium rounded-full border transition-all cursor-pointer whitespace-nowrap ${
+                isSelected
+                  ? 'bg-foreground border-foreground text-surface font-semibold shadow-xs'
+                  : 'bg-surface border-border text-foreground hover:bg-surface-hover hover:border-[oklch(87%_0.006_250)]'
+              }`}
+            >
+              {o.label}
+            </button>
+          );
+        })}
       </div>
       {swapPrefix && options.map((o) => (
         <div key={o.val} data-swap-panel={`${swapPrefix}-${o.val}`} hidden={value !== o.val} />
@@ -62,7 +77,6 @@ export function Switch({ checked, onChange, label }: { checked: boolean; onChang
   const toggle = () => onChange(!checked);
   return (
     <span
-      className="switch"
       role="switch"
       tabIndex={0}
       aria-checked={checked}
@@ -74,7 +88,16 @@ export function Switch({ checked, onChange, label }: { checked: boolean; onChang
           toggle();
         }
       }}
-    />
+      className={`relative inline-flex items-center h-5 w-8.5 shrink-0 rounded-full transition-colors cursor-pointer ${
+        checked ? 'bg-accent-strong' : 'bg-[oklch(88%_0.006_250)]'
+      }`}
+    >
+      <span
+        className={`inline-block h-4 w-4 rounded-full bg-surface shadow-xs transition-transform ${
+          checked ? 'translate-x-4' : 'translate-x-0.5'
+        }`}
+      />
+    </span>
   );
 }
 
@@ -86,5 +109,5 @@ export function useTextFilter<T>(items: T[], getText: (item: T) => string) {
 }
 
 export function usePageReveal() {
-  // reveal-in animation handled by tx.css when class added on mount
+  // handled cleanly via Tailwind animate utilities
 }

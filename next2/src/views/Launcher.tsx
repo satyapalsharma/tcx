@@ -22,46 +22,72 @@ export default function Launcher() {
   const [lastPage, setLastPage] = useState<string | null>(null);
 
   useEffect(() => {
-    document.body.classList.add('launcher');
     try {
       const lp = localStorage.getItem('tx-last-page');
       if (lp && lp !== 'index') setLastPage(lp);
     } catch { /* noop */ }
-    return () => document.body.classList.remove('launcher');
   }, []);
 
   const lastLabel = lastPage ? lastPage.replace(/-/g, ' ').replace(/^./, (c) => c.toUpperCase()) : '';
 
   return (
-    <main className="ov" data-od-id="launcher">
-      <div className="row" style={{ gap: 10, alignItems: 'center' }}>
-        <img className="exl-logo" src="/EXL_Service_logo.svg.webp" alt="EXL" style={{ height: 22, width: 'auto', display: 'block' }} />
-        <span style={{ width: 1, height: 22, background: 'var(--border)' }} aria-hidden="true" />
-        <div>
-          <div style={{ fontWeight: 640, fontSize: 16, letterSpacing: '-0.02em' }}>Transform.cx</div>
-          <div className="caps" style={{ marginTop: 1 }}>Prototype v1 · EXL</div>
+    <main className="min-h-screen grid place-items-center p-6 sm:p-12 bg-background text-foreground" data-od-id="launcher">
+      <div className="w-full max-w-[760px]">
+        <div className="flex items-center gap-2.5">
+          <img className="h-5.5 w-auto block shrink-0" src="/EXL_Service_logo.svg.webp" alt="EXL" />
+          <span className="w-px h-5.5 bg-border shrink-0" aria-hidden="true" />
+          <div>
+            <div className="font-bold text-base tracking-tight text-foreground">Transform.cx</div>
+            <div className="text-[11px] uppercase tracking-wider font-semibold text-muted mt-0.5">Prototype v1 · EXL</div>
+          </div>
+          <span className="ml-auto inline-flex items-center gap-1.5 h-5.5 px-2 text-xs font-medium rounded-full bg-surface-inset border border-border text-foreground">
+            <span className="w-1.5 h-1.5 rounded-full bg-muted" />12 screens
+          </span>
         </div>
-        <span className="badge" style={{ marginLeft: 'auto' }}><span className="dot" />12 screens</span>
-      </div>
-      <h1>Conversation-to-automation pipeline,<br />broken into clean stages</h1>
-      <p className="lede">Customer interactions in → intents extracted → L1→L2→L3 clusters → process maps → agent code. Three umbrellas — <strong>Analysis</strong> (Analysts), <strong>Design</strong> (CX Designers), <strong>Develop</strong> (Developers) — each usable on its own or stacked end-to-end. Demo tells the Skyline Broadband story throughout.</p>
-      <div className="screens" data-od-id="screen-list">
-        {SCREENS.map((s) => (
-          <Link key={s.to} className={`scr${s.pri ? ' pri' : ''}`} to={s.to} data-od-id={s.od} onClick={() => { try { localStorage.setItem('tx-last-page', s.to.slice(1)); } catch { /* noop */ } }}>
-            <span className="ic"><Icon name={s.icon} /></span>
-            <div><div className="n">{s.name}</div><div className="d">{s.desc}</div></div>
-            <Icon name="arrowr" className="go" />
-          </Link>
-        ))}
-      </div>
-      {lastPage && (
-        <div className="note" data-od-id="resume-note">
-          <Icon name="clock" />
-          Last opened in this session:
-          <Link className="link" to={`/${lastPage}`} style={{ marginLeft: 2 }}>{lastLabel}</Link>
-          · sidebar also returns you to any stage directly
+
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground mt-4 leading-tight">
+          Conversation-to-automation pipeline,<br className="hidden sm:inline" /> broken into clean stages
+        </h1>
+
+        <p className="text-muted text-sm sm:text-[14.5px] mt-2 max-w-[58ch] leading-relaxed">
+          Customer interactions in → intents extracted → L1→L2→L3 clusters → process maps → agent code. Three umbrellas — <strong>Analysis</strong> (Analysts), <strong>Design</strong> (CX Designers), <strong>Develop</strong> (Developers) — each usable on its own or stacked end-to-end. Demo tells the Skyline Broadband story throughout.
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-8" data-od-id="screen-list">
+          {SCREENS.map((s) => (
+            <Link
+              key={s.to}
+              className={`group flex items-center gap-3 p-3.5 rounded-lg border text-foreground transition-all duration-150 active:translate-y-px ${
+                s.pri
+                  ? 'border-accent-border bg-accent-soft hover:bg-accent-soft hover:border-accent'
+                  : 'bg-surface border-border hover:border-[oklch(85%_0.008_250)] hover:bg-surface-hover'
+              }`}
+              to={s.to}
+              data-od-id={s.od}
+              onClick={() => { try { localStorage.setItem('tx-last-page', s.to.slice(1)); } catch { /* noop */ } }}
+            >
+              <span className={`w-8 h-8 rounded-lg grid place-items-center shrink-0 ${s.pri ? 'bg-accent-strong text-white' : 'bg-surface-inset text-muted'}`}>
+                <Icon name={s.icon} className="w-4 h-4" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="font-semibold text-xs sm:text-[13px] text-foreground">{s.name}</div>
+                <div className="text-xs text-muted truncate mt-0.5">{s.desc}</div>
+              </div>
+              <Icon name="arrowr" className="ml-auto text-muted w-4 h-4 transition-colors group-hover:text-foreground shrink-0" />
+            </Link>
+          ))}
         </div>
-      )}
+
+        {lastPage && (
+          <div className="mt-6 p-3.5 sm:px-4 bg-surface-inset border border-border/70 rounded-lg text-xs text-muted flex items-center gap-2 flex-wrap" data-od-id="resume-note">
+            <Icon name="clock" className="w-3.5 h-3.5 text-muted shrink-0" />
+            <span>Last opened in this session:</span>
+            <Link className="text-accent-strong hover:underline font-medium" to={`/${lastPage}`}>{lastLabel}</Link>
+            <span className="text-border">·</span>
+            <span>sidebar also returns you to any stage directly</span>
+          </div>
+        )}
+      </div>
     </main>
   );
 }

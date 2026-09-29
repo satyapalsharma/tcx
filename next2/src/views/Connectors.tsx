@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { AppShell } from '../components/AppShell';
 import { Icon } from '../components/Icon';
 import { CloseButton, Drawer, OpenButton, useOverlay } from '../components/Overlay';
-import { useTextFilter } from '../components/ui';
+import { Switch, useTextFilter } from '../components/ui';
 import { useToast } from '../components/Toast';
 import { useReveal } from '../hooks/useReveal';
 
@@ -42,6 +42,8 @@ export default function Connectors() {
   const [ncProvider, setNcProvider] = useState('Generic webhook');
   const [ncSync, setNcSync] = useState('Hourly');
   const [authMode, setAuthMode] = useState('IAM role (recommended)');
+  const [piiRedaction, setPiiRedaction] = useState(true);
+  const [liveSource, setLiveSource] = useState(true);
 
   const openConn = (c: Conn) => {
     setSelected(c);
@@ -52,158 +54,332 @@ export default function Connectors() {
     const mono = k === 'Bucket' || k === 'Instance' || k === 'Subdomain';
     const warn = v.includes('expired');
     return (
-      <span className={mono ? 'mono' : ''} style={{ fontSize: mono ? '11.5px' : undefined, color: warn ? 'var(--warn-fg)' : undefined, fontWeight: warn ? 560 : undefined }}>
+      <span className={`${mono ? 'font-mono text-[11.5px]' : 'text-xs'} ${warn ? 'text-warn-fg font-semibold' : 'text-foreground'}`}>
         {v}
       </span>
     );
   };
 
+  const getBadgeClass = (badge: string) => {
+    if (badge === 'badge-ok') return 'bg-success-soft text-success-fg';
+    if (badge === 'badge-warn') return 'bg-warn-soft text-warn-fg';
+    return 'bg-surface-inset text-muted';
+  };
+
   return (
-    <AppShell crumb="Connectors" badge={<span className="badge badge-warn"><span className="dot" />1 needs re-auth</span>}>
-      <div className="page" data-od-id="connectors-page">
-        <div className="page-h">
-          <div style={{ flex: 1 }}>
-            <h1 data-od-id="page-title">Connectors</h1>
-            <p className="sub">Point Transform.cx at the places your customer interactions already live. Syncs run hourly; credentials sit in the workspace vault, never inside pipeline runs.</p>
+    <AppShell
+      crumb="Connectors"
+      badge={
+        <span className="inline-flex items-center gap-1.5 h-5 px-2 rounded-full text-xs font-medium bg-warn-soft text-warn-fg">
+          <span className="w-1.5 h-1.5 rounded-full bg-current" />
+          1 needs re-auth
+        </span>
+      }
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6" data-od-id="connectors-page">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
+          <div className="flex-1">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground" data-od-id="page-title">Connectors</h1>
+            <p className="text-xs sm:text-sm text-muted mt-1 max-w-2xl leading-relaxed">
+              Point Transform.cx at the places your customer interactions already live. Syncs run hourly; credentials sit in the workspace vault, never inside pipeline runs.
+            </p>
           </div>
-          <button type="button" className="btn" onClick={() => toast('Connector SDK docs (stub for demo)', 'ext')}><Icon name="ext" />SDK docs</button>
-          <OpenButton className="btn btn-primary" target="dw-newconn" data-od-id="add-connector-btn"><Icon name="plus" />Add connector</OpenButton>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md text-xs sm:text-sm font-medium border border-border bg-surface hover:bg-surface-hover transition-colors text-foreground shadow-xs cursor-pointer"
+              onClick={() => toast('Connector SDK docs (stub for demo)', 'ext')}
+            >
+              <Icon name="ext" />SDK docs
+            </button>
+            <OpenButton
+              className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md text-xs sm:text-sm font-medium bg-accent-strong text-white hover:bg-accent-hover active:bg-accent-active transition-colors shadow-xs cursor-pointer"
+              target="dw-newconn"
+              data-od-id="add-connector-btn"
+            >
+              <Icon name="plus" />Add connector
+            </OpenButton>
+          </div>
         </div>
-        <div className="row" style={{ gap: 8, marginBottom: 14 }} data-od-id="conn-filters">
-          <input className="input" style={{ width: 280 }} placeholder="Search connectors" aria-label="Search connectors" value={query} onChange={(e) => setQuery(e.target.value)} />
-          <span style={{ flex: 1 }} />
-          <span className="hint"><span>{query.trim() ? count : count + 1}</span> shown</span>
+
+        <div className="flex items-center gap-2 pb-1" data-od-id="conn-filters">
+          <input
+            className="h-9 px-3 w-64 sm:w-72 rounded-md border border-border bg-surface text-xs sm:text-sm text-foreground placeholder:text-muted/60 focus:outline-none focus:ring-1 focus:ring-accent"
+            placeholder="Search connectors"
+            aria-label="Search connectors"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          <span className="flex-1" />
+          <span className="text-xs text-muted font-medium"><span>{query.trim() ? count : count + 1}</span> shown</span>
         </div>
-        <div className="conn-grid" data-od-id="conn-grid">
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5" data-od-id="conn-grid">
           {filtered.map((c) => (
-            <div key={c.id} className="card conn-card" data-od-id={`conn-${c.id}`} onClick={() => openConn(c)}>
-              <div className="row" style={{ gap: 9 }}>
-                <span className={`mark${c.alt ? ' alt' : ''}`}>{c.mark}</span>
-                <strong style={{ fontSize: 13 }}>{c.name}</strong>
-                <span className={`badge ${c.badge}`} style={{ marginLeft: 'auto' }}><span className="dot" />{c.badgeText}</span>
+            <div
+              key={c.id}
+              className="group bg-surface border border-border rounded-xl p-4 flex flex-col gap-3 cursor-pointer hover:border-border-strong hover:bg-surface-hover/30 transition-all text-left shadow-xs"
+              data-od-id={`conn-${c.id}`}
+              onClick={() => openConn(c)}
+            >
+              <div className="flex items-center gap-2.5">
+                <span className={`w-7 h-7 rounded-md text-xs font-bold flex items-center justify-center shrink-0 ${c.alt ? 'bg-surface-inset text-foreground border border-border' : 'bg-foreground text-surface'}`}>
+                  {c.mark}
+                </span>
+                <strong className="text-[13px] font-semibold text-foreground truncate">{c.name}</strong>
+                <span className={`inline-flex items-center gap-1.5 h-5 px-2 rounded-full text-[11px] font-medium shrink-0 ml-auto ${getBadgeClass(c.badge)}`}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                  {c.badgeText}
+                </span>
               </div>
-              <span className="muted" style={{ fontSize: 12 }}>{c.desc}</span>
-              {c.kvs.map(([k, v]) => <div key={k} className="kv"><span>{k}</span>{kvValue(k, v)}</div>)}
+              <span className="text-xs text-muted leading-relaxed line-clamp-2">{c.desc}</span>
+              <div className="flex flex-col gap-1 pt-2 border-t border-border/60 mt-auto">
+                {c.kvs.map(([k, v]) => (
+                  <div key={k} className="flex items-center justify-between text-xs py-0.5">
+                    <span className="text-muted">{k}</span>
+                    {kvValue(k, v)}
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
-          <OpenButton className="card conn-card" target="dw-newconn" data-od-id="conn-new-tile" style={{ borderStyle: 'dashed', cursor: 'pointer' }}>
-            <span className="mark alt"><Icon name="plus" style={{ width: 14, height: 14 }} /></span>
-            <strong style={{ fontSize: 13 }}>New connector</strong>
-            <span className="muted" style={{ fontSize: 12 }}>Freshdesk · Intercom · Dialpad · generic webhook</span>
+
+          <OpenButton
+            className="bg-surface/50 border border-dashed border-border hover:border-accent hover:bg-accent-soft/30 rounded-xl p-4 flex flex-col items-start gap-2.5 cursor-pointer transition-all text-left group"
+            target="dw-newconn"
+            data-od-id="conn-new-tile"
+          >
+            <span className="w-7 h-7 rounded-md bg-surface-inset group-hover:bg-accent-soft group-hover:text-accent-strong border border-border text-muted text-xs font-bold flex items-center justify-center shrink-0 transition-colors">
+              <Icon name="plus" style={{ width: 14, height: 14 }} />
+            </span>
+            <strong className="text-[13px] font-semibold text-foreground group-hover:text-accent-strong transition-colors">New connector</strong>
+            <span className="text-xs text-muted">Freshdesk · Intercom · Dialpad · generic webhook</span>
           </OpenButton>
         </div>
+
         {filtered.length === 0 && (
-          <div className="empty" data-od-id="conn-empty">
-            <div style={{ marginBottom: 8 }}><Icon name="filter" className="i-lg" /></div>
+          <div className="flex flex-col items-center justify-center py-16 text-center text-sm text-muted border border-dashed border-border rounded-xl bg-surface/40" data-od-id="conn-empty">
+            <div className="mb-2 text-muted"><Icon name="filter" className="i-lg" /></div>
             No connectors match this search.
           </div>
         )}
       </div>
 
       <Drawer id="dw-conn" data-od-id="conn-drawer">
-        <div className="drawer-h">
-          <div className="row" style={{ gap: 10, minWidth: 0, flex: 1 }}>
-            <span style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--fg)', color: 'var(--surface)', display: 'grid', placeItems: 'center', fontSize: 11, fontWeight: 680 }}>{connMark(selected.name)}</span>
+        <div className="flex items-center justify-between gap-3 p-4 sm:p-5 border-b border-border">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            <span className="w-8 h-8 rounded-lg bg-foreground text-surface grid place-items-center text-xs font-bold shrink-0">{connMark(selected.name)}</span>
             <div>
-              <div style={{ fontSize: 15, fontWeight: 620, letterSpacing: '-0.01em' }}>{selected.name}</div>
-              <div className="hint" style={{ marginTop: 1 }}>{selected.kind}</div>
+              <div className="text-sm sm:text-base font-semibold text-foreground tracking-tight">{selected.name}</div>
+              <div className="text-xs text-muted mt-0.5">{selected.kind}</div>
             </div>
           </div>
-          <span className={`badge ${selected.badge}`}><span className="dot" />{selected.badgeText}</span>
-          <CloseButton className="icon-btn" title="Close"><Icon name="x" /></CloseButton>
+          <span className={`inline-flex items-center gap-1.5 h-5 px-2 rounded-full text-xs font-medium shrink-0 ${getBadgeClass(selected.badge)}`}>
+            <span className="w-1.5 h-1.5 rounded-full bg-current" />
+            {selected.badgeText}
+          </span>
+          <CloseButton className="inline-flex items-center justify-center w-8 h-8 rounded-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer" title="Close">
+            <Icon name="x" />
+          </CloseButton>
         </div>
-        <div className="drawer-b" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+        <div className="p-4 sm:p-5 flex flex-col gap-4 overflow-y-auto max-h-[calc(100vh-140px)]">
           <div>
-            <div className="caps" style={{ marginBottom: 8 }}>Sync health</div>
-            <div className="row" style={{ gap: 10, fontSize: '12.5px' }}>
-              <span>Last sync: <strong>12 min ago</strong></span>
-              <span className="muted">·</span>
-              <span>Next: <strong>in 48 min</strong></span>
-              <span style={{ flex: 1 }} />
-              <button type="button" className="btn btn-sm" onClick={() => toast('Sync requested — queue position 2', 'sync')}><Icon name="sync" />Sync now</button>
+            <div className="text-[11px] font-semibold tracking-wider uppercase text-muted mb-2">Sync health</div>
+            <div className="flex flex-wrap items-center gap-2.5 text-xs text-muted">
+              <span>Last sync: <strong className="text-foreground font-semibold">12 min ago</strong></span>
+              <span className="text-muted/60">·</span>
+              <span>Next: <strong className="text-foreground font-semibold">in 48 min</strong></span>
+              <span className="flex-1" />
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-xs font-medium border border-border bg-surface hover:bg-surface-hover text-foreground transition-colors cursor-pointer"
+                onClick={() => toast('Sync requested — queue position 2', 'sync')}
+              >
+                <Icon name="sync" />Sync now
+              </button>
             </div>
-            <div className="meter" style={{ marginTop: 8 }}><div className="track"><div className="fill fill-ok" style={{ width: '100%' }} /></div></div>
-          </div>
-          <div className="divider" />
-          <div className="grid-2">
-            <div className="field"><label className="label" htmlFor="dw-field-name">Name</label><input className="input" id="dw-field-name" defaultValue="Skyline exports bucket" /></div>
-            <div className="field"><label className="label" htmlFor="dw-region">Region</label>
-              <select className="input" id="dw-region"><option>ap-south-1 (Mumbai)</option><option>us-east-1</option><option>eu-central-1</option></select>
+            <div className="w-full h-1.5 bg-surface-inset rounded-full overflow-hidden mt-2">
+              <div className="h-full bg-success rounded-full" style={{ width: '100%' }} />
             </div>
           </div>
-          <div className="field">
-            <label className="label" htmlFor="dw-prefix">Prefix filter</label>
-            <input className="input mono" id="dw-prefix" style={{ fontSize: 12 }} defaultValue="transcripts/wk*/" />
-            <span className="hint">Only objects under this prefix join the pipeline.</span>
+
+          <div className="h-px bg-border" />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1.5" htmlFor="dw-field-name">Name</label>
+              <input className="w-full h-9 px-3 rounded-md border border-border bg-surface text-xs sm:text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent" id="dw-field-name" defaultValue="Skyline exports bucket" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1.5" htmlFor="dw-region">Region</label>
+              <select className="w-full h-9 px-3 rounded-md border border-border bg-surface text-xs sm:text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent" id="dw-region">
+                <option>ap-south-1 (Mumbai)</option>
+                <option>us-east-1</option>
+                <option>eu-central-1</option>
+              </select>
+            </div>
           </div>
-          <div className="row" style={{ justifyContent: 'space-between' }}>
-            <div><div className="label">PII redaction on ingest</div><div className="hint">Masks numbers and IDs before embedding.</div></div>
-            <SwitchStub checked />
+
+          <div>
+            <label className="block text-xs font-semibold text-foreground mb-1.5" htmlFor="dw-prefix">Prefix filter</label>
+            <input className="w-full h-9 px-3 rounded-md border border-border bg-surface font-mono text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent" id="dw-prefix" defaultValue="transcripts/wk*/" />
+            <span className="text-[11.5px] text-muted mt-1 block">Only objects under this prefix join the pipeline.</span>
           </div>
-          <div className="row" style={{ justifyContent: 'space-between' }}>
-            <div><div className="label">Live source</div><div className="hint">Off = frozen snapshot from last sync.</div></div>
-            <SwitchStub checked />
+
+          <div className="flex items-center justify-between py-1">
+            <div>
+              <div className="text-xs font-semibold text-foreground">PII redaction on ingest</div>
+              <div className="text-[11.5px] text-muted">Masks numbers and IDs before embedding.</div>
+            </div>
+            <Switch checked={piiRedaction} onChange={setPiiRedaction} label="PII redaction" />
           </div>
-          <details className="adv">
-            <summary><Icon name="key" /><span>Credentials</span><Icon name="chev" className="chev" /></summary>
-            <div className="adv-body" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div className="field">
-                <span className="label">Access mode</span>
-                <div className="row" style={{ gap: 6 }}>
+
+          <div className="flex items-center justify-between py-1">
+            <div>
+              <div className="text-xs font-semibold text-foreground">Live source</div>
+              <div className="text-[11.5px] text-muted">Off = frozen snapshot from last sync.</div>
+            </div>
+            <Switch checked={liveSource} onChange={setLiveSource} label="Live source" />
+          </div>
+
+          <details className="group border border-border rounded-lg p-3 bg-surface-inset/40 text-xs">
+            <summary className="flex items-center justify-between font-medium text-foreground cursor-pointer select-none">
+              <span className="flex items-center gap-2"><Icon name="key" /><span>Credentials</span></span>
+              <Icon name="chev" className="transition-transform group-open:rotate-180" />
+            </summary>
+            <div className="flex flex-col gap-3 pt-3 mt-2 border-t border-border/60">
+              <div>
+                <span className="block text-xs font-semibold text-foreground mb-1.5">Access mode</span>
+                <div className="flex flex-wrap items-center gap-1.5">
                   {['IAM role (recommended)', 'Access key pair'].map((m) => (
-                    <button key={m} type="button" className="chip" aria-pressed={authMode === m} onClick={() => setAuthMode(m)}>{m}</button>
+                    <button
+                      key={m}
+                      type="button"
+                      aria-pressed={authMode === m}
+                      onClick={() => setAuthMode(m)}
+                      className={`inline-flex items-center h-6.5 px-2.5 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
+                        authMode === m
+                          ? 'bg-foreground border-foreground text-surface font-semibold'
+                          : 'bg-surface border-border text-foreground hover:bg-surface-hover'
+                      }`}
+                    >
+                      {m}
+                    </button>
                   ))}
                 </div>
               </div>
-              <div className="field"><label className="label" htmlFor="dw-arn">Role ARN</label><input className="input mono" id="dw-arn" style={{ fontSize: 12 }} defaultValue="arn:aws:iam::4132xxxx:role/tx-s3-read" /></div>
-              <p className="hint">Keys live in the workspace vault with audit logging on every use. Rotate pairs every 90 days.</p>
+              <div>
+                <label className="block text-xs font-semibold text-foreground mb-1.5" htmlFor="dw-arn">Role ARN</label>
+                <input className="w-full h-9 px-3 rounded-md border border-border bg-surface font-mono text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent" id="dw-arn" defaultValue="arn:aws:iam::4132xxxx:role/tx-s3-read" />
+              </div>
+              <p className="text-[11.5px] text-muted">Keys live in the workspace vault with audit logging on every use. Rotate pairs every 90 days.</p>
             </div>
           </details>
         </div>
-        <div className="drawer-f">
-          <button type="button" className="btn btn-sm" style={{ marginRight: 'auto' }} onClick={() => toast('Test OK — 3 sample objects readable', 'check')}>Test connection</button>
-          <CloseButton className="btn">Cancel</CloseButton>
-          <button type="button" className="btn btn-primary" data-od-id="conn-save" onClick={() => { close(); toast('Connector settings saved', 'check'); }}>Save changes</button>
+
+        <div className="flex items-center justify-end gap-2 p-4 border-t border-border bg-surface-inset/30">
+          <button
+            type="button"
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-medium border border-border bg-surface hover:bg-surface-hover text-foreground transition-colors mr-auto cursor-pointer"
+            onClick={() => toast('Test OK — 3 sample objects readable', 'check')}
+          >
+            Test connection
+          </button>
+          <CloseButton className="inline-flex items-center justify-center h-8 px-3 rounded-md text-xs font-medium border border-border bg-surface hover:bg-surface-hover text-foreground transition-colors cursor-pointer">
+            Cancel
+          </CloseButton>
+          <button
+            type="button"
+            className="inline-flex items-center justify-center h-8 px-3.5 rounded-md text-xs font-medium bg-accent-strong text-white hover:bg-accent-hover transition-colors shadow-xs cursor-pointer"
+            data-od-id="conn-save"
+            onClick={() => { close(); toast('Connector settings saved', 'check'); }}
+          >
+            Save changes
+          </button>
         </div>
       </Drawer>
 
       <Drawer id="dw-newconn" data-od-id="new-connector-drawer">
-        <div className="drawer-h">
-          <div style={{ flex: 1 }}><div style={{ fontSize: 15, fontWeight: 620, letterSpacing: '-0.01em' }}>New connector</div><div className="hint">Pick a provider, then authenticate. Takes about 2 minutes.</div></div>
-          <CloseButton className="icon-btn" title="Close"><Icon name="x" /></CloseButton>
+        <div className="flex items-center justify-between gap-3 p-4 sm:p-5 border-b border-border">
+          <div className="flex-1">
+            <div className="text-sm sm:text-base font-semibold text-foreground tracking-tight">New connector</div>
+            <div className="text-xs text-muted mt-0.5">Pick a provider, then authenticate. Takes about 2 minutes.</div>
+          </div>
+          <CloseButton className="inline-flex items-center justify-center w-8 h-8 rounded-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer" title="Close">
+            <Icon name="x" />
+          </CloseButton>
         </div>
-        <div className="drawer-b" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div className="field">
-            <span className="label">1 · Provider</span>
-            <div className="row" style={{ gap: 6, flexWrap: 'wrap' }} data-od-id="nc-providers">
+
+        <div className="p-4 sm:p-5 flex flex-col gap-4 overflow-y-auto max-h-[calc(100vh-140px)]">
+          <div>
+            <span className="block text-xs font-semibold text-foreground mb-2">1 · Provider</span>
+            <div className="flex flex-wrap items-center gap-1.5" data-od-id="nc-providers">
               {['Generic webhook', 'Freshdesk', 'Intercom', 'Dialpad'].map((p) => (
-                <button key={p} type="button" className="chip" aria-pressed={ncProvider === p} onClick={() => setNcProvider(p)}>{p}</button>
+                <button
+                  key={p}
+                  type="button"
+                  aria-pressed={ncProvider === p}
+                  onClick={() => setNcProvider(p)}
+                  className={`inline-flex items-center h-6.5 px-2.5 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
+                    ncProvider === p
+                      ? 'bg-foreground border-foreground text-surface font-semibold'
+                      : 'bg-surface border-border text-foreground hover:bg-surface-hover'
+                  }`}
+                >
+                  {p}
+                </button>
               ))}
             </div>
           </div>
-          <div className="field">
-            <span className="label">2 · Auth</span>
-            <div className="field" style={{ marginBottom: 8 }}><label className="label" htmlFor="nc-name">Display name</label><input className="input" id="nc-name" placeholder="e.g. WhatsApp support exports" /></div>
-            <div className="field"><label className="label" htmlFor="nc-token">Auth token / API key</label><input className="input" id="nc-token" placeholder="Stored in vault — never shown again" /></div>
+
+          <div className="flex flex-col gap-3">
+            <span className="block text-xs font-semibold text-foreground">2 · Auth</span>
+            <div>
+              <label className="block text-xs font-medium text-foreground mb-1" htmlFor="nc-name">Display name</label>
+              <input className="w-full h-9 px-3 rounded-md border border-border bg-surface text-xs sm:text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent" id="nc-name" placeholder="e.g. WhatsApp support exports" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-foreground mb-1" htmlFor="nc-token">Auth token / API key</label>
+              <input className="w-full h-9 px-3 rounded-md border border-border bg-surface text-xs sm:text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent" id="nc-token" placeholder="Stored in vault — never shown again" />
+            </div>
           </div>
-          <div className="field">
-            <span className="label">3 · Default sync</span>
-            <div className="row" style={{ gap: 6 }}>
+
+          <div>
+            <span className="block text-xs font-semibold text-foreground mb-2">3 · Default sync</span>
+            <div className="flex flex-wrap items-center gap-1.5">
               {['Hourly', 'Every 15 min', 'Manual'].map((s) => (
-                <button key={s} type="button" className="chip" aria-pressed={ncSync === s} onClick={() => setNcSync(s)}>{s}</button>
+                <button
+                  key={s}
+                  type="button"
+                  aria-pressed={ncSync === s}
+                  onClick={() => setNcSync(s)}
+                  className={`inline-flex items-center h-6.5 px-2.5 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
+                    ncSync === s
+                      ? 'bg-foreground border-foreground text-surface font-semibold'
+                      : 'bg-surface border-border text-foreground hover:bg-surface-hover'
+                  }`}
+                >
+                  {s}
+                </button>
               ))}
             </div>
           </div>
         </div>
-        <div className="drawer-f">
-          <CloseButton className="btn">Cancel</CloseButton>
-          <button type="button" className="btn btn-primary" onClick={() => { close(); toast('Connection wizard launched — check email for verification link', 'plug'); }}>Connect</button>
+
+        <div className="flex items-center justify-end gap-2 p-4 border-t border-border bg-surface-inset/30">
+          <CloseButton className="inline-flex items-center justify-center h-8 px-3 rounded-md text-xs font-medium border border-border bg-surface hover:bg-surface-hover text-foreground transition-colors cursor-pointer">
+            Cancel
+          </CloseButton>
+          <button
+            type="button"
+            className="inline-flex items-center justify-center h-8 px-3.5 rounded-md text-xs font-medium bg-accent-strong text-white hover:bg-accent-hover transition-colors shadow-xs cursor-pointer"
+            onClick={() => { close(); toast('Connection wizard launched — check email for verification link', 'plug'); }}
+          >
+            Connect
+          </button>
         </div>
       </Drawer>
     </AppShell>
   );
-}
-
-function SwitchStub({ checked }: { checked: boolean }) {
-  return <span className="switch" role="switch" aria-checked={checked} />;
 }

@@ -21,10 +21,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastCtx.Provider value={toast}>
       {children}
-      <div className="toasts" role="status" aria-live="polite">
+      <div className="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none" role="status" aria-live="polite">
         {items.map((t) => (
-          <div key={t.id} className="toast">
-            <Icon name={t.icon} />
+          <div
+            key={t.id}
+            className="flex items-center gap-2.5 px-3.5 py-2.5 bg-foreground text-surface text-xs sm:text-sm font-medium rounded-lg shadow-xl pointer-events-auto animate-in fade-in slide-in-from-bottom-2 duration-150"
+          >
+            <Icon name={t.icon} className="w-4 h-4 shrink-0 text-surface" />
             <span>{t.msg}</span>
           </div>
         ))}

@@ -50,7 +50,9 @@ export function OverlayProvider({ children }: { children: ReactNode }) {
     <Ctx.Provider value={{ open, close, active }}>
       {children}
       <div
-        className={`overlay${active ? ' open' : ''}`}
+        className={`fixed inset-0 bg-black/40 z-50 transition-opacity duration-200 ${
+          active ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
         data-overlay
         onClick={(e) => { if ((e.target as HTMLElement).matches('[data-overlay]')) close(); }}
         aria-hidden={!active}
@@ -63,7 +65,15 @@ export function Dialog({ id, children, className = '', dataOdId }: { id: string;
   const { active, close } = useOverlay();
   const open = active === id;
   return (
-    <div id={id} className={`dialog${open ? ' open' : ''} ${className}`.trim()} role="dialog" aria-modal="true" data-od-id={dataOdId}>
+    <div
+      id={id}
+      className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[92%] max-w-[540px] bg-surface border border-border rounded-xl shadow-2xl transition-all duration-200 overflow-hidden ${
+        open ? 'scale-100 opacity-100 pointer-events-auto' : 'scale-95 opacity-0 pointer-events-none'
+      } ${className}`.trim()}
+      role="dialog"
+      aria-modal="true"
+      data-od-id={dataOdId}
+    >
       {children}
       <button type="button" className="sr-only" data-close onClick={close} aria-label="Close" />
     </div>
@@ -74,7 +84,16 @@ export function Drawer({ id, children, dataOdId }: { id: string; children: React
   const { active } = useOverlay();
   const open = active === id;
   return (
-    <div id={id} className={`drawer${open ? ' open' : ''}`} role="dialog" aria-modal="true" aria-label="Job details" data-od-id={dataOdId}>
+    <div
+      id={id}
+      className={`fixed top-0 right-0 h-full w-[90%] max-w-[520px] bg-surface border-l border-border shadow-2xl z-50 flex flex-col transition-transform duration-200 ease-out overflow-hidden ${
+        open ? 'translate-x-0' : 'translate-x-full'
+      }`}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Job details"
+      data-od-id={dataOdId}
+    >
       {children}
     </div>
   );

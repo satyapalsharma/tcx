@@ -11,10 +11,10 @@ import { useToast } from '../components/Toast';
 import { useReveal } from '../hooks/useReveal';
 
 const MAPS = [
-  { id: 'mi-billing', name: 'Billing Dispute Resolution', badge: 'badge-warn', status: 'In review', hint: 'v3 · from Invoice Disputes' },
-  { id: 'mi-outage', name: 'Outage Triage & Status', badge: '', status: 'Needs review', hint: 'v1 · early draft' },
-  { id: 'mi-install', name: 'New Installation Booking', badge: 'badge-ok', status: 'Approved', hint: 'v2 · yesterday' },
-  { id: 'mi-portout', name: 'Port-out Retention', badge: '', status: 'Not generated', hint: 'cluster approved' },
+  { id: 'mi-billing', name: 'Billing Dispute Resolution', badge: 'bg-warn-soft text-warn-fg', status: 'In review', hint: 'v3 · from Invoice Disputes' },
+  { id: 'mi-outage', name: 'Outage Triage & Status', badge: 'bg-surface-inset text-foreground', status: 'Needs review', hint: 'v1 · early draft' },
+  { id: 'mi-install', name: 'New Installation Booking', badge: 'bg-success-soft text-success-fg', status: 'Approved', hint: 'v2 · yesterday' },
+  { id: 'mi-portout', name: 'Port-out Retention', badge: 'bg-surface-inset text-muted', status: 'Not generated', hint: 'cluster approved' },
 ];
 
 const NODES: Record<string, { name: string; aht: string; res: string; tool: string; desc: string; phrases: string[] }> = {
@@ -69,76 +69,176 @@ export default function Design() {
 
   const node = activeNode ? NODES[activeNode] : null;
   const statusBadge = mapStatus === 'approved'
-    ? { className: 'badge badge-ok', text: 'Approved · handed to Develop' }
+    ? { className: 'bg-success-soft text-success-fg', text: 'Approved · handed to Develop' }
     : mapStatus === 'changes'
-      ? { className: 'badge badge-warn badge-run', text: 'Changes requested' }
-      : { className: 'badge badge-warn', text: 'In review' };
+      ? { className: 'bg-warn-soft text-warn-fg', text: 'Changes requested' }
+      : { className: 'bg-warn-soft text-warn-fg', text: 'In review' };
 
   return (
-    <AppShell crumb="Design" badge={<span className="badge badge-warn badge-run"><span className="dot" />RUN-4821 · Analysis 68%</span>}>
-      <div className="page" data-od-id="design-page">
-        <div className="page-h">
-          <div style={{ flex: 1 }}>
-            <h1 data-od-id="page-title">Design</h1>
-            <p className="sub">Verify and edit process maps generated from approved Analysis clusters, then review the UML sequence headers before handing off to Develop.</p>
+    <AppShell
+      crumb="Design"
+      badge={
+        <span className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-semibold rounded-full bg-warn-soft text-warn-fg mr-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-warn animate-pulse" />
+          RUN-4821 · Analysis 68%
+        </span>
+      }
+    >
+      <div className="p-4 sm:p-6 lg:p-7 max-w-[1240px] mx-auto w-full pb-16" data-od-id="design-page">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground" data-od-id="page-title">Design</h1>
+            <p className="text-xs sm:text-sm text-muted mt-1 max-w-[660px]">
+              Verify and edit process maps generated from approved Analysis clusters, then review the UML sequence headers before handing off to Develop.
+            </p>
           </div>
-          <OpenButton className="btn" target="dlg-export" data-od-id="export-btn"><Icon name="download" />Export</OpenButton>
-          <OpenButton className="btn" target="dlg-changes" data-od-id="request-changes-btn"><Icon name="mail" />Request changes</OpenButton>
-          <OpenButton className="btn btn-primary" target="dlg-approve" data-od-id="approve-btn"><Icon name="check" />Approve &amp; hand off</OpenButton>
+          <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+            <OpenButton
+              className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-surface hover:bg-surface-hover border border-border text-foreground text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
+              target="dlg-export"
+              data-od-id="export-btn"
+            >
+              <Icon name="download" className="w-4 h-4 text-muted" />Export
+            </OpenButton>
+            <OpenButton
+              className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-surface hover:bg-surface-hover border border-border text-foreground text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
+              target="dlg-changes"
+              data-od-id="request-changes-btn"
+            >
+              <Icon name="mail" className="w-4 h-4 text-muted" />Request changes
+            </OpenButton>
+            <OpenButton
+              className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
+              target="dlg-approve"
+              data-od-id="approve-btn"
+            >
+              <Icon name="check" className="w-4 h-4" />Approve &amp; hand off
+            </OpenButton>
+          </div>
         </div>
 
-        <div className="card card-b" style={{ marginBottom: 16, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12 }} data-od-id="upstream-strip">
-          <Icon name="lock" style={{ color: 'var(--muted)' }} />
-          <div style={{ fontSize: '12.5px', flex: 1 }}>
-            <strong>Inherited from Analysis · 4 approved clusters</strong>
-            <div className="hint">Last verified by Riya Menon · 2 days ago. If upstream clusters change, maps are queued for regen — your edits stay as overlays.</div>
+        {/* Upstream Strip */}
+        <div className="p-3.5 sm:px-4 bg-surface border border-border rounded-xl shadow-xs mb-4 flex items-center gap-3 flex-wrap" data-od-id="upstream-strip">
+          <Icon name="lock" className="w-4 h-4 text-muted shrink-0" />
+          <div className="text-xs flex-1 min-w-[200px]">
+            <strong className="text-foreground">Inherited from Analysis · 4 approved clusters</strong>
+            <div className="text-muted mt-0.5">Last verified by Riya Menon · 2 days ago. If upstream clusters change, maps are queued for regen — your edits stay as overlays.</div>
           </div>
-          <div className="stage-flow">
-            <span className="snode done"><span className="glyph"><Icon name="check" style={{ width: 10, height: 10 }} /></span>Analysis</span>
-            <span className="slink" />
-            <span className="snode live"><span className="glyph"><span className="mini" /></span>Design</span>
-            <span className="slink" />
-            <span className="snode"><span className="glyph" />Develop</span>
+          <div className="flex items-center gap-2 origin-right scale-90 sm:scale-95">
+            <span className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-medium rounded-full bg-success-soft text-success-fg">
+              <span className="w-3.5 h-3.5 rounded-full bg-success text-white grid place-items-center">
+                <Icon name="check" style={{ width: 9, height: 9 }} />
+              </span>
+              Analysis
+            </span>
+            <span className="w-3.5 h-px bg-border shrink-0" />
+            <span className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-semibold rounded-full border border-foreground text-foreground bg-surface">
+              <span className="w-1.5 h-1.5 rounded-full bg-warn animate-pulse" />
+              Design
+            </span>
+            <span className="w-3.5 h-px bg-border shrink-0" />
+            <span className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-medium rounded-full border border-border text-muted bg-surface">
+              Develop
+            </span>
           </div>
         </div>
 
-        <div className="dm-grid" data-tab-scope>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0 }}>
-            <div className="tabs" style={{ borderRadius: 'var(--r-md)', border: '1px solid var(--border)', background: 'var(--surface)' }} data-tabs>
-              <button type="button" role="tab" aria-selected={tab === 'pmap'} data-tab="pmap" data-od-id="tab-pmap" onClick={() => setTab('pmap')}>Process maps <span className="count">4</span></button>
-              <button type="button" role="tab" aria-selected={tab === 'uml'} data-tab="uml" data-od-id="tab-uml" onClick={() => setTab('uml')}>UML diagrams <span className="count">2</span></button>
+        {/* 2-Column Work Area */}
+        <div className="grid grid-cols-1 md:grid-cols-[240px_minmax(0,1fr)] gap-4 items-start" data-tab-scope>
+          <div className="space-y-3 min-w-0">
+            <div className="flex items-center p-0.5 bg-surface-inset border border-border rounded-lg" data-tabs>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={tab === 'pmap'}
+                data-tab="pmap"
+                data-od-id="tab-pmap"
+                onClick={() => setTab('pmap')}
+                className={`flex-1 h-7 text-xs font-medium rounded-md transition-all cursor-pointer ${
+                  tab === 'pmap' ? 'bg-surface text-foreground shadow-xs font-semibold' : 'text-muted hover:text-foreground'
+                }`}
+              >
+                Process maps <span className="ml-1 px-1.5 py-0.2 rounded-full bg-surface-inset text-[10px] font-mono text-muted">4</span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={tab === 'uml'}
+                data-tab="uml"
+                data-od-id="tab-uml"
+                onClick={() => setTab('uml')}
+                className={`flex-1 h-7 text-xs font-medium rounded-md transition-all cursor-pointer ${
+                  tab === 'uml' ? 'bg-surface text-foreground shadow-xs font-semibold' : 'text-muted hover:text-foreground'
+                }`}
+              >
+                UML diagrams <span className="ml-1 px-1.5 py-0.2 rounded-full bg-surface-inset text-[10px] font-mono text-muted">2</span>
+              </button>
             </div>
-            <div className="card maps-rail" data-od-id="map-rail">
-              {MAPS.map((m) => (
-                <div key={m.id} className={`mi${activeMap === m.id ? ' on' : ''}`} data-od-id={m.id} onClick={() => pickMap(m.id, m.name)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter') pickMap(m.id, m.name); }}>
-                  <strong style={{ fontSize: '12.5px' }}>{m.name}</strong>
-                  <div className="row" style={{ gap: 6 }}>
-                    <span className={`badge${m.badge ? ` ${m.badge}` : ''}`}><span className="dot" />{m.status}</span>
-                    <span className="hint" style={{ fontSize: 11 }}>{m.hint}</span>
+
+            <div className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden divide-y divide-border" data-od-id="map-rail">
+              {MAPS.map((m) => {
+                const isSelected = activeMap === m.id;
+                return (
+                  <div
+                    key={m.id}
+                    className={`p-3 transition-colors cursor-pointer select-none ${
+                      isSelected ? 'bg-surface-inset/80 border-l-2 border-foreground' : 'hover:bg-surface-hover/70'
+                    }`}
+                    data-od-id={m.id}
+                    onClick={() => pickMap(m.id, m.name)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter') pickMap(m.id, m.name); }}
+                  >
+                    <strong className="text-xs font-semibold text-foreground block">{m.name}</strong>
+                    <div className="flex items-center gap-1.5 mt-1.5">
+                      <span className={`inline-flex items-center gap-1.5 h-4.5 px-2 text-[11px] font-medium rounded-full ${m.badge}`}>
+                        <span className="w-1.5 h-1.5 rounded-full bg-current" />{m.status}
+                      </span>
+                      <span className="text-[11px] text-muted truncate">{m.hint}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
-              <div style={{ padding: '10px 12px' }}>
-                <button type="button" className="btn btn-sm" style={{ width: '100%', justifyContent: 'center' }} data-od-id="new-map-btn" onClick={() => toast('Choose an approved cluster in Analysis first', 'info')}><Icon name="plus" />Generate new map</button>
+                );
+              })}
+              <div className="p-2.5">
+                <button
+                  type="button"
+                  className="w-full h-8 inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer"
+                  data-od-id="new-map-btn"
+                  onClick={() => toast('Choose an approved cluster in Analysis first', 'info')}
+                >
+                  <Icon name="plus" className="w-3.5 h-3.5" />Generate new map
+                </button>
               </div>
             </div>
           </div>
 
           {tab === 'pmap' && (
             <div data-panel="pmap" data-od-id="panel-pmap">
-              <div className="card">
-                <div className="card-h" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+              <div className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden">
+                <div className="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <h3 style={{ fontSize: 14 }}>Billing Dispute Resolution <span className="muted" style={{ fontWeight: 460 }}>· v3</span></h3>
-                    <div className="hint" style={{ fontSize: '11.5px' }}>Generated from cluster &ldquo;Invoice Disputes&rdquo; (2,847 calls) · 5 tools · 2 sub-agent routes</div>
+                    <h3 className="text-sm font-semibold text-foreground">
+                      Billing Dispute Resolution <span className="text-muted font-normal">· v3</span>
+                    </h3>
+                    <div className="text-xs text-muted mt-0.5">
+                      Generated from cluster &ldquo;Invoice Disputes&rdquo; (2,847 calls) · 5 tools · 2 sub-agent routes
+                    </div>
                   </div>
-                  <div className="stage-acts">
-                    <span className={statusBadge.className} id="map-status"><span className="dot" />{statusBadge.text}</span>
-                    <OpenButton className="btn btn-sm" target="dlg-export"><Icon name="download" />Export</OpenButton>
+                  <div className="flex items-center gap-2">
+                    <span className={`inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-medium rounded-full ${statusBadge.className}`} id="map-status">
+                      <span className="w-1.5 h-1.5 rounded-full bg-current" />{statusBadge.text}
+                    </span>
+                    <OpenButton
+                      className="inline-flex items-center justify-center gap-1.5 h-8 px-2.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer"
+                      target="dlg-export"
+                    >
+                      <Icon name="download" className="w-3.5 h-3.5 text-muted" />Export
+                    </OpenButton>
                   </div>
                 </div>
-                <div className="card-b">
-                  <div className="canvas-box">
+                <div className="p-4 sm:p-6 overflow-x-auto scrollbar-none flex justify-center bg-surface-inset/30">
+                  <div className="w-full max-w-[800px] min-w-[580px]">
                     <ProcessMapSvg activeNode={activeNode} onNodeClick={openNode} />
                   </div>
                 </div>
@@ -148,32 +248,46 @@ export default function Design() {
 
           {tab === 'uml' && (
             <div data-panel="uml" data-od-id="panel-uml">
-              <div className="ud-grid">
-                <div className="card">
-                  <div className="card-h" style={{ justifyContent: 'space-between' }}>
+              <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_250px] gap-4 items-start">
+                <div className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden">
+                  <div className="p-4 border-b border-border flex items-center justify-between">
                     <div>
-                      <h3 style={{ fontSize: 14 }}>UML sequence — Billing Dispute</h3>
-                      <div className="hint" style={{ fontSize: '11.5px' }}>Synced with process map v3 · information flow between user, orchestrator, tools and sub-agents</div>
+                      <h3 className="text-sm font-semibold text-foreground">UML sequence — Billing Dispute</h3>
+                      <div className="text-xs text-muted mt-0.5">Synced with process map v3 · flow between user, orchestrator, tools</div>
                     </div>
-                    <div className="row" style={{ gap: 8 }}>
-                      <button type="button" className="btn btn-sm" onClick={() => toast('Sequence regenerated from map v3', 'sync')}><Icon name="sync" />Regenerate</button>
-                    </div>
+                    <button
+                      type="button"
+                      className="inline-flex items-center justify-center gap-1.5 h-8 px-2.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer"
+                      onClick={() => toast('Sequence regenerated from map v3', 'sync')}
+                    >
+                      <Icon name="sync" className="w-3.5 h-3.5 text-muted" />Regenerate
+                    </button>
                   </div>
-                  <div className="card-b">
-                    <div className="canvas-box">
-                      <UmlSequenceSvg />
-                    </div>
+                  <div className="p-4 sm:p-6 overflow-x-auto scrollbar-none">
+                    <UmlSequenceSvg />
                   </div>
                 </div>
-                <div className="card" data-od-id="uml-guardrails">
-                  <div className="card-h"><h3>Handoff guardrails</h3></div>
-                  <div className="card-b meta-list">
-                    <div><span className="k">Escalation agent joins after</span><br />2 declined offers or account value &gt; ₹8,000/mo</div>
-                    <div><span className="k">Tools in scope</span><br /><span className="mono" style={{ fontSize: '11.5px' }}>crm.get_customer · crm.get_invoice · billing.apply_credit · comms.send_receipt</span></div>
-                    <div><span className="k">Coverage</span><br />63% of disputes resolve without the escalation path</div>
-                    <div className="rag-row" style={{ border: '1px solid var(--accent-border)', background: 'var(--accent-soft)', borderRadius: 8, padding: '10px 12px', gap: 8 }}>
-                      <Icon name="info" style={{ color: 'var(--accent-strong)', marginTop: 1 }} />
-                      <div style={{ fontSize: 12, color: 'var(--accent-strong)' }}>Ready for Develop — snapshot locks on approval. Regen keeps your overlays.</div>
+
+                <div className="p-4 bg-surface border border-border rounded-xl shadow-xs space-y-3" data-od-id="uml-guardrails">
+                  <div className="pb-2 border-b border-border">
+                    <h3 className="text-sm font-semibold text-foreground">Handoff guardrails</h3>
+                  </div>
+                  <div className="space-y-3 text-xs leading-relaxed">
+                    <div>
+                      <span className="text-muted block">Escalation agent joins after</span>
+                      <span className="text-foreground font-medium">2 declined offers or account value &gt; ₹8,000/mo</span>
+                    </div>
+                    <div>
+                      <span className="text-muted block">Tools in scope</span>
+                      <span className="font-mono text-muted text-[11px] block mt-0.5">crm.get_customer · crm.get_invoice · billing.apply_credit · comms.send_receipt</span>
+                    </div>
+                    <div>
+                      <span className="text-muted block">Coverage</span>
+                      <span className="text-foreground font-medium">63% of disputes resolve without escalation</span>
+                    </div>
+                    <div className="p-2.5 rounded-lg border border-accent-border bg-accent-soft text-accent-strong flex items-start gap-2">
+                      <Icon name="info" className="w-4 h-4 mt-0.5 shrink-0" />
+                      <div className="text-[11.5px]">Ready for Develop — snapshot locks on approval. Regen keeps your overlays.</div>
                     </div>
                   </div>
                 </div>
@@ -183,132 +297,240 @@ export default function Design() {
         </div>
       </div>
 
-      <Drawer id="dw-node" data-od-id="node-inspector">
+      {/* Node Inspector Drawer */}
+      <Drawer id="dw-node" dataOdId="node-inspector">
         {node && (
           <>
-            <div className="drawer-h">
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <div className="caps">Process map node</div>
-                <div id="node-name" style={{ fontSize: 15, fontWeight: 620, letterSpacing: '-0.01em', marginTop: 2 }}>{node.name}</div>
+            <div className="p-4 sm:p-5 border-b border-border flex items-center justify-between">
+              <div className="min-w-0 flex-1">
+                <div className="text-[10px] uppercase tracking-wider font-semibold text-muted">Process map node</div>
+                <div id="node-name" className="text-sm sm:text-base font-bold text-foreground tracking-tight mt-0.5">{node.name}</div>
               </div>
-              <CloseButton className="icon-btn" title="Close"><Icon name="x" /></CloseButton>
+              <CloseButton className="inline-flex items-center justify-center w-8 h-8 rounded-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer" title="Close">
+                <Icon name="x" className="w-4 h-4" />
+              </CloseButton>
             </div>
-            <div className="drawer-b">
-              <div className="grid-2" style={{ marginBottom: 14 }}>
-                <div className="card" style={{ padding: '10px 12px' }}><div className="caps" style={{ fontSize: 10 }}>Avg. handle time</div><div className="tabular" id="node-aht" style={{ fontSize: 15, fontWeight: 620, marginTop: 3 }}>{node.aht}</div></div>
-                <div className="card" style={{ padding: '10px 12px' }}><div className="caps" style={{ fontSize: 10 }}>Resolution share</div><div className="tabular" id="node-res" style={{ fontSize: 15, fontWeight: 620, marginTop: 3 }}>{node.res}</div></div>
+            <div className="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1">
+              <div className="grid grid-cols-2 gap-2.5">
+                <div className="p-3 bg-surface border border-border rounded-lg shadow-xs">
+                  <div className="text-[10px] uppercase tracking-wider font-semibold text-muted">Avg. handle time</div>
+                  <div className="font-mono text-base font-bold text-foreground mt-1" id="node-aht">{node.aht}</div>
+                </div>
+                <div className="p-3 bg-surface border border-border rounded-lg shadow-xs">
+                  <div className="text-[10px] uppercase tracking-wider font-semibold text-muted">Resolution share</div>
+                  <div className="font-mono text-base font-bold text-foreground mt-1" id="node-res">{node.res}</div>
+                </div>
               </div>
-              <div className="field" style={{ marginBottom: 12 }}>
-                <span className="label">Bound tool</span>
-                <div className="mono" id="node-tool" style={{ background: 'var(--surface-inset)', border: '1px solid var(--border)', borderRadius: 6, padding: '8px 10px', whiteSpace: 'nowrap', overflow: 'auto' }}>{node.tool}</div>
+
+              <div>
+                <span className="block text-xs font-semibold text-foreground tracking-wide mb-1">Bound tool</span>
+                <div className="font-mono text-xs text-foreground bg-surface-inset border border-border rounded-md px-3 py-2 overflow-x-auto whitespace-nowrap" id="node-tool">
+                  {node.tool}
+                </div>
               </div>
-              <div className="field" style={{ marginBottom: 12 }}>
-                <label className="label" htmlFor="node-desc">Step instructions (what the agent does here)</label>
-                <textarea className="input" id="node-desc" rows={4} value={nodeDesc} onChange={(e) => setNodeDesc(e.target.value)} />
-                <span className="hint">Saving bumps the map to v3.1 and re-syncs the UML diagram.</span>
+
+              <div>
+                <label className="block text-xs font-semibold text-foreground tracking-wide mb-1" htmlFor="node-desc">
+                  Step instructions (what the agent does here)
+                </label>
+                <textarea
+                  className="w-full p-2.5 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent"
+                  id="node-desc"
+                  rows={4}
+                  value={nodeDesc}
+                  onChange={(e) => setNodeDesc(e.target.value)}
+                />
+                <span className="text-[11px] text-muted mt-1 block">Saving bumps the map to v3.1 and re-syncs the UML diagram.</span>
               </div>
-              <div className="field" style={{ marginBottom: 12 }}>
-                <span className="label">Common caller phrases at this step</span>
-                <div className="row" id="node-phrases" style={{ gap: 6, flexWrap: 'wrap' }}>
+
+              <div>
+                <span className="block text-xs font-semibold text-foreground tracking-wide mb-1.5">Common caller phrases at this step</span>
+                <div className="flex flex-wrap gap-1.5" id="node-phrases">
                   {node.phrases.map((p) => (
-                    <span key={p} className="chip" style={{ cursor: 'default' }} aria-pressed="false">&ldquo;{p}&rdquo;</span>
+                    <span key={p} className="h-6 px-2.5 rounded-full border border-border bg-surface-inset text-xs text-foreground inline-flex items-center">
+                      &ldquo;{p}&rdquo;
+                    </span>
                   ))}
                 </div>
               </div>
-              <div className="rag-row" style={{ border: '1px solid var(--warn)', background: 'var(--warn-soft)', borderRadius: 8, padding: '10px 12px', gap: 8 }}>
-                <Icon name="warn" style={{ color: 'var(--warn-fg)', marginTop: 1 }} />
-                <div style={{ fontSize: 12, color: 'var(--warn-fg)' }}>Upstream Analysis is re-running (RUN-4821 · 68%). Cluster drift over 5% queues a regen after you approve — your overlays persist.</div>
+
+              <div className="p-2.5 rounded-lg border border-warn bg-warn-soft/80 text-warn-fg flex items-start gap-2 text-xs">
+                <Icon name="warn" className="w-4 h-4 mt-0.5 shrink-0" />
+                <div className="leading-relaxed">
+                  Upstream Analysis is re-running (RUN-4821 · 68%). Cluster drift over 5% queues a regen after you approve.
+                </div>
               </div>
             </div>
-            <div className="drawer-f">
-              <CloseButton className="btn">Close</CloseButton>
-              <button type="button" className="btn btn-primary" id="node-save" data-od-id="node-save" onClick={() => { close(); toast('Node saved — map v3.1 drafted, UML re-sync queued', 'check'); }}>Save changes</button>
+            <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-end gap-2.5 rounded-b-xl">
+              <CloseButton className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer">
+                Close
+              </CloseButton>
+              <button
+                type="button"
+                className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs font-medium shadow-xs transition-colors cursor-pointer"
+                id="node-save"
+                data-od-id="node-save"
+                onClick={() => { close(); toast('Node saved — map v3.1 drafted, UML re-sync queued', 'check'); }}
+              >
+                Save changes
+              </button>
             </div>
           </>
         )}
       </Drawer>
 
-      <Dialog id="dlg-changes" data-od-id="changes-dialog">
-        <div className="dialog-h">
-          <h2>Request changes</h2>
-          <p className="hint">Goes back to the owning analyst with your comment. Major asks re-run the branch — long-running jobs show in the top bar.</p>
+      {/* Request Changes Dialog */}
+      <Dialog id="dlg-changes" dataOdId="changes-dialog">
+        <div className="p-5 border-b border-border">
+          <h2 className="text-base font-semibold text-foreground tracking-tight">Request changes</h2>
+          <p className="text-xs text-muted mt-1">Goes back to the owning analyst with your comment.</p>
         </div>
-        <div className="dialog-b">
-          <div className="field">
-            <span className="label">Severity</span>
-            <ChipGroup value={severity} onChange={setSeverity} options={[
-              { val: 'minor', label: 'Minor — wording only' },
-              { val: 'major', label: 'Major — regenerate branch' },
-            ]} />
+        <div className="p-5 space-y-4">
+          <div>
+            <span className="block text-xs font-semibold text-foreground tracking-wide mb-1.5">Severity</span>
+            <ChipGroup
+              value={severity}
+              onChange={setSeverity}
+              options={[
+                { val: 'minor', label: 'Minor — wording only' },
+                { val: 'major', label: 'Major — regenerate branch' },
+              ]}
+            />
           </div>
-          <div className="field">
-            <label className="label" htmlFor="ch-note">What should change?</label>
-            <textarea className="input" id="ch-note" rows={3} placeholder="e.g. Retention escalation should only trigger after two declined offers, not one." />
+          <div>
+            <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="ch-note">What should change?</label>
+            <textarea
+              className="w-full p-2.5 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent"
+              id="ch-note"
+              rows={3}
+              placeholder="e.g. Retention escalation should only trigger after two declined offers, not one."
+            />
           </div>
         </div>
-        <div className="dialog-f">
-          <CloseButton className="btn">Cancel</CloseButton>
-          <button type="button" className="btn btn-primary" id="ch-send" data-od-id="changes-send" onClick={() => { close(); setMapStatus('changes'); toast('Change request sent to Riya Menon (Analysis)', 'mail'); }}>Send request</button>
+        <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-end gap-2.5 rounded-b-xl">
+          <CloseButton className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer">
+            Cancel
+          </CloseButton>
+          <button
+            type="button"
+            className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs font-medium shadow-xs transition-colors cursor-pointer"
+            id="ch-send"
+            data-od-id="changes-send"
+            onClick={() => { close(); setMapStatus('changes'); toast('Change request sent to Riya Menon (Analysis)', 'mail'); }}
+          >
+            Send request
+          </button>
         </div>
       </Dialog>
 
-      <Dialog id="dlg-approve" data-od-id="approve-dialog">
-        <div className="dialog-h">
-          <h2>Approve &amp; hand off to Develop</h2>
-          <p className="hint">Both artifacts lock at the current version. The Develop umbrella gets a read-only snapshot it can generate code against.</p>
+      {/* Approve Dialog */}
+      <Dialog id="dlg-approve" dataOdId="approve-dialog">
+        <div className="p-5 border-b border-border">
+          <h2 className="text-base font-semibold text-foreground tracking-tight">Approve &amp; hand off to Develop</h2>
+          <p className="text-xs text-muted mt-1">Both artifacts lock at the current version. The Develop umbrella gets a read-only snapshot.</p>
         </div>
-        <div className="dialog-b">
-          <div className="field">
-            <span className="label">Approving</span>
-            <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-              <span className="badge"><span className="dot" />Process map v3 — Billing Dispute Resolution</span>
-              <span className="badge"><span className="dot" />UML sequence — Billing Dispute v3</span>
+        <div className="p-5 space-y-4">
+          <div>
+            <span className="block text-xs font-semibold text-foreground tracking-wide mb-1.5">Approving</span>
+            <div className="flex flex-wrap gap-2">
+              <span className="inline-flex items-center gap-1.5 h-5.5 px-2.5 text-xs font-medium rounded-full bg-surface-inset border border-border text-foreground">
+                <span className="w-1.5 h-1.5 rounded-full bg-success" />Process map v3 — Billing Dispute Resolution
+              </span>
+              <span className="inline-flex items-center gap-1.5 h-5.5 px-2.5 text-xs font-medium rounded-full bg-surface-inset border border-border text-foreground">
+                <span className="w-1.5 h-1.5 rounded-full bg-success" />UML sequence — Billing Dispute v3
+              </span>
             </div>
           </div>
-          <div className="field">
-            <label className="label" htmlFor="ap-note">Handoff note (optional)</label>
-            <textarea className="input" id="ap-note" rows={3} placeholder="e.g. Start with the Google ADK target — Bedrock follows next sprint." />
+          <div>
+            <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="ap-note">Handoff note (optional)</label>
+            <textarea
+              className="w-full p-2.5 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent"
+              id="ap-note"
+              rows={3}
+              placeholder="e.g. Start with the Google ADK target — Bedrock follows next sprint."
+            />
           </div>
         </div>
-        <div className="dialog-f">
-          <CloseButton className="btn">Cancel</CloseButton>
-          <button type="button" className="btn btn-primary" id="ap-confirm" data-od-id="approve-confirm" onClick={() => { close(); setMapStatus('approved'); toast('Approved — snapshot v3 shared with Develop (Develop is next in the sidebar)', 'check'); }}>Approve &amp; notify Dev team</button>
+        <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-end gap-2.5 rounded-b-xl">
+          <CloseButton className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer">
+            Cancel
+          </CloseButton>
+          <button
+            type="button"
+            className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs font-medium shadow-xs transition-colors cursor-pointer"
+            id="ap-confirm"
+            data-od-id="approve-confirm"
+            onClick={() => { close(); setMapStatus('approved'); toast('Approved — snapshot v3 shared with Develop (Develop is next in the sidebar)', 'check'); }}
+          >
+            Approve &amp; notify Dev team
+          </button>
         </div>
       </Dialog>
 
-      <Dialog id="dlg-export" data-od-id="export-dialog">
-        <div className="dialog-h">
-          <h2>Export design data</h2>
-          <p className="hint">Take the process maps and UML diagrams out of Transform.cx — as diagrams for documentation, or as structured data for your own tooling.</p>
+      {/* Export Dialog */}
+      <Dialog id="dlg-export" dataOdId="export-dialog">
+        <div className="p-5 border-b border-border">
+          <h2 className="text-base font-semibold text-foreground tracking-tight">Export design data</h2>
+          <p className="text-xs text-muted mt-1">Take the process maps and UML diagrams out of Transform.cx.</p>
         </div>
-        <div className="dialog-b">
-          <div className="field">
-            <span className="label">What to export</span>
-            <ChipGroup value={exportScope} onChange={setExportScope} options={[
-              { val: 'current', label: 'Current map + UML' },
-              { val: 'approved', label: 'All approved maps' },
-              { val: 'full', label: 'Full design bundle' },
-            ]} />
+        <div className="p-5 space-y-4">
+          <div>
+            <span className="block text-xs font-semibold text-foreground tracking-wide mb-1.5">What to export</span>
+            <ChipGroup
+              value={exportScope}
+              onChange={setExportScope}
+              options={[
+                { val: 'current', label: 'Current map + UML' },
+                { val: 'approved', label: 'All approved maps' },
+                { val: 'full', label: 'Full design bundle' },
+              ]}
+            />
           </div>
-          <div className="field">
-            <span className="label">Format</span>
-            <ChipGroup value={exportFmt} onChange={setExportFmt} options={[
-              { val: 'PNG', label: 'PNG' }, { val: 'SVG', label: 'SVG' }, { val: 'PDF', label: 'PDF' }, { val: 'JSON', label: 'JSON' }, { val: 'CSV', label: 'CSV' },
-            ]} />
-            <span className="hint" id="export-hint">{EX_HINT[exportFmt] ?? EX_HINT.PNG}</span>
+          <div>
+            <span className="block text-xs font-semibold text-foreground tracking-wide mb-1.5">Format</span>
+            <ChipGroup
+              value={exportFmt}
+              onChange={setExportFmt}
+              options={[
+                { val: 'PNG', label: 'PNG' },
+                { val: 'SVG', label: 'SVG' },
+                { val: 'PDF', label: 'PDF' },
+                { val: 'JSON', label: 'JSON' },
+                { val: 'CSV', label: 'CSV' },
+              ]}
+            />
+            <span className="text-[11px] text-muted mt-1 block" id="export-hint">{EX_HINT[exportFmt] ?? EX_HINT.PNG}</span>
           </div>
-          <div className="row" style={{ justifyContent: 'space-between' }}>
-            <div><div className="label">Include metrics &amp; call evidence</div><div className="hint">Volume, handle time and confidence columns where available.</div></div>
+          <div className="flex items-center justify-between p-3 border border-border rounded-lg bg-surface-inset">
+            <div>
+              <div className="text-xs font-semibold text-foreground">Include metrics &amp; call evidence</div>
+              <div className="text-[11px] text-muted">Volume, handle time and confidence columns where available.</div>
+            </div>
             <Switch checked={includeMetrics} onChange={setIncludeMetrics} label="Include metrics" />
           </div>
-          <div className="field">
-            <label className="label" htmlFor="export-name">File name</label>
-            <input className="input" id="export-name" value={exportName} onChange={(e) => setExportName(e.target.value)} />
+          <div>
+            <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="export-name">File name</label>
+            <input
+              className="w-full h-9 px-3 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent"
+              id="export-name"
+              value={exportName}
+              onChange={(e) => setExportName(e.target.value)}
+            />
           </div>
         </div>
-        <div className="dialog-f">
-          <CloseButton className="btn">Cancel</CloseButton>
-          <button type="button" className="btn btn-primary" id="export-confirm" data-od-id="export-confirm" onClick={() => { close(); toast(`${exportName}.${exportFmt.toLowerCase()} downloading`, 'download'); }}><Icon name="download" />Export</button>
+        <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-end gap-2.5 rounded-b-xl">
+          <CloseButton className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer">
+            Cancel
+          </CloseButton>
+          <button
+            type="button"
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 h-8.5 rounded-md bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs font-medium shadow-xs transition-colors cursor-pointer"
+            id="export-confirm"
+            data-od-id="export-confirm"
+            onClick={() => { close(); toast(`${exportName}.${exportFmt.toLowerCase()} downloading`, 'download'); }}
+          >
+            <Icon name="download" className="w-3.5 h-3.5" />Export
+          </button>
         </div>
       </Dialog>
     </AppShell>
