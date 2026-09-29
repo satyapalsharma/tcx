@@ -38,57 +38,64 @@
   --shadow-overlay: 0 8px 30px oklch(18% 0.012 250 / 0.14), 0 1px 4px oklch(18% 0.012 250 / 0.08);
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html { -webkit-text-size-adjust: 100%; }
-body {
-  font-family: var(--font-body);
-  font-size: 13.5px;
-  line-height: 1.5;
-  color: var(--fg);
-  background: var(--bg);
-  -webkit-font-smoothing: antialiased;
+@layer base {
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: var(--font-body);
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--fg);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.015em; }
+  code, kbd, pre { font-family: var(--font-mono); }
+  a { color: var(--fg); text-decoration: none; }
+  a.link { color: var(--accent-strong); }
+  a.link:hover { text-decoration: underline; text-underline-offset: 3px; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  input, select, textarea { font: inherit; color: inherit; }
+  ::selection { background: var(--accent-soft); }
+  :focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 2px; border-radius: 4px; }
 }
-h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.015em; }
-code, kbd, pre { font-family: var(--font-mono); }
-a { color: var(--fg); text-decoration: none; }
-a.link { color: var(--accent-strong); }
-a.link:hover { text-decoration: underline; text-underline-offset: 3px; }
-button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
-input, select, textarea { font: inherit; color: inherit; }
-.tabular { font-variant-numeric: tabular-nums; }
-.mono { font-family: var(--font-mono); font-size: 12.5px; }
-.muted { color: var(--muted); }
-.caps { text-transform: uppercase; letter-spacing: .08em; font-size: 11px; font-weight: 560; color: var(--muted); }
-::selection { background: var(--accent-soft); }
-:focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 2px; border-radius: 4px; }
 
-/* icons */
-.i { width: 15px; height: 15px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; vertical-align: -2px; }
-.i-lg { width: 17px; height: 17px; }
+@layer utilities {
+  .tabular { font-variant-numeric: tabular-nums; }
+  .mono { font-family: var(--font-mono); font-size: 12.5px; }
+  .muted { color: var(--muted); }
+  .caps { text-transform: uppercase; letter-spacing: .08em; font-size: 11px; font-weight: 560; color: var(--muted); }
+}
 
-/* SVG Diagrams & Canvas */
-.canvas-box { border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--surface-inset); overflow: auto; -webkit-overflow-scrolling: touch; position: relative; }
-.pmap-node rect { fill: var(--surface); stroke: oklch(82% 0.01 250); }
-.pmap-node text { fill: var(--fg); font-family: var(--font-body); }
-.pmap-node.active rect { stroke: var(--accent-strong); stroke-width: 1.8; }
-.pmap-edge { stroke: oklch(70% 0.012 250); stroke-width: 1.4; fill: none; marker-end: url(#arrowhead); }
-.pmap-edge.dash { stroke-dasharray: 5 4; }
-.pmap-node.start rect { fill: oklch(22% 0.01 250); stroke: oklch(22% 0.01 250); }
-.pmap-node.start text { fill: var(--surface); }
-.pmap-node.decision rect { fill: var(--warn-soft); stroke: oklch(78% 0.09 80); }
-.pmap-node.tool rect { fill: var(--success-soft); stroke: oklch(80% 0.06 150); }
+@layer components {
+  /* icons */
+  .i { width: 15px; height: 15px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; vertical-align: -2px; }
+  .i-lg { width: 17px; height: 17px; }
 
-/* Cluster Map SVG */
-.cluster-map { display: block; width: 100%; height: auto; }
-.cm-l1 rect { fill: var(--surface); stroke: var(--border); }
-.cm-l1.on rect { stroke: var(--accent-strong); stroke-width: 1.8; }
-.cm-l1:hover rect { stroke: var(--fg); }
-.cm-l1 text { fill: var(--fg); font-family: var(--font-body); }
-.cm-link { stroke: oklch(84% 0.01 250); stroke-width: 1.4; fill: none; }
-.cm-hub rect { fill: oklch(22% 0.01 250); }
-.cm-hub text { fill: var(--surface); font-family: var(--font-body); }
-.cm-bar { fill: oklch(92% 0.006 250); }
-.cm-bar-fill { fill: var(--accent-strong); }
+  /* SVG Diagrams & Canvas */
+  .canvas-box { border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--surface-inset); overflow: auto; -webkit-overflow-scrolling: touch; position: relative; }
+  .pmap-node rect { fill: var(--surface); stroke: oklch(82% 0.01 250); }
+  .pmap-node text { fill: var(--fg); font-family: var(--font-body); }
+  .pmap-node.active rect { stroke: var(--accent-strong); stroke-width: 1.8; }
+  .pmap-edge { stroke: oklch(70% 0.012 250); stroke-width: 1.4; fill: none; marker-end: url(#arrowhead); }
+  .pmap-edge.dash { stroke-dasharray: 5 4; }
+  .pmap-node.start rect { fill: oklch(22% 0.01 250); stroke: oklch(22% 0.01 250); }
+  .pmap-node.start text { fill: var(--surface); }
+  .pmap-node.decision rect { fill: var(--warn-soft); stroke: oklch(78% 0.09 80); }
+  .pmap-node.tool rect { fill: var(--success-soft); stroke: oklch(80% 0.06 150); }
+
+  /* Cluster Map SVG */
+  .cluster-map { display: block; width: 100%; height: auto; }
+  .cm-l1 rect { fill: var(--surface); stroke: var(--border); }
+  .cm-l1.on rect { stroke: var(--accent-strong); stroke-width: 1.8; }
+  .cm-l1:hover rect { stroke: var(--fg); }
+  .cm-l1 text { fill: var(--fg); font-family: var(--font-body); }
+  .cm-link { stroke: oklch(84% 0.01 250); stroke-width: 1.4; fill: none; }
+  .cm-hub rect { fill: oklch(22% 0.01 250); }
+  .cm-hub text { fill: var(--surface); font-family: var(--font-body); }
+  .cm-bar { fill: oklch(92% 0.006 250); }
+  .cm-bar-fill { fill: var(--accent-strong); }
+}
 
 /* Motion */
 @media (prefers-reduced-motion: no-preference) {

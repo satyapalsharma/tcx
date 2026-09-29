@@ -181,8 +181,8 @@ export function AppShell({ children, crumb, middleCrumb, badge, actions }: {
             <span className="hidden sm:inline text-border">/</span>
             {middleCrumb ? (
               <>
-                <span className="hover:text-foreground transition-colors">{middleCrumb}</span>
-                <span className="text-border">/</span>
+                <span className="hidden md:inline hover:text-foreground transition-colors truncate max-w-[200px]">{middleCrumb}</span>
+                <span className="hidden md:inline text-border">/</span>
               </>
             ) : null}
             <span className="font-semibold text-foreground truncate">{crumb}</span>
@@ -190,7 +190,9 @@ export function AppShell({ children, crumb, middleCrumb, badge, actions }: {
           <div className="flex-1" />
           <div className="flex items-center gap-2">
             {actions}
-            {badge}
+            <div className="hidden sm:flex items-center gap-2">
+              {badge}
+            </div>
           </div>
           <button
             type="button"

@@ -107,9 +107,9 @@
      var() consumers, so shadcn's tint utilities resolve to soft surfaces:
      bg-accent → --surface-hover, bg-muted → --surface-inset. */
   --color-accent-foreground: var(--fg);
-  --color-accent: var(--surface-hover);
+  --color-accent: var(--accent);
   --color-muted-foreground: var(--muted);
-  --color-muted: var(--surface-inset);
+  --color-muted: var(--muted);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
