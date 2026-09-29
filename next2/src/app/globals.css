@@ -1,0 +1,188 @@
+@import "tailwindcss";
+@import "../tx.css";
+@import "../pages.css";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+/*
+ ---break---
+ */
+@custom-variant dark (&:is(.dark *));
+
+/* Status classes that may be composed at runtime (bg-${status}-soft …).
+ * Mirrors SAFELIST in tailwind.config.ts. */
+@source inline("bg-success-soft", "bg-warn-soft", "bg-danger-soft", "text-success-fg", "text-warn-fg", "text-danger-fg", "border-success", "border-warn", "border-danger");
+
+/*
+ * Transform.cx — Tailwind v4 theme (CSS-first).
+ * Tailwind v4 is configured here via @theme instead of tailwind.config.ts.
+ * Every value mirrors brand-spec.md / tx.css 1:1 so the port stays pixel-identical.
+ * The legacy tx.css + pages.css are imported above as the base component layer;
+ * @theme re-exposes the same values as Tailwind utilities (bg-surface, text-fg, …).
+ */
+@theme {
+  /* Core six */
+  --color-bg: oklch(99% 0.002 240);
+  --color-surface: oklch(100% 0 0);
+  --color-fg: oklch(18% 0.012 250);
+  --color-muted: oklch(54% 0.012 250);
+  --color-border: oklch(92% 0.005 250);
+  --color-accent: oklch(66.2% 0.218 37); /* EXL orange #FB4E0B */
+
+  /* Derived accent (L-shift only, hue held at 35–45) */
+  --color-accent-strong: oklch(55% 0.19 36);
+  --color-accent-hover: oklch(50% 0.175 35);
+  --color-accent-active: oklch(46% 0.16 34);
+  --color-accent-soft: oklch(96% 0.028 45);
+  --color-accent-border: oklch(85% 0.075 42);
+
+  /* Status (hues pushed away from brand hue 37) */
+  --color-success: oklch(60% 0.14 150);
+  --color-success-soft: oklch(95% 0.04 150);
+  --color-success-fg: oklch(38% 0.1 150);
+  --color-warn: oklch(78% 0.145 88);
+  --color-warn-soft: oklch(96% 0.05 90);
+  --color-warn-fg: oklch(43% 0.1 80);
+  --color-danger: oklch(54% 0.21 22);
+  --color-danger-soft: oklch(95.5% 0.03 22);
+  --color-danger-fg: oklch(43% 0.17 22);
+
+  /* Surfaces */
+  --color-surface-hover: oklch(96.5% 0.004 250);
+  --color-surface-active: oklch(94.5% 0.005 250);
+  --color-surface-inset: oklch(97.5% 0.004 250);
+
+  /* Type */
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Shape */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 14px; /* dialogs */
+
+  /* Motion — one curve for anything that moves */
+  --ease-brand: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Breakpoints (mirror the responsive contract) */
+  --breakpoint-xs: 560px;
+  --breakpoint-3xl: 1101px;
+}
+
+/* Tailwind v4 keeps utilities in the utilities layer; the imported legacy
+ * component classes (tx.css / pages.css) win where they apply, so existing
+ * markup ports over unchanged while new screens can compose Tailwind utilities. */
+
+/*
+ ---break---
+ */
+
+@theme inline {
+  /* Fonts — resolve at runtime from the @theme block above (SF-brand stacks). */
+  --font-heading: var(--font-display);
+  --font-sans: var(--font-body);
+
+  /* shadcn semantic colors — resolve to the brand-mapped :root vars below. */
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  /* Hover/select tints follow the brand's soft-surface hover language
+     (tx.css: .btn:hover/.chip:hover = --surface-hover). tx.css owns the
+     raw --accent/--muted vars (orange fill / text gray) for its direct
+     var() consumers, so shadcn's tint utilities resolve to soft surfaces:
+     bg-accent → --surface-hover, bg-muted → --surface-inset. */
+  --color-accent-foreground: var(--fg);
+  --color-accent: var(--surface-hover);
+  --color-muted-foreground: var(--muted);
+  --color-muted: var(--surface-inset);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+}
+
+/*
+ ---break---
+ */
+
+/*
+ * shadcn semantic tokens, mapped 1:1 onto the Transform.cx brand palette
+ * (brand-spec.md / tx.css). No neutral grays — every shadcn primitive
+ * (Button, Dialog, Select, …) renders brand-correct out of the box.
+ * Light-mode only; the prototype ships no dark theme, hence no .dark block.
+ */
+:root {
+  --background: oklch(99% 0.002 240);        /* --bg */
+  --foreground: oklch(18% 0.012 250);        /* --fg */
+  --card: oklch(100% 0 0);                  /* --surface */
+  --card-foreground: oklch(18% 0.012 250);
+  --popover: oklch(100% 0 0);
+  --popover-foreground: oklch(18% 0.012 250);
+  --primary: oklch(55% 0.19 36);            /* --accent-strong · 5.30:1 vs white */
+  --primary-foreground: oklch(100% 0 0);
+  --secondary: oklch(97.5% 0.004 250);      /* --surface-inset */
+  --secondary-foreground: oklch(18% 0.012 250);
+  /* NB: --muted is intentionally NOT redefined here — tx.css owns it as the
+     54% text gray. bg-muted maps to --surface-inset via @theme inline above. */
+  --muted-foreground: oklch(54% 0.012 250); /* --muted */
+  --accent: oklch(66.2% 0.218 37);          /* EXL orange #FB4E0B */
+  --accent-foreground: oklch(100% 0 0);
+  --destructive: oklch(54% 0.21 22);        /* --danger */
+  --border: oklch(92% 0.005 250);           /* --border */
+  --input: oklch(92% 0.005 250);
+  --ring: oklch(55% 0.19 36);               /* --accent-strong */
+  --chart-1: oklch(66.2% 0.218 37);         /* brand orange */
+  --chart-2: oklch(55% 0.19 36);           /* accent-strong */
+  --chart-3: oklch(60% 0.14 150);          /* success */
+  --chart-4: oklch(78% 0.145 88);          /* warn */
+  --chart-5: oklch(54% 0.21 22);           /* danger */
+  --radius: 12px;                           /* --r-lg · sonner/dialog base */
+  --sidebar: oklch(100% 0 0);
+  --sidebar-foreground: oklch(18% 0.012 250);
+  --sidebar-primary: oklch(55% 0.19 36);
+  --sidebar-primary-foreground: oklch(100% 0 0);
+  --sidebar-accent: oklch(96.5% 0.004 250); /* --surface-hover */
+  --sidebar-accent-foreground: oklch(18% 0.012 250);
+  --sidebar-border: oklch(92% 0.005 250);
+  --sidebar-ring: oklch(55% 0.19 36);
+}
+
+/*
+ ---break---
+ */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  button:not(:disabled), [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  html {
+    @apply font-sans;
+  }
+}
