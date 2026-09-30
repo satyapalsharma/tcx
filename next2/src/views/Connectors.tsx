@@ -57,7 +57,7 @@ export default function Connectors() {
     const mono = k === 'Bucket' || k === 'Instance' || k === 'Subdomain';
     const warn = v.includes('expired');
     return (
-      <span className={`${mono ? 'font-mono text-[11.5px]' : 'text-xs'} ${warn ? 'text-warn-fg font-semibold' : 'text-foreground'}`}>
+      <span className={`${mono ? 'font-mono text-[11.5px]' : 'text-xs'} ${warn ? 'text-warn-fg font-semibold' : 'text-foreground'} truncate text-right min-w-0`} title={v}>
         {v}
       </span>
     );
@@ -136,8 +136,8 @@ export default function Connectors() {
               <span className="text-xs text-muted leading-relaxed line-clamp-2">{c.desc}</span>
               <div className="flex flex-col gap-1 pt-2 border-t border-border/60 mt-auto">
                 {c.kvs.map(([k, v]) => (
-                  <div key={k} className="flex items-center justify-between text-xs py-0.5">
-                    <span className="text-muted">{k}</span>
+                  <div key={k} className="flex items-center justify-between gap-2 text-xs py-0.5 min-w-0">
+                    <span className="text-muted shrink-0">{k}</span>
                     {kvValue(k, v)}
                   </div>
                 ))}

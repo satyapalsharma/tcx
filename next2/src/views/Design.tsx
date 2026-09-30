@@ -145,7 +145,7 @@ export default function Design() {
         </div>
 
         {/* 2-Column Work Area */}
-        <div className="grid grid-cols-1 md:grid-cols-[240px_minmax(0,1fr)] gap-4 items-start" data-tab-scope>
+        <div className="grid grid-cols-1 md:grid-cols-[268px_minmax(0,1fr)] gap-4 items-start" data-tab-scope>
           <div className="space-y-3 min-w-0">
             <div className="flex items-center p-0.5 bg-surface-inset border border-border rounded-lg" data-tabs>
               <button
