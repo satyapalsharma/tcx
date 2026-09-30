@@ -13,6 +13,11 @@ import { useReveal } from '../hooks/useReveal';
 import { PageHeader, StatusBadge } from '@/components/common';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const MAPS = [
   { id: 'mi-billing', name: 'Billing Dispute Resolution', badge: 'bg-warn-soft text-warn-fg', status: 'In review', hint: 'v3 · from Invoice Disputes' },
@@ -95,21 +100,24 @@ export default function Design() {
           actions={
             <div className="flex items-center gap-2 flex-wrap">
               <OpenButton
-                className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-surface hover:bg-surface-hover border border-border text-foreground text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer mr-1"
+                variant="outline"
+                className="gap-2 h-9 px-3.5 text-xs sm:text-sm font-medium mr-1 cursor-pointer"
                 target="dlg-export"
                 data-od-id="export-btn"
               >
                 <Icon name="download" className="w-4 h-4 text-muted" />Export
               </OpenButton>
               <OpenButton
-                className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-surface hover:bg-warn-soft/40 border border-warn/30 text-warn-fg text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
+                variant="warn"
+                className="gap-2 h-9 px-3.5 text-xs sm:text-sm font-medium cursor-pointer"
                 target="dlg-changes"
                 data-od-id="request-changes-btn"
               >
                 <Icon name="mail" className="w-4 h-4" />Request changes
               </OpenButton>
               <OpenButton
-                className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
+                variant="accent"
+                className="gap-2 h-9 px-3.5 text-xs sm:text-sm font-medium cursor-pointer"
                 target="dlg-approve"
                 data-od-id="approve-btn"
               >
@@ -156,34 +164,26 @@ export default function Design() {
         {/* 2-Column Work Area */}
         <div className="grid grid-cols-1 md:grid-cols-[268px_minmax(0,1fr)] gap-4 items-start" data-tab-scope>
           <div className="space-y-3 min-w-0">
-            <div className="flex items-center p-0.5 bg-surface-inset border border-border rounded-lg" data-tabs>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={tab === 'pmap'}
-                data-tab="pmap"
-                data-od-id="tab-pmap"
-                onClick={() => setTab('pmap')}
-                className={`flex-1 h-7 text-xs font-medium rounded-md transition-all cursor-pointer ${
-                  tab === 'pmap' ? 'bg-surface text-foreground shadow-xs font-semibold' : 'text-muted hover:text-foreground'
-                }`}
-              >
-                Process maps <span className="ml-1 px-1.5 py-0.2 rounded-full bg-surface-inset text-[10px] font-mono text-muted">4</span>
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={tab === 'uml'}
-                data-tab="uml"
-                data-od-id="tab-uml"
-                onClick={() => setTab('uml')}
-                className={`flex-1 h-7 text-xs font-medium rounded-md transition-all cursor-pointer ${
-                  tab === 'uml' ? 'bg-surface text-foreground shadow-xs font-semibold' : 'text-muted hover:text-foreground'
-                }`}
-              >
-                UML diagrams <span className="ml-1 px-1.5 py-0.2 rounded-full bg-surface-inset text-[10px] font-mono text-muted">2</span>
-              </button>
-            </div>
+            <Tabs value={tab} onValueChange={(v) => setTab(v as 'pmap' | 'uml')} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 p-0.5 h-8 bg-surface-inset border border-border rounded-lg" data-tabs>
+                <TabsTrigger
+                  value="pmap"
+                  data-tab="pmap"
+                  data-od-id="tab-pmap"
+                  className="h-7 text-xs font-medium rounded-md data-[state=active]:bg-surface data-[state=active]:text-foreground data-[state=active]:shadow-xs data-[state=active]:font-semibold"
+                >
+                  Process maps <span className="ml-1 px-1.5 py-0.2 rounded-full bg-surface-inset text-[10px] font-mono text-muted">4</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="uml"
+                  data-tab="uml"
+                  data-od-id="tab-uml"
+                  className="h-7 text-xs font-medium rounded-md data-[state=active]:bg-surface data-[state=active]:text-foreground data-[state=active]:shadow-xs data-[state=active]:font-semibold"
+                >
+                  UML diagrams <span className="ml-1 px-1.5 py-0.2 rounded-full bg-surface-inset text-[10px] font-mono text-muted">2</span>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
 
             <div className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden divide-y divide-border" data-od-id="map-rail">
               {MAPS.map((m) => {
@@ -211,14 +211,16 @@ export default function Design() {
                 );
               })}
               <div className="p-2.5">
-                <button
+                <Button
                   type="button"
-                  className="w-full h-8 inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer"
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-8 gap-1.5 cursor-pointer"
                   data-od-id="new-map-btn"
                   onClick={() => toast('Choose an approved cluster in Analysis first', 'info')}
                 >
                   <Icon name="plus" className="w-3.5 h-3.5" />Generate new map
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -240,7 +242,9 @@ export default function Design() {
                       <span className="w-1.5 h-1.5 rounded-full bg-current" />{statusBadge.text}
                     </span>
                     <OpenButton
-                      className="inline-flex items-center justify-center gap-1.5 h-8 px-2.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer"
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5 h-8 px-2.5 cursor-pointer"
                       target="dlg-export"
                     >
                       <Icon name="download" className="w-3.5 h-3.5 text-muted" />Export
@@ -265,13 +269,15 @@ export default function Design() {
                       <h3 className="text-sm font-semibold text-foreground">UML sequence — Billing Dispute</h3>
                       <div className="text-xs text-muted mt-0.5">Synced with process map v3 · flow between user, orchestrator, tools</div>
                     </div>
-                    <button
+                    <Button
                       type="button"
-                      className="inline-flex items-center justify-center gap-1.5 h-8 px-2.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer"
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5 h-8 px-2.5 cursor-pointer"
                       onClick={() => toast('Sequence regenerated from map v3', 'sync')}
                     >
                       <Icon name="sync" className="w-3.5 h-3.5 text-muted" />Regenerate
-                    </button>
+                    </Button>
                   </div>
                   <div className="p-4 sm:p-6 overflow-x-auto scrollbar-none">
                     <UmlSequenceSvg />
@@ -340,11 +346,11 @@ export default function Design() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-foreground tracking-wide mb-1" htmlFor="node-desc">
+                <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1" htmlFor="node-desc">
                   Step instructions (what the agent does here)
-                </label>
-                <textarea
-                  className="w-full p-2.5 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent"
+                </Label>
+                <Textarea
+                  className="w-full p-2.5 bg-surface text-xs sm:text-sm"
                   id="node-desc"
                   rows={4}
                   value={nodeDesc}
@@ -372,18 +378,22 @@ export default function Design() {
               </div>
             </div>
             <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-end gap-2.5 rounded-b-xl">
-              <CloseButton className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer">
+              <CloseButton
+                variant="outline"
+                className="px-3.5 h-8.5 rounded-md text-foreground text-xs font-medium cursor-pointer"
+              >
                 Close
               </CloseButton>
-              <button
+              <Button
                 type="button"
-                className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs font-medium shadow-xs transition-colors cursor-pointer"
+                variant="accent"
+                className="px-3.5 h-8.5 rounded-md text-xs font-medium cursor-pointer"
                 id="node-save"
                 data-od-id="node-save"
                 onClick={() => { close(); toast('Node saved — map v3.1 drafted, UML re-sync queued', 'check'); }}
               >
                 Save changes
-              </button>
+              </Button>
             </div>
           </>
         )}
@@ -408,9 +418,9 @@ export default function Design() {
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="ch-note">What should change?</label>
-            <textarea
-              className="w-full p-2.5 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent"
+            <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="ch-note">What should change?</Label>
+            <Textarea
+              className="w-full p-2.5 bg-surface border-border text-xs sm:text-sm text-foreground focus-visible:border-accent"
               id="ch-note"
               rows={3}
               placeholder="e.g. Retention escalation should only trigger after two declined offers, not one."
@@ -418,18 +428,22 @@ export default function Design() {
           </div>
         </div>
         <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-end gap-2.5 rounded-b-xl">
-          <CloseButton className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer">
+          <CloseButton
+            variant="outline"
+            className="px-3.5 h-8.5 rounded-md text-foreground text-xs font-medium cursor-pointer"
+          >
             Cancel
           </CloseButton>
-          <button
+          <Button
             type="button"
-            className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs font-medium shadow-xs transition-colors cursor-pointer"
+            variant="accent"
+            className="px-3.5 h-8.5 rounded-md text-xs font-medium cursor-pointer"
             id="ch-send"
             data-od-id="changes-send"
             onClick={() => { close(); setMapStatus('changes'); toast('Change request sent to Riya Menon (Analysis)', 'mail'); }}
           >
             Send request
-          </button>
+          </Button>
         </div>
       </Dialog>
 
@@ -452,9 +466,9 @@ export default function Design() {
             </div>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="ap-note">Handoff note (optional)</label>
-            <textarea
-              className="w-full p-2.5 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent"
+            <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="ap-note">Handoff note (optional)</Label>
+            <Textarea
+              className="w-full p-2.5 bg-surface border-border text-xs sm:text-sm text-foreground focus-visible:border-accent"
               id="ap-note"
               rows={3}
               placeholder="e.g. Start with the Google ADK target — Bedrock follows next sprint."
@@ -462,18 +476,22 @@ export default function Design() {
           </div>
         </div>
         <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-end gap-2.5 rounded-b-xl">
-          <CloseButton className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer">
+          <CloseButton
+            variant="outline"
+            className="px-3.5 h-8.5 rounded-md text-foreground text-xs font-medium cursor-pointer"
+          >
             Cancel
           </CloseButton>
-          <button
+          <Button
             type="button"
-            className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs font-medium shadow-xs transition-colors cursor-pointer"
+            variant="accent"
+            className="px-3.5 h-8.5 rounded-md text-xs font-medium cursor-pointer"
             id="ap-confirm"
             data-od-id="approve-confirm"
             onClick={() => { close(); setMapStatus('approved'); toast('Approved — snapshot v3 shared with Develop (Develop is next in the sidebar)', 'check'); }}
           >
             Approve &amp; notify Dev team
-          </button>
+          </Button>
         </div>
       </Dialog>
 
@@ -519,9 +537,9 @@ export default function Design() {
             <Switch checked={includeMetrics} onCheckedChange={setIncludeMetrics} aria-label="Include metrics" />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="export-name">File name</label>
-            <input
-              className="w-full h-9 px-3 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent"
+            <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="export-name">File name</Label>
+            <Input
+              className="w-full h-9 px-3 bg-surface border-border text-xs sm:text-sm text-foreground focus-visible:border-accent"
               id="export-name"
               value={exportName}
               onChange={(e) => setExportName(e.target.value)}
@@ -529,18 +547,22 @@ export default function Design() {
           </div>
         </div>
         <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-end gap-2.5 rounded-b-xl">
-          <CloseButton className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer">
+          <CloseButton
+            variant="outline"
+            className="px-3.5 h-8.5 rounded-md text-foreground text-xs font-medium cursor-pointer"
+          >
             Cancel
           </CloseButton>
-          <button
+          <Button
             type="button"
-            className="inline-flex items-center justify-center gap-1.5 px-3.5 h-8.5 rounded-md bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs font-medium shadow-xs transition-colors cursor-pointer"
+            variant="accent"
+            className="gap-1.5 px-3.5 h-8.5 rounded-md text-xs font-medium cursor-pointer"
             id="export-confirm"
             data-od-id="export-confirm"
             onClick={() => { close(); toast(`${exportName}.${exportFmt.toLowerCase()} downloading`, 'download'); }}
           >
             <Icon name="download" className="w-3.5 h-3.5" />Export
-          </button>
+          </Button>
         </div>
       </Dialog>
     </AppShell>

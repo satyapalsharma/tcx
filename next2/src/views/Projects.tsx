@@ -13,6 +13,9 @@ import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 type StageNode = { kind: 'live' | 'done' | 'empty' | 'dash'; label: string };
 
@@ -169,7 +172,8 @@ export default function Projects() {
           dataOdId="page-title"
           actions={
             <OpenButton
-              className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer shrink-0"
+              variant="accent"
+              className="gap-2 h-9 px-3.5 text-xs sm:text-sm font-medium rounded-md shadow-xs shrink-0 cursor-pointer"
               target="dlg-new-project"
               data-od-id="new-project-btn"
             >
@@ -402,9 +406,9 @@ export default function Projects() {
         </div>
         <div className="p-5 space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="np-name">Project name</label>
-            <input
-              className="w-full h-9 px-3 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+            <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="np-name">Project name</Label>
+            <Input
+              className="w-full h-9 px-3 bg-surface border-border text-xs sm:text-sm text-foreground placeholder:text-muted focus-visible:border-accent focus-visible:ring-1 focus-visible:ring-accent transition-colors"
               id="np-name"
               placeholder="e.g. Retention Desk — Q3 automation"
               value={projName}
@@ -412,9 +416,9 @@ export default function Projects() {
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="np-client">
+            <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="np-client">
               Client <span className="text-muted font-normal">· required for cost tagging</span>
-            </label>
+            </Label>
             <div className="flex items-center gap-2">
               <select
                 className="w-full h-9 px-3 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
@@ -426,14 +430,20 @@ export default function Projects() {
                 {CLIENTS.map((c) => <option key={c}>{c}</option>)}
                 <option value="__new__">+ Add new client…</option>
               </select>
-              <Link
-                className="inline-flex items-center justify-center gap-1.5 h-9 px-3 border border-border rounded-md bg-surface hover:bg-surface-hover text-xs font-medium text-foreground transition-colors shrink-0"
-                to="/settings"
-                title="Manage clients"
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 px-3 shrink-0"
+                asChild
               >
-                <Icon name="gear" className="w-3.5 h-3.5 text-muted" />
-                Manage
-              </Link>
+                <Link
+                  to="/settings"
+                  title="Manage clients"
+                >
+                  <Icon name="gear" className="w-3.5 h-3.5 text-muted" />
+                  Manage
+                </Link>
+              </Button>
             </div>
             <p className="text-xs text-muted mt-1 leading-relaxed">Every job run under this project is tagged to this client so cost reporting stays accurate.</p>
           </div>
@@ -453,7 +463,7 @@ export default function Projects() {
             </div>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="np-source">First data source</label>
+            <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="np-source">First data source</Label>
             <select
               className="w-full h-9 px-3 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
               id="np-source"
@@ -476,18 +486,22 @@ export default function Projects() {
           </div>
         </div>
         <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-end gap-2.5 rounded-b-xl">
-          <CloseButton className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer">
+          <CloseButton
+            variant="outline"
+            className="px-3.5 h-8.5 rounded-md text-foreground text-xs font-medium cursor-pointer"
+          >
             Cancel
           </CloseButton>
-          <button
+          <Button
             type="button"
-            className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs font-medium shadow-xs transition-colors cursor-pointer"
+            variant="accent"
+            className="px-3.5 h-8.5 rounded-md text-xs font-medium cursor-pointer"
             id="np-create"
             data-od-id="np-create-btn"
             onClick={create}
           >
             Create project
-          </button>
+          </Button>
         </div>
       </Dialog>
     </AppShell>

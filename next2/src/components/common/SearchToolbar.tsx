@@ -1,5 +1,6 @@
 import React from 'react';
 import { Icon } from '@/components/Icon';
+import { Input } from '@/components/ui/input';
 import { cn } from 'cn';
 
 export interface SearchToolbarProps {
@@ -32,11 +33,11 @@ export function SearchToolbar({
       <div className="relative">
         <Icon
           name="search"
-          className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted pointer-events-none"
+          className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted pointer-events-none z-10"
         />
-        <input
+        <Input
           className={cn(
-            'h-8 pl-8 pr-3 w-full sm:w-[210px] bg-surface-inset border border-border rounded-md text-xs text-foreground placeholder:text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors',
+            'h-8 pl-8 pr-3 w-full sm:w-[210px] bg-surface-inset border-border text-xs text-foreground placeholder:text-muted focus-visible:border-accent focus-visible:ring-1 focus-visible:ring-accent transition-colors',
             inputClassName
           )}
           placeholder={placeholder}

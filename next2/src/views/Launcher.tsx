@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from '../lib/navigation';
 import { Icon } from '../components/Icon';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 
 const SCREENS = [
   { to: '/login', pri: true, od: 'scr-login', icon: 'lock' as const, name: 'Login', desc: 'Sign in · SSO + SAML stubs · demo gate' },
@@ -40,9 +42,9 @@ export default function Launcher() {
             <div className="font-bold text-base tracking-tight text-foreground">Transform.cx</div>
             <div className="text-[11px] uppercase tracking-wider font-semibold text-muted mt-0.5">Prototype v1 · EXL</div>
           </div>
-          <span className="ml-auto inline-flex items-center gap-1.5 h-5.5 px-2 text-xs font-medium rounded-full bg-surface-inset border border-border text-foreground">
+          <Badge variant="outline" className="ml-auto inline-flex items-center gap-1.5 h-5.5 px-2 text-xs font-medium rounded-full bg-surface-inset border-border text-foreground">
             <span className="w-1.5 h-1.5 rounded-full bg-muted" />12 screens
-          </span>
+          </Badge>
         </div>
 
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground mt-4 leading-tight">
@@ -55,37 +57,41 @@ export default function Launcher() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-8" data-od-id="screen-list">
           {SCREENS.map((s) => (
-            <Link
+            <Card
               key={s.to}
-              className={`group flex items-center gap-3 p-3.5 rounded-lg border text-foreground transition-all duration-150 active:translate-y-px ${
+              className={`p-0 overflow-hidden border transition-all duration-150 active:translate-y-px shadow-xs ${
                 s.pri
-                  ? 'border-accent-border bg-accent-soft hover:bg-accent-soft hover:border-accent'
-                  : 'bg-surface border-border hover:border-[oklch(85%_0.008_250)] hover:bg-surface-hover'
+                  ? 'border-accent-border bg-accent-soft hover:border-accent'
+                  : 'bg-surface border-border hover:border-border-strong hover:bg-surface-hover'
               }`}
-              to={s.to}
-              data-od-id={s.od}
-              onClick={() => { try { localStorage.setItem('tx-last-page', s.to.slice(1)); } catch { /* noop */ } }}
             >
-              <span className={`w-8 h-8 rounded-lg grid place-items-center shrink-0 ${s.pri ? 'bg-accent-strong text-white' : 'bg-surface-inset text-muted'}`}>
-                <Icon name={s.icon} className="w-4 h-4" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="font-semibold text-xs sm:text-[13px] text-foreground">{s.name}</div>
-                <div className="text-xs text-muted truncate mt-0.5">{s.desc}</div>
-              </div>
-              <Icon name="arrowr" className="ml-auto text-muted w-4 h-4 transition-colors group-hover:text-foreground shrink-0" />
-            </Link>
+              <Link
+                className="group flex items-center gap-3 p-3.5 text-foreground w-full h-full"
+                to={s.to}
+                data-od-id={s.od}
+                onClick={() => { try { localStorage.setItem('tx-last-page', s.to.slice(1)); } catch { /* noop */ } }}
+              >
+                <span className={`w-8 h-8 rounded-lg grid place-items-center shrink-0 ${s.pri ? 'bg-accent-strong text-white' : 'bg-surface-inset text-muted'}`}>
+                  <Icon name={s.icon} className="w-4 h-4" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold text-xs sm:text-[13px] text-foreground">{s.name}</div>
+                  <div className="text-xs text-muted truncate mt-0.5">{s.desc}</div>
+                </div>
+                <Icon name="arrowr" className="ml-auto text-muted w-4 h-4 transition-colors group-hover:text-foreground shrink-0" />
+              </Link>
+            </Card>
           ))}
         </div>
 
         {lastPage && (
-          <div className="mt-6 p-3.5 sm:px-4 bg-surface-inset border border-border/70 rounded-lg text-xs text-muted flex items-center gap-2 flex-wrap" data-od-id="resume-note">
+          <Card className="mt-6 p-3.5 sm:px-4 bg-surface-inset border border-border/70 rounded-lg text-xs text-muted flex flex-row items-center gap-2 flex-wrap shadow-none" data-od-id="resume-note">
             <Icon name="clock" className="w-3.5 h-3.5 text-muted shrink-0" />
             <span>Last opened in this session:</span>
             <Link className="text-accent-strong hover:underline font-medium" to={`/${lastPage}`}>{lastLabel}</Link>
             <span className="text-border">·</span>
             <span>sidebar also returns you to any stage directly</span>
-          </div>
+          </Card>
         )}
       </div>
     </main>

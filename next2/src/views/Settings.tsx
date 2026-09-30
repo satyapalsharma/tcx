@@ -12,6 +12,10 @@ import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
 
 type Client = {
   id: string;
@@ -117,7 +121,8 @@ export default function Settings() {
                     countLabel="shown"
                   />
                   <OpenButton
-                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-medium bg-accent-strong text-white hover:bg-accent-hover active:bg-accent-active transition-colors shadow-xs cursor-pointer"
+                    variant="accent"
+                    size="sm"
                     target="dlg-client"
                     data-od-id="add-client-btn"
                   >
@@ -174,22 +179,23 @@ export default function Settings() {
                         </TableCell>
                         <TableCell className="px-4 py-3 whitespace-nowrap">
                           <div className="flex items-center gap-1 justify-end">
-                            <button
-                              type="button"
-                              className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
+                            <Button
+                              variant="ghost"
+                              size="icon-xs"
                               aria-label="Edit client"
                               onClick={() => openClient(c)}
                             >
                               <Icon name="edit" />
-                            </button>
-                            <button
-                              type="button"
-                              className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-danger-fg hover:bg-danger-soft transition-colors cursor-pointer"
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon-xs"
+                              className="hover:text-danger-fg hover:bg-danger-soft"
                               aria-label="Delete client"
                               onClick={() => { setDeleteTarget(c); open('dlg-confirm'); }}
                             >
                               <Icon name="trash" />
-                            </button>
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -212,11 +218,11 @@ export default function Settings() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <Card className="bg-surface border border-border rounded-xl p-4 sm:p-5 shadow-xs flex flex-col gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-foreground mb-1.5">Workspace name</label>
-                  <input className="w-full h-9 px-3 rounded-md border border-border bg-surface text-xs sm:text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent" defaultValue="Skyline workspace" aria-label="Workspace name" />
+                  <Label className="block text-xs font-semibold text-foreground mb-1.5">Workspace name</Label>
+                  <Input defaultValue="Skyline workspace" aria-label="Workspace name" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-foreground mb-1.5">Default region</label>
+                  <Label className="block text-xs font-semibold text-foreground mb-1.5">Default region</Label>
                   <select className="w-full h-9 px-3 rounded-md border border-border bg-surface text-xs sm:text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent" aria-label="Default region">
                     <option>asia-south1 (Mumbai)</option>
                     <option>us-central1</option>
@@ -230,13 +236,14 @@ export default function Settings() {
                   </div>
                   <Switch checked={piiDefault} onCheckedChange={setPiiDefault} aria-label="PII redaction by default" />
                 </div>
-                <button
-                  type="button"
-                  className="inline-flex items-center justify-center h-8 px-3 rounded-md text-xs font-medium border border-border bg-surface hover:bg-surface-hover text-foreground transition-colors self-start cursor-pointer mt-1"
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="self-start mt-1"
                   onClick={() => toast('Workspace defaults saved', 'check')}
                 >
                   Save defaults
-                </button>
+                </Button>
               </Card>
 
               <Card className="bg-surface border border-border rounded-xl p-4 sm:p-5 shadow-xs flex flex-col gap-3">
@@ -269,9 +276,7 @@ export default function Settings() {
                 {SPEND.map((s) => (
                   <div key={s.name} className="grid grid-cols-[130px_1fr_60px] sm:grid-cols-[160px_1fr_70px] items-center gap-3 text-xs">
                     <span className="font-medium text-foreground truncate">{s.name}</span>
-                    <div className="w-full h-2 bg-surface-inset rounded-full overflow-hidden">
-                      <div className="h-full bg-accent-strong rounded-full transition-all" style={{ width: `${s.pct}%` }} />
-                    </div>
+                    <Progress value={s.pct} className="h-2" />
                     <span className="font-mono tabular-nums text-right text-muted">{s.amount}</span>
                   </div>
                 ))}
@@ -291,16 +296,16 @@ export default function Settings() {
         </div>
         <div className="p-4 sm:p-5 flex flex-col gap-4">
           <div>
-            <label className="block text-xs font-semibold text-foreground mb-1.5" htmlFor="c-name">Client name</label>
-            <input className="w-full h-9 px-3 rounded-md border border-border bg-surface text-xs sm:text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent" id="c-name" placeholder="e.g. Northwind Retail" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            <Label className="block text-xs font-semibold text-foreground mb-1.5" htmlFor="c-name">Client name</Label>
+            <Input id="c-name" placeholder="e.g. Northwind Retail" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-foreground mb-1.5" htmlFor="c-contact">Primary contact email</label>
-            <input className="w-full h-9 px-3 rounded-md border border-border bg-surface text-xs sm:text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent" id="c-contact" type="email" placeholder="name@company.com" value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} />
+            <Label className="block text-xs font-semibold text-foreground mb-1.5" htmlFor="c-contact">Primary contact email</Label>
+            <Input id="c-contact" type="email" placeholder="name@company.com" value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-foreground mb-1.5" htmlFor="c-industry">Industry</label>
-            <input className="w-full h-9 px-3 rounded-md border border-border bg-surface text-xs sm:text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent" id="c-industry" placeholder="e.g. Telecom / ISP" value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} />
+            <Label className="block text-xs font-semibold text-foreground mb-1.5" htmlFor="c-industry">Industry</Label>
+            <Input id="c-industry" placeholder="e.g. Telecom / ISP" value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} />
           </div>
           <div className="flex items-center justify-between py-1">
             <div>
@@ -311,8 +316,8 @@ export default function Settings() {
           </div>
         </div>
         <div className="flex items-center justify-end gap-2 p-4 border-t border-border bg-surface-inset/30">
-          <CloseButton className="inline-flex items-center justify-center h-8 px-3 rounded-md text-xs font-medium border border-border bg-surface hover:bg-surface-hover text-foreground transition-colors cursor-pointer">Cancel</CloseButton>
-          <button type="button" className="inline-flex items-center justify-center h-8 px-3.5 rounded-md text-xs font-medium bg-accent-strong text-white hover:bg-accent-hover transition-colors shadow-xs cursor-pointer" data-od-id="client-save" onClick={saveClient}>Save client</button>
+          <CloseButton variant="outline" size="sm">Cancel</CloseButton>
+          <Button variant="accent" size="sm" data-od-id="client-save" onClick={saveClient}>Save client</Button>
         </div>
       </Dialog>
 
@@ -322,14 +327,14 @@ export default function Settings() {
           <p className="text-xs text-muted mt-0.5">Jobs already run stay in the workspace and keep their cost history, but new jobs can no longer be tagged to this client unless it is re-added.</p>
         </div>
         <div className="flex items-center justify-end gap-2 p-4 border-t border-border bg-surface-inset/30">
-          <CloseButton className="inline-flex items-center justify-center h-8 px-3 rounded-md text-xs font-medium border border-border bg-surface hover:bg-surface-hover text-foreground transition-colors cursor-pointer">Cancel</CloseButton>
-          <button
-            type="button"
-            className="inline-flex items-center justify-center h-8 px-3.5 rounded-md text-xs font-medium bg-danger-soft text-danger-fg border border-danger/20 hover:bg-danger-soft/80 transition-colors shadow-xs cursor-pointer"
+          <CloseButton variant="outline" size="sm">Cancel</CloseButton>
+          <Button
+            variant="destructive"
+            size="sm"
             onClick={confirmDelete}
           >
             Delete client
-          </button>
+          </Button>
         </div>
       </Dialog>
     </AppShell>

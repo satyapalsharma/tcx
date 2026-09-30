@@ -12,6 +12,12 @@ import { useReveal } from '../hooks/useReveal';
 import { PageHeader, StatusBadge } from '@/components/common';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
+import { Textarea } from '@/components/ui/textarea';
+import { Toggle } from '@/components/ui/toggle';
 
 const TARGETS = [
   { id: 'adk', name: 'Google ADK', desc: 'Python agents with FunctionTools, direct Vertex AI deploy.', badge: 'bg-accent-soft text-accent-strong', badgeText: 'Recommended' },
@@ -219,15 +225,17 @@ export default function Develop() {
           dataOdId="page-title"
           actions={
             <>
-              <button
+              <Button
                 type="button"
-                className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-surface hover:bg-surface-hover border border-border text-foreground text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
+                variant="outline"
+                className="gap-2 h-9 px-3.5 text-xs sm:text-sm font-medium cursor-pointer"
                 onClick={() => toast('Runtime docs open in vendor documentation (stub for demo)', 'ext')}
               >
                 <Icon name="ext" className="w-4 h-4 text-muted" />Runtime docs
-              </button>
+              </Button>
               <OpenButton
-                className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
+                variant="accent"
+                className="gap-2 h-9 px-3.5 text-xs sm:text-sm font-medium cursor-pointer"
                 target="dlg-gen"
                 data-od-id="generate-btn"
               >
@@ -265,16 +273,18 @@ export default function Develop() {
           {TARGETS.map((t) => {
             const isSelected = target === t.name;
             return (
-              <button
+              <Card
                 key={t.id}
-                type="button"
-                className={`p-3.5 border rounded-xl transition-all cursor-pointer flex flex-col gap-2 text-left ${
+                tabIndex={0}
+                role="button"
+                className={`p-3.5 border rounded-xl transition-all cursor-pointer flex flex-col gap-2 text-left shadow-xs ${
                   isSelected
                     ? 'border-accent-strong bg-accent-soft/30 ring-2 ring-accent-soft'
                     : 'border-border bg-surface hover:bg-surface-hover/70'
                 }`}
                 data-od-id={`tg-${t.id}`}
                 onClick={() => setTarget(t.name)}
+                onKeyDown={(e) => e.key === 'Enter' && setTarget(t.name)}
               >
                 <div className="flex items-center justify-between w-full">
                   <strong className="text-xs sm:text-sm font-semibold text-foreground">{t.name}</strong>
@@ -288,7 +298,7 @@ export default function Develop() {
                 <span className={`inline-flex items-center gap-1 h-5 px-2 text-[11px] font-medium rounded-full mt-auto ${t.badge}`}>
                   <span className="w-1.5 h-1.5 rounded-full bg-current" />{t.badgeText}
                 </span>
-              </button>
+              </Card>
             );
           })}
         </div>
@@ -308,9 +318,7 @@ export default function Develop() {
                     <span>GEN-0143 — generating {target} build from snapshot v3</span>
                     <span className="font-mono text-accent-strong">{genPct}%</span>
                   </div>
-                  <div className="h-1.5 w-full bg-surface rounded-full overflow-hidden">
-                    <div className="h-full bg-accent-strong rounded-full transition-all duration-200" style={{ width: `${genPct}%` }} />
-                  </div>
+                  <Progress value={genPct} className="h-1.5 w-full" />
                   <div className="space-y-1.5 pt-1">
                     {GEN_STEPS.map((step, i) => (
                       <div key={step.label} className={`flex items-center gap-2 text-xs ${genStage < i ? 'text-muted' : 'text-foreground'}`}>
@@ -330,107 +338,115 @@ export default function Develop() {
               )}
 
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm border-collapse min-w-[620px]">
-                  <thead className="bg-surface border-b border-border">
-                    <tr className="text-[11px] font-semibold uppercase tracking-wider text-muted">
-                      <th className="px-4 py-2.5">Build</th>
-                      <th className="px-4 py-2.5">Runtime</th>
-                      <th className="px-4 py-2.5">From</th>
-                      <th className="px-4 py-2.5 text-right">Tests</th>
-                      <th className="px-4 py-2.5">Status</th>
-                      <th className="px-4 py-2.5">Created</th>
-                      <th className="px-3 py-2.5 w-20 text-right" />
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
+                <Table className="w-full text-left text-sm min-w-[620px]">
+                  <TableHeader className="bg-surface">
+                    <TableRow className="border-b border-border">
+                      <TableHead className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted">Build</TableHead>
+                      <TableHead className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted">Runtime</TableHead>
+                      <TableHead className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted">From</TableHead>
+                      <TableHead className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted text-right">Tests</TableHead>
+                      <TableHead className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted">Status</TableHead>
+                      <TableHead className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted">Created</TableHead>
+                      <TableHead className="px-3 py-2.5 w-20 text-right" />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="divide-y divide-border">
                     {showRow143 && (
-                      <tr className="hover:bg-surface-hover/70 transition-colors">
-                        <td className="px-4 py-3 font-mono text-xs text-foreground font-semibold">ADK-0143</td>
-                        <td className="px-4 py-3 text-xs sm:text-sm text-foreground">Google ADK</td>
-                        <td className="px-4 py-3 font-mono text-xs text-muted">map v3</td>
-                        <td className="px-4 py-3 text-right font-mono text-xs">4/4</td>
-                        <td className="px-4 py-3">
+                      <TableRow className="hover:bg-surface-hover/70 transition-colors">
+                        <TableCell className="px-4 py-3 font-mono text-xs text-foreground font-semibold">ADK-0143</TableCell>
+                        <TableCell className="px-4 py-3 text-xs sm:text-sm text-foreground">Google ADK</TableCell>
+                        <TableCell className="px-4 py-3 font-mono text-xs text-muted">map v3</TableCell>
+                        <TableCell className="px-4 py-3 text-right font-mono text-xs">4/4</TableCell>
+                        <TableCell className="px-4 py-3">
                           <span className="inline-flex items-center gap-1.5 h-5 px-2 text-xs font-medium rounded-full bg-success-soft text-success-fg">
                             <span className="w-1.5 h-1.5 rounded-full bg-success" />Ready
                           </span>
-                        </td>
-                        <td className="px-4 py-3 text-xs text-muted">just now</td>
-                        <td className="px-3 py-3 text-right">
-                          <button
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-xs text-muted">just now</TableCell>
+                        <TableCell className="px-3 py-3 text-right">
+                          <Button
                             type="button"
-                            className="h-7 px-2.5 rounded-md bg-accent-strong hover:bg-accent-hover text-white text-xs font-medium transition-colors cursor-pointer"
+                            size="sm"
+                            variant="accent"
+                            className="h-7 px-2.5 text-xs"
                             onClick={startDeploy}
                           >
                             Deploy
-                          </button>
-                        </td>
-                      </tr>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
                     )}
-                    <tr className="hover:bg-surface-hover/70 transition-colors">
-                      <td className="px-4 py-3 font-mono text-xs text-foreground font-semibold">ADK-0142</td>
-                      <td className="px-4 py-3 text-xs sm:text-sm text-foreground">Google ADK</td>
-                      <td className="px-4 py-3 font-mono text-xs text-muted">map v2</td>
-                      <td className="px-4 py-3 text-right font-mono text-xs">4/4</td>
-                      <td className="px-4 py-3">
+                    <TableRow className="hover:bg-surface-hover/70 transition-colors">
+                      <TableCell className="px-4 py-3 font-mono text-xs text-foreground font-semibold">ADK-0142</TableCell>
+                      <TableCell className="px-4 py-3 text-xs sm:text-sm text-foreground">Google ADK</TableCell>
+                      <TableCell className="px-4 py-3 font-mono text-xs text-muted">map v2</TableCell>
+                      <TableCell className="px-4 py-3 text-right font-mono text-xs">4/4</TableCell>
+                      <TableCell className="px-4 py-3">
                         <span className="inline-flex items-center gap-1.5 h-5 px-2 text-xs font-medium rounded-full bg-success-soft text-success-fg">
                           <span className="w-1.5 h-1.5 rounded-full bg-success" />Deployed · staging
                         </span>
-                      </td>
-                      <td className="px-4 py-3 text-xs text-muted">2 days ago</td>
-                      <td className="px-3 py-3 text-right">
-                        <button
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-xs text-muted">2 days ago</TableCell>
+                      <TableCell className="px-3 py-3 text-right">
+                        <Button
                           type="button"
-                          className="h-7 px-2.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer"
+                          size="sm"
+                          variant="outline"
+                          className="h-7 px-2.5 text-xs"
                           onClick={() => toast('Already live on staging — promote from Cloud Run', 'info')}
                         >
                           Live
-                        </button>
-                      </td>
-                    </tr>
-                    <tr className="hover:bg-surface-hover/70 transition-colors">
-                      <td className="px-4 py-3 font-mono text-xs text-foreground font-semibold">LGR-0091</td>
-                      <td className="px-4 py-3 text-xs sm:text-sm text-foreground">LangGraph</td>
-                      <td className="px-4 py-3 font-mono text-xs text-muted">map v2</td>
-                      <td className="px-4 py-3 text-right font-mono text-xs">3/4</td>
-                      <td className="px-4 py-3">
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className="hover:bg-surface-hover/70 transition-colors">
+                      <TableCell className="px-4 py-3 font-mono text-xs text-foreground font-semibold">LGR-0091</TableCell>
+                      <TableCell className="px-4 py-3 text-xs sm:text-sm text-foreground">LangGraph</TableCell>
+                      <TableCell className="px-4 py-3 font-mono text-xs text-muted">map v2</TableCell>
+                      <TableCell className="px-4 py-3 text-right font-mono text-xs">3/4</TableCell>
+                      <TableCell className="px-4 py-3">
                         <span className="inline-flex items-center gap-1.5 h-5 px-2 text-xs font-medium rounded-full bg-warn-soft text-warn-fg">
                           <span className="w-1.5 h-1.5 rounded-full bg-warn" />1 flaky test
                         </span>
-                      </td>
-                      <td className="px-4 py-3 text-xs text-muted">3 days ago</td>
-                      <td className="px-3 py-3 text-right">
-                        <button
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-xs text-muted">3 days ago</TableCell>
+                      <TableCell className="px-3 py-3 text-right">
+                        <Button
                           type="button"
-                          className="h-7 px-2.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer"
+                          size="sm"
+                          variant="outline"
+                          className="h-7 px-2.5 text-xs"
                           onClick={() => toast('Rerun queued with fixed seed 42', 'sync')}
                         >
                           Rerun
-                        </button>
-                      </td>
-                    </tr>
-                    <tr className="hover:bg-surface-hover/70 transition-colors">
-                      <td className="px-4 py-3 font-mono text-xs text-foreground font-semibold">BRK-0037</td>
-                      <td className="px-4 py-3 text-xs sm:text-sm text-foreground">Amazon Bedrock</td>
-                      <td className="px-4 py-3 font-mono text-xs text-muted">map v1</td>
-                      <td className="px-4 py-3 text-right font-mono text-xs">2/4</td>
-                      <td className="px-4 py-3">
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className="hover:bg-surface-hover/70 transition-colors">
+                      <TableCell className="px-4 py-3 font-mono text-xs text-foreground font-semibold">BRK-0037</TableCell>
+                      <TableCell className="px-4 py-3 text-xs sm:text-sm text-foreground">Amazon Bedrock</TableCell>
+                      <TableCell className="px-4 py-3 font-mono text-xs text-muted">map v1</TableCell>
+                      <TableCell className="px-4 py-3 text-right font-mono text-xs">2/4</TableCell>
+                      <TableCell className="px-4 py-3">
                         <span className="inline-flex items-center gap-1.5 h-5 px-2 text-xs font-medium rounded-full bg-danger-soft text-danger-fg">
                           <span className="w-1.5 h-1.5 rounded-full bg-danger" />Failed · auth scope
                         </span>
-                      </td>
-                      <td className="px-4 py-3 text-xs text-muted">last week</td>
-                      <td className="px-3 py-3 text-right">
-                        <button
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-xs text-muted">last week</TableCell>
+                      <TableCell className="px-3 py-3 text-right">
+                        <Button
                           type="button"
-                          className="h-7 px-2.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer"
+                          size="sm"
+                          variant="outline"
+                          className="h-7 px-2.5 text-xs"
                           onClick={() => toast('Fix: allow bedrock:InvokeModel on the tool role, then rerun', 'info')}
                         >
                           Fix
-                        </button>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
               </div>
             </div>
 
@@ -439,38 +455,43 @@ export default function Develop() {
               <div className="p-4 border-b border-border flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-foreground">3 · Review generated scaffold</h3>
                 <div className="flex items-center gap-2">
-                  <button
+                  <Button
                     type="button"
-                    className="inline-flex items-center justify-center gap-1.5 h-7 px-2.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2.5 text-xs"
                     onClick={() => toast('agent.py copied to clipboard', 'copy')}
                   >
                     <Icon name="copy" className="w-3.5 h-3.5 text-muted" />Copy
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
-                    className="inline-flex items-center justify-center gap-1.5 h-7 px-2.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2.5 text-xs"
                     onClick={() => toast('Package downloaded as adk-billing-dispute-v3.zip', 'download')}
                   >
                     <Icon name="download" className="w-3.5 h-3.5 text-muted" />Download .zip
-                  </button>
+                  </Button>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-[170px_minmax(0,1fr)]">
                 <div className="p-2 bg-surface-inset border-r border-border flex md:flex-col gap-1 overflow-x-auto" data-od-id="file-tree">
                   {(['agent', 'tools', 'policy', 'test'] as const).map((k) => (
-                    <button
+                    <Button
                       key={k}
-                      type="button"
-                      className={`h-8 px-2.5 rounded-md text-xs font-mono flex items-center gap-2 transition-colors whitespace-nowrap cursor-pointer ${
+                      variant={file === k ? 'default' : 'ghost'}
+                      size="sm"
+                      className={`h-8 px-2.5 rounded-md text-xs font-mono justify-start gap-2 whitespace-nowrap cursor-pointer ${
                         file === k
-                          ? 'bg-foreground text-surface font-semibold shadow-xs'
+                          ? 'bg-foreground text-surface font-semibold shadow-xs hover:bg-foreground hover:text-surface'
                           : 'text-foreground hover:bg-surface-hover'
                       }`}
                       onClick={() => setFile(k)}
                     >
                       <Icon name="file" className={`w-3.5 h-3.5 shrink-0 ${file === k ? 'text-surface' : 'text-muted'}`} />
                       {k === 'policy' ? 'policies.py' : k === 'test' ? 'test_flow.py' : `${k}.py`}
-                    </button>
+                    </Button>
                   ))}
                 </div>
                 <div className="bg-surface-inset/70">
@@ -497,9 +518,11 @@ export default function Develop() {
                     <span className="w-1.5 h-1.5 rounded-full bg-current" />
                     {deployBadge === 'live' ? 'Live on staging' : deployBadge === 'deploying' ? 'Deploying to staging…' : 'Not deployed'}
                   </span>
-                  <button
+                  <Button
                     type="button"
-                    className="inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-md bg-accent-strong hover:bg-accent-hover text-white text-xs font-medium shadow-xs transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                    variant="accent"
+                    size="sm"
+                    className="h-8 px-3 text-xs"
                     data-od-id="deploy-btn"
                     disabled={deploying}
                     onClick={startDeploy}
@@ -515,7 +538,7 @@ export default function Develop() {
                         {deployBadge === 'live' ? 'Redeploy' : 'Deploy to staging'}
                       </>
                     )}
-                  </button>
+                  </Button>
                 </div>
               </div>
 
@@ -558,11 +581,11 @@ export default function Develop() {
                             </span>
                             <span className="text-muted text-[11.5px]">revision adk-billing-dispute-00014 · gemini-2.0-flash</span>
                           </div>
-                          <button
+                          <Button
                             type="button"
-                            className={`h-6.5 px-2.5 rounded-full border text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer ${
-                              improve ? 'bg-warn text-white border-warn font-semibold' : 'bg-surface border-border text-muted hover:text-foreground'
-                            }`}
+                            variant={improve ? 'warn' : 'outline'}
+                            size="sm"
+                            className="h-6.5 px-2.5 rounded-full text-xs"
                             data-od-id="improve-btn"
                             onClick={() => {
                               const next = !improve;
@@ -572,7 +595,7 @@ export default function Develop() {
                             }}
                           >
                             <Icon name="flag" className="w-3 h-3" />Improve experience
-                          </button>
+                          </Button>
                         </div>
                         <div className="p-4 flex flex-col gap-2.5 max-h-[300px] overflow-y-auto bg-surface-inset/30" ref={chatRef} role="log" aria-label="Conversation with the deployed agent">
                           {chat.map((m, i) => (
@@ -603,24 +626,25 @@ export default function Develop() {
                           ))}
                         </div>
                         <div className="p-3 border-t border-border flex gap-2">
-                          <input
-                            className="w-full h-9 px-3 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent"
+                          <Input
+                            className="w-full h-9 bg-surface text-xs sm:text-sm"
                             value={chatInput}
                             onChange={(e) => setChatInput(e.target.value)}
                             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); sendChat(); } }}
                             placeholder="Chat with the deployed agent…"
                             aria-label="Message the deployed agent"
                           />
-                          <button
+                          <Button
                             type="button"
-                            className="h-9 px-3.5 rounded-md bg-foreground text-surface hover:bg-foreground/90 text-xs font-semibold flex items-center gap-1.5 cursor-pointer shrink-0"
+                            size="sm"
+                            className="h-9 px-3.5 bg-foreground text-surface hover:bg-foreground/90 shrink-0"
                             data-od-id="chat-send"
                             onClick={sendChat}
                             aria-label="Send message"
                           >
                             <Icon name="send" className="w-3.5 h-3.5" />
                             <span>Send</span>
-                          </button>
+                          </Button>
                         </div>
                         <div className="px-3 pb-3 text-[11px] text-muted">{improveHint}</div>
                       </div>
@@ -642,38 +666,44 @@ export default function Develop() {
                                 <div className="text-foreground mt-0.5 font-medium">{g.note}</div>
                                 <div className="text-[11px] text-muted mt-0.5 truncate">On: &ldquo;{String(g.quote || '').slice(0, 74)}…&rdquo;</div>
                               </div>
-                              <button
+                              <Button
                                 type="button"
-                                className="inline-flex items-center justify-center w-6 h-6 rounded text-muted hover:text-foreground cursor-pointer"
+                                variant="ghost"
+                                size="icon-xs"
+                                className="text-muted hover:text-foreground"
                                 aria-label="Remove pointer"
                                 onClick={() => setGaps((gs) => gs.filter((_, j) => j !== i))}
                               >
                                 <Icon name="x" className="w-3.5 h-3.5" />
-                              </button>
+                              </Button>
                             </div>
                           ))}
                         </div>
                         <div className="flex items-center gap-2 pt-2 flex-wrap">
-                          <button
+                          <Button
                             type="button"
-                            className="h-8 px-3 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium flex items-center gap-1.5 cursor-pointer"
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-3 text-xs"
                             onClick={() => {
                               if (!gaps.length) { toast('Mark at least one gap first', 'info'); return; }
                               toast(`${gaps.length} gap${gaps.length > 1 ? 's' : ''} sent to Design — map v3.1 queued`, 'flow');
                             }}
                           >
                             <Icon name="flow" className="w-3.5 h-3.5 text-muted" />Send to Design
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             type="button"
-                            className="h-8 px-3 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium flex items-center gap-1.5 cursor-pointer"
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-3 text-xs"
                             onClick={() => {
                               if (!gaps.length) { toast('Mark at least one gap first', 'info'); return; }
                               toast(`${gaps.length} gap${gaps.length > 1 ? 's' : ''} sent to Analysis — filed against the review queue`, 'chart');
                             }}
                           >
                             <Icon name="chart" className="w-3.5 h-3.5 text-muted" />Send to Analysis
-                          </button>
+                          </Button>
                           {gaps.length === 0 && <span className="text-xs text-muted ml-auto">No gaps marked yet.</span>}
                         </div>
                       </div>
@@ -723,7 +753,7 @@ export default function Develop() {
               </summary>
               <div className="p-3.5 border-t border-border space-y-3">
                 <div>
-                  <label className="block text-xs font-semibold text-foreground tracking-wide mb-1">Model</label>
+                  <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1">Model</Label>
                   <select className="w-full h-8 px-2.5 bg-surface-inset border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-accent" defaultValue="gemini-2.0-flash">
                     <option>gemini-2.0-flash</option>
                     <option>gemini-2.5-pro</option>
@@ -732,26 +762,26 @@ export default function Develop() {
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-xs font-semibold text-foreground tracking-wide mb-1">Temperature</label>
-                    <input className="w-full h-8 px-2.5 bg-surface-inset border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-accent" defaultValue="0.2" inputMode="decimal" />
+                    <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1">Temperature</Label>
+                    <Input className="w-full h-8 px-2.5 bg-surface-inset text-xs" defaultValue="0.2" inputMode="decimal" />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-foreground tracking-wide mb-1">Max turns</label>
-                    <input className="w-full h-8 px-2.5 bg-surface-inset border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-accent" defaultValue="14" inputMode="numeric" />
+                    <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1">Max turns</Label>
+                    <Input className="w-full h-8 px-2.5 bg-surface-inset text-xs" defaultValue="14" inputMode="numeric" />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-foreground tracking-wide mb-1">Deploy region</label>
+                  <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1">Deploy region</Label>
                   <select className="w-full h-8 px-2.5 bg-surface-inset border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-accent">
                     <option>asia-south1 (Mumbai)</option>
                     <option>us-central1</option>
                   </select>
                 </div>
                 <div>
-                  <span className="block text-xs font-semibold text-foreground tracking-wide mb-1">Eval harness</span>
+                  <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1">Eval harness</Label>
                   <div className="flex gap-1.5">
-                    <button type="button" className="h-6 px-2.5 rounded-full bg-foreground text-surface text-xs font-semibold">Golden set · 24</button>
-                    <button type="button" className="h-6 px-2.5 rounded-full border border-border bg-surface text-muted text-xs hover:text-foreground">Adversarial · 40</button>
+                    <Button type="button" size="sm" className="h-6 px-2.5 rounded-full text-xs font-semibold">Golden set · 24</Button>
+                    <Button type="button" variant="outline" size="sm" className="h-6 px-2.5 rounded-full text-muted text-xs hover:text-foreground">Adversarial · 40</Button>
                   </div>
                 </div>
               </div>
@@ -782,7 +812,7 @@ export default function Develop() {
             <Switch checked={applyGuardrails} onCheckedChange={setApplyGuardrails} aria-label="Apply guardrails policy" />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="gen-env">Environment</label>
+            <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="gen-env">Environment</Label>
             <select className="w-full h-9 px-3 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent" id="gen-env">
               <option>staging (default)</option>
               <option>production</option>
@@ -790,17 +820,19 @@ export default function Develop() {
           </div>
         </div>
         <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-end gap-2.5 rounded-b-xl">
-          <CloseButton className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer">
+          <CloseButton variant="outline" size="sm" className="h-8.5 px-3.5 text-xs">
             Cancel
           </CloseButton>
-          <button
+          <Button
             type="button"
-            className="inline-flex items-center justify-center gap-1.5 px-3.5 h-8.5 rounded-md bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs font-medium shadow-xs transition-colors cursor-pointer"
+            variant="accent"
+            size="sm"
+            className="h-8.5 px-3.5 text-xs gap-1.5"
             data-od-id="gen-start-btn"
             onClick={startGeneration}
           >
             <Icon name="bolt" className="w-3.5 h-3.5" />Start generation
-          </button>
+          </Button>
         </div>
       </Dialog>
 
@@ -812,28 +844,28 @@ export default function Develop() {
         </div>
         <div className="p-5 space-y-4">
           <div>
-            <span className="block text-xs font-semibold text-foreground tracking-wide mb-1.5">Gap type</span>
+            <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5">Gap type</Label>
             <div className="flex flex-wrap gap-1.5" data-od-id="gap-sev">
               {GAP_TYPES.map((t) => (
-                <button
+                <Toggle
                   key={t}
-                  type="button"
-                  className={`h-6.5 px-3 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
-                    gapType === t ? 'bg-foreground text-surface border-foreground font-semibold' : 'bg-surface border-border text-muted hover:text-foreground'
-                  }`}
-                  onClick={() => setGapType(t)}
+                  pressed={gapType === t}
+                  onPressedChange={() => setGapType(t)}
+                  variant="outline"
+                  size="sm"
+                  className="h-6.5 px-3 rounded-full text-xs font-medium border border-border data-[state=on]:bg-foreground data-[state=on]:text-surface data-[state=on]:border-foreground cursor-pointer"
                 >
                   {t}
-                </button>
+                </Toggle>
               ))}
             </div>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="gap-note">
+            <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="gap-note">
               What should the agent do instead?
-            </label>
-            <textarea
-              className="w-full p-2.5 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent"
+            </Label>
+            <Textarea
+              className="w-full bg-surface text-xs sm:text-sm"
               id="gap-note"
               rows={3}
               placeholder="e.g. Ask for the cancellation date before quoting the credit amount."
@@ -843,17 +875,19 @@ export default function Develop() {
           </div>
         </div>
         <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-end gap-2.5 rounded-b-xl">
-          <CloseButton className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer">
+          <CloseButton variant="outline" size="sm" className="h-8.5 px-3.5 text-xs">
             Cancel
           </CloseButton>
-          <button
+          <Button
             type="button"
-            className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs font-medium shadow-xs transition-colors cursor-pointer"
+            variant="accent"
+            size="sm"
+            className="h-8.5 px-3.5 text-xs"
             data-od-id="gap-save"
             onClick={saveGap}
           >
             Add pointer
-          </button>
+          </Button>
         </div>
       </Dialog>
     </AppShell>

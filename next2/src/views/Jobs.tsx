@@ -11,6 +11,11 @@ import { KpiCard, PageHeader, StatusBadge, EmptyState, SearchToolbar } from '@/c
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
+import { cn } from 'cn';
 
 const STEP_ICONS: Record<StepStatus, Parameters<typeof Icon>[0]['name']> = {
   done: 'check',
@@ -91,15 +96,17 @@ export default function Jobs() {
           dataOdId="page-title"
           actions={
             <>
-              <button
+              <Button
                 type="button"
-                className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-surface hover:bg-surface-hover border border-border text-foreground text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
+                variant="outline"
+                className="gap-2 h-9 px-3.5 text-xs sm:text-sm font-medium cursor-pointer"
                 onClick={() => toast('Job history exported as jobs-30d.csv', 'download')}
               >
                 <Icon name="download" className="w-4 h-4 text-muted" />Export CSV
-              </button>
+              </Button>
               <OpenButton
-                className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
+                variant="accent"
+                className="gap-2 h-9 px-3.5 text-xs sm:text-sm font-medium cursor-pointer"
                 target="dlg-newjob"
                 data-od-id="new-job-btn"
               >
@@ -231,16 +238,15 @@ export default function Jobs() {
                       </TableCell>
                       <TableCell className="px-4 py-3">
                         <div className="flex items-center gap-2.5">
-                          <div className="h-1.5 flex-1 bg-surface-inset rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full transition-all duration-300 ${
-                                j.progressFill === 'fill-ok' ? 'bg-success' :
-                                j.progressFill === 'fill-warn' ? 'bg-warn' :
-                                'bg-accent-strong'
-                              }`}
-                              style={{ width: `${j.progress}%` }}
-                            />
-                          </div>
+                          <Progress
+                            value={j.progress}
+                            className={cn(
+                              'h-1.5 flex-1 bg-surface-inset',
+                              j.progressFill === 'fill-ok' && '[&>[data-slot=progress-indicator]]:bg-success',
+                              j.progressFill === 'fill-warn' && '[&>[data-slot=progress-indicator]]:bg-warn',
+                              j.progressFill !== 'fill-ok' && j.progressFill !== 'fill-warn' && '[&>[data-slot=progress-indicator]]:bg-accent-strong'
+                            )}
+                          />
                           <span className="text-[11.5px] font-mono text-muted tabular-nums whitespace-nowrap">
                             {j.progressLabel}
                           </span>
@@ -252,24 +258,28 @@ export default function Jobs() {
                       </TableCell>
                       <TableCell className="px-3 py-3 text-right">
                         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-                          <button
+                          <Button
                             type="button"
-                            className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
+                            variant="ghost"
+                            size="icon-xs"
+                            className="text-muted hover:text-foreground hover:bg-surface-hover cursor-pointer"
                             data-open-job
                             aria-label="Job details"
                             onClick={() => openJob(j)}
                           >
                             <Icon name="eye" className="w-3.5 h-3.5" />
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             type="button"
-                            className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-danger-fg hover:bg-danger-soft transition-colors cursor-pointer"
+                            variant="ghost"
+                            size="icon-xs"
+                            className="text-muted hover:text-danger-fg hover:bg-danger-soft cursor-pointer"
                             data-del-job
                             aria-label="Delete job"
                             onClick={(e) => askDelete(j, e)}
                           >
                             <Icon name="trash" className="w-3.5 h-3.5" />
-                          </button>
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -316,12 +326,10 @@ export default function Jobs() {
 
                   {j.progress > 0 && j.status === 'run' && (
                     <div className="flex items-center gap-2">
-                      <div className="h-1.5 flex-1 bg-surface-inset rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-warn transition-all duration-300"
-                          style={{ width: `${j.progress}%` }}
-                        />
-                      </div>
+                      <Progress
+                        value={j.progress}
+                        className="h-1.5 flex-1 bg-surface-inset [&>[data-slot=progress-indicator]]:bg-warn"
+                      />
                       <span className="text-[11px] font-mono text-muted">{j.progressLabel}</span>
                     </div>
                   )}
@@ -333,24 +341,28 @@ export default function Jobs() {
                       <span className="font-mono font-medium text-foreground">{j.cost}</span>
                     </div>
                     <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                      <button
+                      <Button
                         type="button"
-                        className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
+                        variant="ghost"
+                        size="icon-xs"
+                        className="text-muted hover:text-foreground hover:bg-surface-hover cursor-pointer"
                         data-open-job
                         aria-label="Job details"
                         onClick={() => openJob(j)}
                       >
                         <Icon name="eye" className="w-3.5 h-3.5" />
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
-                        className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-danger-fg hover:bg-danger-soft transition-colors cursor-pointer"
+                        variant="ghost"
+                        size="icon-xs"
+                        className="text-muted hover:text-danger-fg hover:bg-danger-soft cursor-pointer"
                         data-del-job
                         aria-label="Delete job"
                         onClick={(e) => askDelete(j, e)}
                       >
                         <Icon name="trash" className="w-3.5 h-3.5" />
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -364,14 +376,16 @@ export default function Jobs() {
               title="No jobs match these filters."
               dataOdId="jobs-empty"
               action={
-                <button
+                <Button
                   type="button"
-                  className="mt-2 h-7.5 px-3 rounded-md border border-border bg-surface hover:bg-surface-hover text-xs font-medium text-foreground transition-colors cursor-pointer"
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 text-xs font-medium cursor-pointer"
                   id="jobs-reset"
                   onClick={resetFilters}
                 >
                   Reset filters
-                </button>
+                </Button>
               }
             />
           )}
@@ -458,18 +472,22 @@ export default function Jobs() {
             </div>
 
             <div className="sticky bottom-0 p-3 sm:p-4 border-t border-border flex items-center justify-between gap-2 bg-surface/95 backdrop-blur-sm z-10">
-              <button
+              <Button
                 type="button"
-                className="h-8 px-3 rounded-md border border-border bg-surface hover:bg-surface-hover text-xs font-medium text-foreground transition-colors cursor-pointer"
+                variant="outline"
+                size="sm"
+                className="text-xs font-medium cursor-pointer"
                 onClick={() => toast(`Raw log for ${selected.id} downloaded`, 'download')}
               >
                 Download log
-              </button>
+              </Button>
               <div className="flex items-center gap-2">
                 {selected.status === 'run' ? (
-                  <button
+                  <Button
                     type="button"
-                    className="h-8 px-3 rounded-md bg-danger-soft hover:bg-danger/20 text-danger-fg text-xs font-medium transition-colors cursor-pointer"
+                    variant="destructive"
+                    size="sm"
+                    className="text-xs font-medium cursor-pointer"
                     id="jd-action-btn"
                     onClick={() => {
                       setJobs((prev) => prev.map((j) => (j.id === selected.id ? { ...j, status: 'failed', statusLabel: 'Cancelled', badgeClass: 'badge-err' } : j)));
@@ -478,11 +496,13 @@ export default function Jobs() {
                     }}
                   >
                     Cancel job
-                  </button>
+                  </Button>
                 ) : (
-                  <button
+                  <Button
                     type="button"
-                    className="h-8 px-3 rounded-md bg-accent-strong hover:bg-accent-hover text-white text-xs font-medium shadow-xs transition-colors cursor-pointer"
+                    variant="accent"
+                    size="sm"
+                    className="text-xs font-medium cursor-pointer"
                     id="jd-action-btn"
                     onClick={() => {
                       toast(`Rerun queued for ${selected.id}`, 'play');
@@ -490,7 +510,7 @@ export default function Jobs() {
                     }}
                   >
                     Rerun job
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>
@@ -507,17 +527,21 @@ export default function Jobs() {
           Are you sure you want to delete <strong className="font-mono">{deleteTarget?.id}</strong> ({deleteTarget?.subtitle})? This cannot be undone.
         </div>
         <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-end gap-2.5 rounded-b-xl">
-          <CloseButton className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer">
+          <CloseButton
+            variant="outline"
+            className="px-3.5 h-8.5 rounded-md text-foreground text-xs font-medium cursor-pointer"
+          >
             Cancel
           </CloseButton>
-          <button
+          <Button
             type="button"
-            className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md bg-danger-fg hover:opacity-90 text-white text-xs font-medium shadow-xs transition-opacity cursor-pointer"
+            variant="destructive"
+            className="px-3.5 h-8.5 rounded-md text-xs font-medium cursor-pointer"
             id="dlg-confirm-del"
             onClick={confirmDelete}
           >
             Delete job
-          </button>
+          </Button>
         </div>
       </Dialog>
 
@@ -528,7 +552,7 @@ export default function Jobs() {
         </div>
         <div className="p-5 space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="nj-client">Client</label>
+            <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="nj-client">Client</Label>
             <select
               className="w-full h-9 px-3 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
               id="nj-client"
@@ -541,7 +565,7 @@ export default function Jobs() {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="nj-pipe">Pipeline stage</label>
+            <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="nj-pipe">Pipeline stage</Label>
             <select
               className="w-full h-9 px-3 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
               id="nj-pipe"
@@ -553,7 +577,7 @@ export default function Jobs() {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="nj-source">Data source</label>
+            <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="nj-source">Data source</Label>
             <select
               className="w-full h-9 px-3 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
               id="nj-source"
@@ -574,17 +598,21 @@ export default function Jobs() {
           </div>
         </div>
         <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-end gap-2.5 rounded-b-xl">
-          <CloseButton className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer">
+          <CloseButton
+            variant="outline"
+            className="px-3.5 h-8.5 rounded-md text-foreground text-xs font-medium cursor-pointer"
+          >
             Cancel
           </CloseButton>
-          <button
+          <Button
             type="button"
-            className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs font-medium shadow-xs transition-colors cursor-pointer"
+            variant="accent"
+            className="px-3.5 h-8.5 rounded-md text-xs font-medium cursor-pointer"
             id="nj-start"
             onClick={startJob}
           >
             Start job
-          </button>
+          </Button>
         </div>
       </Dialog>
     </AppShell>

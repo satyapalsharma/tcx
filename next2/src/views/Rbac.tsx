@@ -11,6 +11,11 @@ import { PageHeader, StatusBadge, EmptyState, SearchToolbar } from '@/components
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Toggle } from '@/components/ui/toggle';
 
 const ROLE_OPTIONS = ['Admin', 'Business Analyst', 'CX Designer', 'Developer', 'Viewer'];
 
@@ -131,19 +136,16 @@ function MultiChips({ labels, selected, onChange, odId }: {
       {labels.map((label) => {
         const isSelected = selected.includes(label);
         return (
-          <button
+          <Toggle
             key={label}
-            type="button"
-            aria-pressed={isSelected}
-            onClick={() => toggle(label)}
-            className={`inline-flex items-center h-6.5 px-2.5 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
-              isSelected
-                ? 'bg-foreground border-foreground text-surface font-semibold'
-                : 'bg-surface border-border text-foreground hover:bg-surface-hover'
-            }`}
+            pressed={isSelected}
+            onPressedChange={() => toggle(label)}
+            variant="outline"
+            size="sm"
+            className="h-6.5 px-2.5 rounded-full text-xs font-medium border border-border data-[state=on]:bg-foreground data-[state=on]:text-surface data-[state=on]:border-foreground cursor-pointer"
           >
             {label}
-          </button>
+          </Toggle>
         );
       })}
     </div>
@@ -278,24 +280,25 @@ export default function Rbac() {
           className="pb-4 border-b border-border mb-0"
           actions={
             <>
-              <button
-                type="button"
-                className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md text-xs sm:text-sm font-medium border border-border bg-surface hover:bg-surface-hover transition-colors text-foreground shadow-xs cursor-pointer"
+              <Button
+                variant="outline"
+                size="sm"
                 id="new-role-btn"
                 data-od-id="new-role-btn"
                 onClick={() => openRoleDialog()}
               >
                 <Icon name="plus" />New role
-              </button>
-              <button
-                type="button"
-                className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md text-xs sm:text-sm font-medium border border-border bg-surface hover:bg-surface-hover transition-colors text-foreground shadow-xs cursor-pointer"
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => toast('Role report exported as roles-skyline.csv', 'download')}
               >
                 <Icon name="download" />Export roles
-              </button>
+              </Button>
               <OpenButton
-                className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md text-xs sm:text-sm font-medium bg-accent-strong text-white hover:bg-accent-hover active:bg-accent-active transition-colors shadow-xs cursor-pointer"
+                variant="accent"
+                size="sm"
                 target="dlg-invite"
                 data-od-id="invite-btn"
               >
@@ -315,23 +318,24 @@ export default function Rbac() {
               <span className="text-xs text-muted leading-relaxed line-clamp-2">{role.desc}</span>
               <span className="text-[11.5px] text-muted">1 member</span>
               <div className="flex items-center gap-1 mt-auto pt-2 border-t border-border/60">
-                <button
-                  type="button"
-                  className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
                   aria-label="Edit role"
                   onClick={() => openRoleDialog(role.name, role.desc)}
                 >
                   <Icon name="edit" />
-                </button>
+                </Button>
                 {role.deletable && (
-                  <button
-                    type="button"
-                    className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-danger-fg hover:bg-danger-soft transition-colors cursor-pointer"
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    className="hover:text-danger-fg hover:bg-danger-soft"
                     aria-label="Delete role"
                     onClick={() => deleteRole(role)}
                   >
                     <Icon name="trash" />
-                  </button>
+                  </Button>
                 )}
               </div>
             </Card>
@@ -420,23 +424,24 @@ export default function Rbac() {
                     </TableCell>
                     <TableCell className="px-4 py-3 whitespace-nowrap">
                       <div className="flex items-center gap-1 justify-end">
-                        <button
-                          type="button"
-                          className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
                           title={m.actionTitle}
                           onClick={() => toast(m.actionToast, m.actionIcon === 'sync' ? 'mail' : m.actionIcon)}
                         >
                           <Icon name={m.actionIcon} />
-                        </button>
-                        <button
-                          type="button"
-                          className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-danger-fg hover:bg-danger-soft transition-colors cursor-pointer"
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
+                          className="hover:text-danger-fg hover:bg-danger-soft"
                           aria-label="Delete member"
                           data-del-member
                           onClick={() => deleteMember(m)}
                         >
                           <Icon name="trash" />
-                        </button>
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -501,15 +506,15 @@ export default function Rbac() {
         </div>
         <div className="p-4 sm:p-5 flex flex-col gap-4">
           <div>
-            <label className="block text-xs font-semibold text-foreground mb-1.5" htmlFor="inv-name">Full name</label>
-            <input className="w-full h-9 px-3 rounded-md border border-border bg-surface text-xs sm:text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent" id="inv-name" placeholder="e.g. Sneha Kulkarni" value={invite.name} onChange={(e) => setInvite({ ...invite, name: e.target.value })} />
+            <Label className="block text-xs font-semibold text-foreground mb-1.5" htmlFor="inv-name">Full name</Label>
+            <Input id="inv-name" placeholder="e.g. Sneha Kulkarni" value={invite.name} onChange={(e) => setInvite({ ...invite, name: e.target.value })} />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-foreground mb-1.5" htmlFor="inv-email">Work email</label>
-            <input className="w-full h-9 px-3 rounded-md border border-border bg-surface text-xs sm:text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent" id="inv-email" type="email" placeholder="name@company.com" value={invite.email} onChange={(e) => setInvite({ ...invite, email: e.target.value })} />
+            <Label className="block text-xs font-semibold text-foreground mb-1.5" htmlFor="inv-email">Work email</Label>
+            <Input id="inv-email" type="email" placeholder="name@company.com" value={invite.email} onChange={(e) => setInvite({ ...invite, email: e.target.value })} />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-foreground mb-1.5" htmlFor="inv-role">Role</label>
+            <Label className="block text-xs font-semibold text-foreground mb-1.5" htmlFor="inv-role">Role</Label>
             <select className="w-full h-9 px-3 rounded-md border border-border bg-surface text-xs sm:text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent" id="inv-role" value={invite.role} onChange={(e) => setInvite({ ...invite, role: e.target.value })}>
               <option>Business Analyst</option>
               <option>CX Designer</option>
@@ -524,8 +529,8 @@ export default function Rbac() {
           </div>
         </div>
         <div className="flex items-center justify-end gap-2 p-4 border-t border-border bg-surface-inset/30">
-          <CloseButton className="inline-flex items-center justify-center h-8 px-3 rounded-md text-xs font-medium border border-border bg-surface hover:bg-surface-hover text-foreground transition-colors cursor-pointer">Cancel</CloseButton>
-          <button type="button" className="inline-flex items-center justify-center h-8 px-3.5 rounded-md text-xs font-medium bg-accent-strong text-white hover:bg-accent-hover transition-colors shadow-xs cursor-pointer" id="inv-send" data-od-id="invite-send" onClick={sendInvite}>Send invite</button>
+          <CloseButton variant="outline" size="sm">Cancel</CloseButton>
+          <Button variant="accent" size="sm" id="inv-send" data-od-id="invite-send" onClick={sendInvite}>Send invite</Button>
         </div>
       </Dialog>
 
@@ -536,12 +541,12 @@ export default function Rbac() {
         </div>
         <div className="p-4 sm:p-5 flex flex-col gap-4">
           <div>
-            <label className="block text-xs font-semibold text-foreground mb-1.5" htmlFor="role-name">Role name</label>
-            <input className="w-full h-9 px-3 rounded-md border border-border bg-surface text-xs sm:text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent" id="role-name" placeholder="e.g. QA Reviewer" value={roleForm.name} onChange={(e) => setRoleForm({ ...roleForm, name: e.target.value })} />
+            <Label className="block text-xs font-semibold text-foreground mb-1.5" htmlFor="role-name">Role name</Label>
+            <Input id="role-name" placeholder="e.g. QA Reviewer" value={roleForm.name} onChange={(e) => setRoleForm({ ...roleForm, name: e.target.value })} />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-foreground mb-1.5" htmlFor="role-desc">Description</label>
-            <input className="w-full h-9 px-3 rounded-md border border-border bg-surface text-xs sm:text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent" id="role-desc" placeholder="What this role can do" value={roleForm.desc} onChange={(e) => setRoleForm({ ...roleForm, desc: e.target.value })} />
+            <Label className="block text-xs font-semibold text-foreground mb-1.5" htmlFor="role-desc">Description</Label>
+            <Input id="role-desc" placeholder="What this role can do" value={roleForm.desc} onChange={(e) => setRoleForm({ ...roleForm, desc: e.target.value })} />
           </div>
           <div>
             <span className="block text-xs font-semibold text-foreground mb-1.5">Umbrella access</span>
@@ -550,18 +555,18 @@ export default function Rbac() {
           <div>
             <span className="block text-xs font-semibold text-foreground mb-2">Capabilities</span>
             <div className="flex flex-col gap-2 max-h-44 overflow-y-auto pr-1">
-              <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer"><input type="checkbox" className="rounded border-border accent-accent" defaultChecked /> Upload data &amp; run intent pipeline</label>
-              <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer"><input type="checkbox" className="rounded border-border accent-accent" defaultChecked /> Edit / merge intents and clusters</label>
-              <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer"><input type="checkbox" className="rounded border-border accent-accent" /> Edit process maps &amp; UML diagrams</label>
-              <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer"><input type="checkbox" className="rounded border-border accent-accent" /> Generate agent builds</label>
-              <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer"><input type="checkbox" className="rounded border-border accent-accent" /> Deploy to staging / production</label>
-              <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer"><input type="checkbox" className="rounded border-border accent-accent" /> View audit log</label>
+              <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer"><Checkbox defaultChecked /> Upload data &amp; run intent pipeline</label>
+              <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer"><Checkbox defaultChecked /> Edit / merge intents and clusters</label>
+              <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer"><Checkbox /> Edit process maps &amp; UML diagrams</label>
+              <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer"><Checkbox /> Generate agent builds</label>
+              <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer"><Checkbox /> Deploy to staging / production</label>
+              <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer"><Checkbox /> View audit log</label>
             </div>
           </div>
         </div>
         <div className="flex items-center justify-end gap-2 p-4 border-t border-border bg-surface-inset/30">
-          <CloseButton className="inline-flex items-center justify-center h-8 px-3 rounded-md text-xs font-medium border border-border bg-surface hover:bg-surface-hover text-foreground transition-colors cursor-pointer">Cancel</CloseButton>
-          <button type="button" className="inline-flex items-center justify-center h-8 px-3.5 rounded-md text-xs font-medium bg-accent-strong text-white hover:bg-accent-hover transition-colors shadow-xs cursor-pointer" id="role-save" data-od-id="role-save" onClick={saveRole}>Save role</button>
+          <CloseButton variant="outline" size="sm">Cancel</CloseButton>
+          <Button variant="accent" size="sm" id="role-save" data-od-id="role-save" onClick={saveRole}>Save role</Button>
         </div>
       </Dialog>
 
@@ -572,16 +577,16 @@ export default function Rbac() {
             <p className="text-xs text-muted mt-0.5" id="cf-body">{confirm.body}</p>
           </div>
           <div className="flex items-center justify-end gap-2 p-4 border-t border-border bg-surface-inset/30">
-            <CloseButton className="inline-flex items-center justify-center h-8 px-3 rounded-md text-xs font-medium border border-border bg-surface hover:bg-surface-hover text-foreground transition-colors cursor-pointer" onClick={() => setConfirm(null)}>Cancel</CloseButton>
-            <button
-              type="button"
-              className="inline-flex items-center justify-center h-8 px-3.5 rounded-md text-xs font-medium bg-danger-soft text-danger-fg border border-danger/20 hover:bg-danger-soft/80 transition-colors shadow-xs cursor-pointer"
+            <CloseButton variant="outline" size="sm" onClick={() => setConfirm(null)}>Cancel</CloseButton>
+            <Button
+              variant="destructive"
+              size="sm"
               id="cf-ok"
               data-od-id="confirm-ok"
               onClick={confirm.onOk}
             >
               {confirm.okLabel}
-            </button>
+            </Button>
           </div>
         </Dialog>
       )}

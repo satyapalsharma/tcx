@@ -10,6 +10,10 @@ import { useReveal } from '../hooks/useReveal';
 import { PageHeader, StatusBadge, EmptyState, SearchToolbar } from '@/components/common';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Toggle } from '@/components/ui/toggle';
 
 type Conn = {
   id: string;
@@ -86,15 +90,19 @@ export default function Connectors() {
           className="pb-4 border-b border-border mb-0"
           actions={
             <>
-              <button
+              <Button
                 type="button"
-                className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md text-xs sm:text-sm font-medium border border-border bg-surface hover:bg-surface-hover transition-colors text-foreground shadow-xs cursor-pointer"
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs sm:text-sm"
                 onClick={() => toast('Connector SDK docs (stub for demo)', 'ext')}
               >
                 <Icon name="ext" />SDK docs
-              </button>
+              </Button>
               <OpenButton
-                className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md text-xs sm:text-sm font-medium bg-accent-strong text-white hover:bg-accent-hover active:bg-accent-active transition-colors shadow-xs cursor-pointer"
+                variant="accent"
+                size="sm"
+                className="gap-1.5 text-xs sm:text-sm"
                 target="dw-newconn"
                 data-od-id="add-connector-btn"
               >
@@ -179,7 +187,7 @@ export default function Connectors() {
           <StatusBadge status={getStatusType(selected.badge)} className="shrink-0">
             {selected.badgeText}
           </StatusBadge>
-          <CloseButton className="inline-flex items-center justify-center w-8 h-8 rounded-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer" title="Close">
+          <CloseButton variant="ghost" size="icon-xs" className="w-8 h-8 text-muted hover:text-foreground" title="Close">
             <Icon name="x" />
           </CloseButton>
         </div>
@@ -192,13 +200,15 @@ export default function Connectors() {
               <span className="text-muted/60">·</span>
               <span>Next: <strong className="text-foreground font-semibold">in 48 min</strong></span>
               <span className="flex-1" />
-              <button
+              <Button
                 type="button"
-                className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-xs font-medium border border-border bg-surface hover:bg-surface-hover text-foreground transition-colors cursor-pointer"
+                variant="outline"
+                size="sm"
+                className="gap-1.5 h-7 px-2.5 text-xs"
                 onClick={() => toast('Sync requested — queue position 2', 'sync')}
               >
                 <Icon name="sync" />Sync now
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -228,25 +238,22 @@ export default function Connectors() {
                 <span className="block text-xs font-semibold text-foreground mb-1.5">Access mode</span>
                 <div className="flex flex-wrap items-center gap-1.5">
                   {['IAM role (recommended)', 'Access key pair'].map((m) => (
-                    <button
+                    <Toggle
                       key={m}
-                      type="button"
-                      aria-pressed={authMode === m}
-                      onClick={() => setAuthMode(m)}
-                      className={`inline-flex items-center h-6.5 px-2.5 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
-                        authMode === m
-                          ? 'bg-foreground border-foreground text-surface font-semibold'
-                          : 'bg-surface border-border text-foreground hover:bg-surface-hover'
-                      }`}
+                      pressed={authMode === m}
+                      onPressedChange={() => setAuthMode(m)}
+                      variant="outline"
+                      size="sm"
+                      className="h-6.5 px-2.5 rounded-full text-xs font-medium border border-border data-[state=on]:bg-foreground data-[state=on]:text-surface data-[state=on]:border-foreground cursor-pointer"
                     >
                       {m}
-                    </button>
+                    </Toggle>
                   ))}
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-foreground mb-1.5" htmlFor="dw-arn">Role ARN</label>
-                <input className="w-full h-9 px-3 rounded-md border border-border bg-surface font-mono text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent" id="dw-arn" defaultValue="arn:aws:iam::4132xxxx:role/tx-s3-read" />
+                <Label className="block text-xs font-semibold text-foreground mb-1.5" htmlFor="dw-arn">Role ARN</Label>
+                <Input className="w-full h-9 bg-surface font-mono text-xs" id="dw-arn" defaultValue="arn:aws:iam::4132xxxx:role/tx-s3-read" />
               </div>
               <p className="text-[11.5px] text-muted">Keys live in the workspace vault with audit logging on every use. Rotate pairs every 90 days.</p>
             </div>
@@ -254,24 +261,28 @@ export default function Connectors() {
         </div>
 
         <div className="flex items-center justify-end gap-2 p-4 border-t border-border bg-surface-inset/30">
-          <button
+          <Button
             type="button"
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-medium border border-border bg-surface hover:bg-surface-hover text-foreground transition-colors mr-auto cursor-pointer"
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs mr-auto"
             onClick={() => toast('Test OK — 3 sample objects readable', 'check')}
           >
             Test connection
-          </button>
-          <CloseButton className="inline-flex items-center justify-center h-8 px-3 rounded-md text-xs font-medium border border-border bg-surface hover:bg-surface-hover text-foreground transition-colors cursor-pointer">
+          </Button>
+          <CloseButton variant="outline" size="sm" className="text-xs">
             Cancel
           </CloseButton>
-          <button
+          <Button
             type="button"
-            className="inline-flex items-center justify-center h-8 px-3.5 rounded-md text-xs font-medium bg-accent-strong text-white hover:bg-accent-hover transition-colors shadow-xs cursor-pointer"
+            variant="accent"
+            size="sm"
+            className="text-xs"
             data-od-id="conn-save"
             onClick={() => { close(); toast('Connector settings saved', 'check'); }}
           >
             Save changes
-          </button>
+          </Button>
         </div>
       </Drawer>
 
@@ -281,7 +292,7 @@ export default function Connectors() {
             <div className="text-sm sm:text-base font-semibold text-foreground tracking-tight">New connector</div>
             <div className="text-xs text-muted mt-0.5">Pick a provider, then authenticate. Takes about 2 minutes.</div>
           </div>
-          <CloseButton className="inline-flex items-center justify-center w-8 h-8 rounded-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer" title="Close">
+          <CloseButton variant="ghost" size="icon-xs" className="w-8 h-8 text-muted hover:text-foreground" title="Close">
             <Icon name="x" />
           </CloseButton>
         </div>
@@ -291,19 +302,16 @@ export default function Connectors() {
             <span className="block text-xs font-semibold text-foreground mb-2">1 · Provider</span>
             <div className="flex flex-wrap items-center gap-1.5" data-od-id="nc-providers">
               {['Generic webhook', 'Freshdesk', 'Intercom', 'Dialpad'].map((p) => (
-                <button
+                <Toggle
                   key={p}
-                  type="button"
-                  aria-pressed={ncProvider === p}
-                  onClick={() => setNcProvider(p)}
-                  className={`inline-flex items-center h-6.5 px-2.5 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
-                    ncProvider === p
-                      ? 'bg-foreground border-foreground text-surface font-semibold'
-                      : 'bg-surface border-border text-foreground hover:bg-surface-hover'
-                  }`}
+                  pressed={ncProvider === p}
+                  onPressedChange={() => setNcProvider(p)}
+                  variant="outline"
+                  size="sm"
+                  className="h-6.5 px-2.5 rounded-full text-xs font-medium border border-border data-[state=on]:bg-foreground data-[state=on]:text-surface data-[state=on]:border-foreground cursor-pointer"
                 >
                   {p}
-                </button>
+                </Toggle>
               ))}
             </div>
           </div>
@@ -311,12 +319,12 @@ export default function Connectors() {
           <div className="flex flex-col gap-3">
             <span className="block text-xs font-semibold text-foreground">2 · Auth</span>
             <div>
-              <label className="block text-xs font-medium text-foreground mb-1" htmlFor="nc-name">Display name</label>
-              <input className="w-full h-9 px-3 rounded-md border border-border bg-surface text-xs sm:text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent" id="nc-name" placeholder="e.g. WhatsApp support exports" />
+              <Label className="block text-xs font-medium text-foreground mb-1" htmlFor="nc-name">Display name</Label>
+              <Input className="w-full h-9 bg-surface text-xs sm:text-sm" id="nc-name" placeholder="e.g. WhatsApp support exports" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-foreground mb-1" htmlFor="nc-token">Auth token / API key</label>
-              <input className="w-full h-9 px-3 rounded-md border border-border bg-surface text-xs sm:text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent" id="nc-token" placeholder="Stored in vault — never shown again" />
+              <Label className="block text-xs font-medium text-foreground mb-1" htmlFor="nc-token">Auth token / API key</Label>
+              <Input className="w-full h-9 bg-surface text-xs sm:text-sm" id="nc-token" placeholder="Stored in vault — never shown again" />
             </div>
           </div>
 
@@ -324,35 +332,34 @@ export default function Connectors() {
             <span className="block text-xs font-semibold text-foreground mb-2">3 · Default sync</span>
             <div className="flex flex-wrap items-center gap-1.5">
               {['Hourly', 'Every 15 min', 'Manual'].map((s) => (
-                <button
+                <Toggle
                   key={s}
-                  type="button"
-                  aria-pressed={ncSync === s}
-                  onClick={() => setNcSync(s)}
-                  className={`inline-flex items-center h-6.5 px-2.5 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
-                    ncSync === s
-                      ? 'bg-foreground border-foreground text-surface font-semibold'
-                      : 'bg-surface border-border text-foreground hover:bg-surface-hover'
-                  }`}
+                  pressed={ncSync === s}
+                  onPressedChange={() => setNcSync(s)}
+                  variant="outline"
+                  size="sm"
+                  className="h-6.5 px-2.5 rounded-full text-xs font-medium border border-border data-[state=on]:bg-foreground data-[state=on]:text-surface data-[state=on]:border-foreground cursor-pointer"
                 >
                   {s}
-                </button>
+                </Toggle>
               ))}
             </div>
           </div>
         </div>
 
         <div className="flex items-center justify-end gap-2 p-4 border-t border-border bg-surface-inset/30">
-          <CloseButton className="inline-flex items-center justify-center h-8 px-3 rounded-md text-xs font-medium border border-border bg-surface hover:bg-surface-hover text-foreground transition-colors cursor-pointer">
+          <CloseButton variant="outline" size="sm" className="text-xs">
             Cancel
           </CloseButton>
-          <button
+          <Button
             type="button"
-            className="inline-flex items-center justify-center h-8 px-3.5 rounded-md text-xs font-medium bg-accent-strong text-white hover:bg-accent-hover transition-colors shadow-xs cursor-pointer"
+            variant="accent"
+            size="sm"
+            className="text-xs"
             onClick={() => { close(); toast('Connection wizard launched — check email for verification link', 'plug'); }}
           >
             Connect
-          </button>
+          </Button>
         </div>
       </Drawer>
     </AppShell>

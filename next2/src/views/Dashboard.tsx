@@ -10,6 +10,7 @@ import { KpiCard, PageHeader, StatusBadge, EmptyState, SearchToolbar } from '@/c
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
 
 type IntentRow = {
   intent: string;
@@ -345,14 +346,16 @@ export default function Dashboard() {
             title="No intents match these filters."
             dataOdId="d-empty"
             action={
-              <button
+              <Button
                 type="button"
-                className="mt-2 h-7.5 px-3 rounded-md border border-border bg-surface hover:bg-surface-hover text-xs font-medium text-foreground transition-colors cursor-pointer"
+                variant="outline"
+                size="sm"
+                className="mt-2 text-xs font-medium cursor-pointer"
                 id="d-reset"
                 onClick={resetFilters}
               >
                 Reset filters
-              </button>
+              </Button>
             }
           />
         )}
@@ -658,13 +661,15 @@ export default function Dashboard() {
         </StatusBadge>
       }
       actions={(
-        <button
+        <Button
           type="button"
-          className="inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer"
+          variant="outline"
+          size="sm"
+          className="gap-1.5 h-8 px-3 text-xs font-medium cursor-pointer"
           onClick={() => toast('Dashboard exported as skyline-run-4821.pdf', 'download')}
         >
           <Icon name="download" className="w-3.5 h-3.5 text-muted" />Export
-        </button>
+        </Button>
       )}
     >
       <div className="p-4 sm:p-6 lg:p-7 max-w-[1240px] mx-auto w-full pb-16" data-od-id="dashboard-page">

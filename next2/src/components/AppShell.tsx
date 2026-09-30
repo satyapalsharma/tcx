@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/breadcrumb';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Button } from '@/components/ui/button';
 
 export type Persona = { initials: string; name: string; role: string };
 
@@ -221,15 +222,16 @@ export function AppShell({ children, crumb, middleCrumb, badge, actions }: {
             </div>
             <Tooltip>
               <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  className="inline-flex items-center justify-center w-8 h-8 rounded-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  className="w-8 h-8 text-muted hover:text-foreground cursor-pointer"
                   title="Notifications"
                   aria-label="Notifications"
                   onClick={() => toast('No new notifications', 'bell')}
                 >
                   <Icon name="bell" className="w-4 h-4" />
-                </button>
+                </Button>
               </TooltipTrigger>
               <TooltipContent>Notifications</TooltipContent>
             </Tooltip>

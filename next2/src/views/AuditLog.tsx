@@ -6,6 +6,9 @@ import { Icon } from '../components/Icon';
 import { useToast } from '../components/Toast';
 import { PageHeader, StatusBadge, EmptyState } from '@/components/common';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 type AuditEvent = {
   id: string;
@@ -146,13 +149,13 @@ export default function AuditLog() {
     <AppShell
       crumb="Audit log"
       actions={
-        <button
-          type="button"
-          className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-medium border border-border bg-surface hover:bg-surface-hover text-foreground transition-colors cursor-pointer"
+        <Button
+          variant="outline"
+          size="sm"
           onClick={exportCsv}
         >
           <Icon name="download" />Export CSV
-        </button>
+        </Button>
       }
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6" data-no-reveal data-od-id="audit-page">
@@ -162,20 +165,20 @@ export default function AuditLog() {
           dataOdId="page-title"
           className="pb-4 border-b border-border mb-0"
           actions={
-            <button
-              type="button"
-              className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md text-xs sm:text-sm font-medium border border-border bg-surface hover:bg-surface-hover transition-colors text-foreground shadow-xs cursor-pointer"
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => toast('Retention applies workspace-wide — contact admin to change', 'info')}
             >
               <Icon name="gear" />Retention policy
-            </button>
+            </Button>
           }
         />
 
         <Card className="bg-surface border border-border rounded-xl p-3 sm:p-4 shadow-xs" data-od-id="audit-filters">
           <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
-            <input
-              className="h-9 px-3 flex-1 min-w-[200px] max-w-xs rounded-md border border-border bg-surface text-xs sm:text-sm text-foreground placeholder:text-muted/60 focus:outline-none focus:ring-1 focus:ring-accent"
+            <Input
+              className="h-9 min-w-[200px] max-w-xs"
               placeholder="Search actor, target, detail…"
               aria-label="Search events by actor, target or detail"
               value={q}
@@ -207,33 +210,34 @@ export default function AuditLog() {
               <option value="Connectors">Connectors</option>
               <option value="Admin">Admin</option>
             </select>
-            <div className="flex items-center gap-1.5" role="group" aria-label="Date range">
+            <ToggleGroup
+              type="single"
+              value={rangeMode}
+              onValueChange={(val) => val && setRangeMode(val)}
+              className="gap-1"
+              aria-label="Date range"
+            >
               {[
                 { val: '24h', label: 'Last 24 h' },
                 { val: 'week', label: 'This week' },
                 { val: 'custom', label: 'Custom range' },
               ].map((c) => (
-                <button
+                <ToggleGroupItem
                   key={c.val}
-                  type="button"
-                  data-val={c.val}
-                  aria-pressed={rangeMode === c.val}
-                  onClick={() => setRangeMode(c.val)}
-                  className={`inline-flex items-center h-6.5 px-2.5 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
-                    rangeMode === c.val
-                      ? 'bg-foreground border-foreground text-surface font-semibold'
-                      : 'bg-surface border-border text-foreground hover:bg-surface-hover'
-                  }`}
+                  value={c.val}
+                  variant="outline"
+                  size="sm"
+                  className="h-6.5 px-2.5 rounded-full text-xs font-medium border border-border data-[state=on]:bg-foreground data-[state=on]:text-surface data-[state=on]:border-foreground cursor-pointer"
                 >
                   {c.label}
-                </button>
+                </ToggleGroupItem>
               ))}
-            </div>
+            </ToggleGroup>
             {rangeMode === 'custom' && (
               <span className="flex items-center gap-1.5">
-                <input
+                <Input
                   type="date"
-                  className="h-8 px-2 rounded-md border border-border bg-surface text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                  className="h-8 px-2 w-auto"
                   min="2026-08-01"
                   max="2026-08-16"
                   aria-label="From date"
@@ -241,9 +245,9 @@ export default function AuditLog() {
                   onChange={(e) => setFromDate(e.target.value)}
                 />
                 <span className="text-xs text-muted" aria-hidden="true">→</span>
-                <input
+                <Input
                   type="date"
-                  className="h-8 px-2 rounded-md border border-border bg-surface text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                  className="h-8 px-2 w-auto"
                   min="2026-08-01"
                   max="2026-08-16"
                   aria-label="To date"
@@ -288,13 +292,14 @@ export default function AuditLog() {
               description="Try a different actor, scope, date range, or search term."
               dataOdId="audit-empty"
               action={
-                <button
-                  type="button"
-                  className="inline-flex items-center justify-center h-8 px-3 rounded-md text-xs font-medium border border-border bg-surface hover:bg-surface-hover text-foreground transition-colors cursor-pointer mt-3"
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-3"
                   onClick={resetFilters}
                 >
                   Reset filters
-                </button>
+                </Button>
               }
             />
           )}
@@ -302,9 +307,9 @@ export default function AuditLog() {
 
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
           <span className="text-xs text-muted font-medium">{showingHint}</span>
-          <button
-            type="button"
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-medium border border-border bg-surface hover:bg-surface-hover text-foreground transition-colors cursor-pointer disabled:opacity-50"
+          <Button
+            variant="outline"
+            size="sm"
             id="load-older"
             data-od-id="load-older"
             disabled={loading}
@@ -312,7 +317,7 @@ export default function AuditLog() {
           >
             {loading ? <span className="w-3.5 h-3.5 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" aria-hidden="true" /> : <Icon name="chevr" />}
             Load older events
-          </button>
+          </Button>
         </div>
       </div>
     </AppShell>

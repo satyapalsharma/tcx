@@ -12,6 +12,13 @@ import { useToast } from '../components/Toast';
 import { useReveal } from '../hooks/useReveal';
 import { KpiCard, PageHeader, StatusBadge, EmptyState } from '@/components/common';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Toggle } from '@/components/ui/toggle';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 type Intent = { name: string; l1: string; vol: string; share: string; conf: string; esc: string; status: string; badge: string };
 
@@ -194,14 +201,16 @@ export default function Analysis() {
           <div className="w-24 sm:w-28 h-1.5 bg-surface-inset rounded-full overflow-hidden">
             <div className={`h-full rounded-full transition-all ${'approved' in c && c.approved ? 'bg-success' : 'bg-accent-strong'}`} style={{ width: `${pctW}%` }} />
           </div>
-          <button
+          <Button
             type="button"
-            className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
+            variant="ghost"
+            size="icon-xs"
+            className="w-7 h-7 text-muted hover:text-foreground"
             aria-label="Rename or merge cluster"
             onClick={(e) => { e.stopPropagation(); openClusterDlg(c.id, name); }}
           >
             <Icon name="edit" className="w-3.5 h-3.5" />
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -224,14 +233,16 @@ export default function Analysis() {
           actions={
             <>
               <OpenButton
-                className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-surface hover:bg-surface-hover border border-border text-foreground text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
+                variant="outline"
+                className="gap-2 text-xs sm:text-sm"
                 target="dlg-upload"
                 data-od-id="upload-btn"
               >
                 <Icon name="upload" className="w-4 h-4 text-muted" />Upload data
               </OpenButton>
               <OpenButton
-                className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
+                variant="accent"
+                className="gap-2 text-xs sm:text-sm"
                 target="dlg-run"
                 data-od-id="run-btn"
               >
@@ -304,45 +315,45 @@ export default function Analysis() {
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_330px] gap-4 items-start">
           <div className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden" data-tab-scope data-od-id="work-area">
             <div className="flex items-center gap-1 border-b border-border px-3 bg-surface overflow-x-auto scrollbar-none" data-tabs>
-              <button
-                type="button"
+              <Button
+                variant="ghost"
                 role="tab"
                 aria-selected={tab === 'intents'}
                 data-tab="intents"
                 data-od-id="tab-intents"
                 onClick={() => setTab('intents')}
-                className={`h-9 px-3.5 text-xs sm:text-[13px] font-medium border-b-2 -mb-px flex items-center gap-2 transition-colors cursor-pointer ${
-                  tab === 'intents' ? 'border-foreground text-foreground font-semibold' : 'border-transparent text-muted hover:text-foreground'
+                className={`h-9 px-3.5 text-xs sm:text-[13px] font-medium border-b-2 rounded-none -mb-px flex items-center gap-2 transition-colors cursor-pointer ${
+                  tab === 'intents' ? 'border-foreground text-foreground font-semibold hover:bg-transparent' : 'border-transparent text-muted hover:text-foreground hover:bg-transparent'
                 }`}
               >
                 Intents <span className="ml-1 px-1.5 py-0.5 rounded-full bg-surface-inset text-[11px] font-mono text-muted">286</span>
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="ghost"
                 role="tab"
                 aria-selected={tab === 'clusters'}
                 data-tab="clusters"
                 data-od-id="tab-clusters"
                 onClick={() => setTab('clusters')}
-                className={`h-9 px-3.5 text-xs sm:text-[13px] font-medium border-b-2 -mb-px flex items-center gap-2 transition-colors cursor-pointer ${
-                  tab === 'clusters' ? 'border-foreground text-foreground font-semibold' : 'border-transparent text-muted hover:text-foreground'
+                className={`h-9 px-3.5 text-xs sm:text-[13px] font-medium border-b-2 rounded-none -mb-px flex items-center gap-2 transition-colors cursor-pointer ${
+                  tab === 'clusters' ? 'border-foreground text-foreground font-semibold hover:bg-transparent' : 'border-transparent text-muted hover:text-foreground hover:bg-transparent'
                 }`}
               >
                 Clusters <span className="ml-1 px-1.5 py-0.5 rounded-full bg-surface-inset text-[11px] font-mono text-muted">6 L1</span>
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="ghost"
                 role="tab"
                 aria-selected={tab === 'review'}
                 data-tab="review"
                 data-od-id="tab-review"
                 onClick={() => setTab('review')}
-                className={`h-9 px-3.5 text-xs sm:text-[13px] font-medium border-b-2 -mb-px flex items-center gap-2 transition-colors cursor-pointer ${
-                  tab === 'review' ? 'border-foreground text-foreground font-semibold' : 'border-transparent text-muted hover:text-foreground'
+                className={`h-9 px-3.5 text-xs sm:text-[13px] font-medium border-b-2 rounded-none -mb-px flex items-center gap-2 transition-colors cursor-pointer ${
+                  tab === 'review' ? 'border-foreground text-foreground font-semibold hover:bg-transparent' : 'border-transparent text-muted hover:text-foreground hover:bg-transparent'
                 }`}
               >
                 Review queue <span className="ml-1 px-1.5 py-0.5 rounded-full bg-surface-inset text-[11px] font-mono text-muted">3</span>
-              </button>
+              </Button>
             </div>
 
             {tab === 'intents' && (
@@ -350,8 +361,8 @@ export default function Analysis() {
                 <div className="p-3 sm:px-4 border-b border-border/70 flex flex-wrap items-center gap-2.5">
                   <div className="relative flex-1 min-w-[180px]">
                     <Icon name="search" className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted pointer-events-none" />
-                    <input
-                      className="h-8 pl-8 pr-3 w-full bg-surface-inset border border-border rounded-md text-xs text-foreground placeholder:text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+                    <Input
+                      className="h-8 pl-8 pr-3 w-full bg-surface-inset text-xs placeholder:text-muted"
                       placeholder="Search intents"
                       aria-label="Search intents"
                       value={intentSearch}
@@ -374,52 +385,54 @@ export default function Analysis() {
                 </div>
 
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm border-collapse min-w-[720px]" id="intent-table">
-                    <thead className="bg-surface border-b border-border">
-                      <tr className="text-[11px] font-semibold uppercase tracking-wider text-muted">
-                        <th className="px-4 py-2.5">Intent</th>
-                        <th className="px-4 py-2.5">L1 cluster</th>
-                        <th className="px-4 py-2.5 text-right">Volume</th>
-                        <th className="px-4 py-2.5 text-right">Share</th>
-                        <th className="px-4 py-2.5 text-right">Conf.</th>
-                        <th className="px-4 py-2.5 text-right">Escalation</th>
-                        <th className="px-4 py-2.5">Status</th>
-                        <th className="px-3 py-2.5 w-10 text-right" />
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
+                  <Table className="w-full text-left text-sm min-w-[720px]" id="intent-table">
+                    <TableHeader className="bg-surface">
+                      <TableRow className="border-b border-border">
+                        <TableHead className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted">Intent</TableHead>
+                        <TableHead className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted">L1 cluster</TableHead>
+                        <TableHead className="px-4 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-muted">Volume</TableHead>
+                        <TableHead className="px-4 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-muted">Share</TableHead>
+                        <TableHead className="px-4 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-muted">Conf.</TableHead>
+                        <TableHead className="px-4 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-muted">Escalation</TableHead>
+                        <TableHead className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted">Status</TableHead>
+                        <TableHead className="px-3 py-2.5 w-10 text-right" />
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody className="divide-y divide-border">
                       {filteredIntents.map((i) => (
-                        <tr
+                        <TableRow
                           key={i.name}
                           data-filter-row
                           className="hover:bg-surface-hover/70 transition-colors cursor-pointer group"
                           onClick={() => openTranscript(i)}
                         >
-                          <td className="px-4 py-3 font-medium text-xs sm:text-sm text-foreground">{i.name}</td>
-                          <td className="px-4 py-3 text-xs sm:text-sm text-muted">{i.l1}</td>
-                          <td className="px-4 py-3 text-right font-mono text-xs text-foreground">{i.vol}</td>
-                          <td className="px-4 py-3 text-right font-mono text-xs text-foreground">{i.share}</td>
-                          <td className="px-4 py-3 text-right font-mono text-xs text-foreground">{i.conf}</td>
-                          <td className="px-4 py-3 text-right font-mono text-xs text-foreground">{i.esc}</td>
-                          <td className="px-4 py-3">
+                          <TableCell className="px-4 py-3 font-medium text-xs sm:text-sm text-foreground">{i.name}</TableCell>
+                          <TableCell className="px-4 py-3 text-xs sm:text-sm text-muted">{i.l1}</TableCell>
+                          <TableCell className="px-4 py-3 text-right font-mono text-xs text-foreground">{i.vol}</TableCell>
+                          <TableCell className="px-4 py-3 text-right font-mono text-xs text-foreground">{i.share}</TableCell>
+                          <TableCell className="px-4 py-3 text-right font-mono text-xs text-foreground">{i.conf}</TableCell>
+                          <TableCell className="px-4 py-3 text-right font-mono text-xs text-foreground">{i.esc}</TableCell>
+                          <TableCell className="px-4 py-3">
                             <span className={`inline-flex items-center gap-1.5 h-5 px-2 text-xs font-medium rounded-full ${i.badge}`}>
                               <span className="w-1.5 h-1.5 rounded-full bg-current" />{i.status}
                             </span>
-                          </td>
-                          <td className="px-3 py-3 text-right">
-                            <button
+                          </TableCell>
+                          <TableCell className="px-3 py-3 text-right">
+                            <Button
                               type="button"
-                              className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
+                              variant="ghost"
+                              size="icon-xs"
+                              className="w-7 h-7 text-muted hover:text-foreground"
                               aria-label="View transcripts"
                               onClick={(e) => { e.stopPropagation(); openTranscript(i); }}
                             >
                               <Icon name="eye" className="w-3.5 h-3.5" />
-                            </button>
-                          </td>
-                        </tr>
+                            </Button>
+                          </TableCell>
+                        </TableRow>
                       ))}
-                    </tbody>
-                  </table>
+                    </TableBody>
+                  </Table>
                 </div>
 
                 {filteredIntents.length === 0 && (
@@ -438,44 +451,46 @@ export default function Analysis() {
                     L1 → L2 → L3. Open a cluster to inspect breakdowns, rename or merge it, then approve the handoff to Design.
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="inline-flex p-0.5 bg-surface-inset border border-border rounded-lg gap-0.5" data-od-id="cluster-view-toggle">
-                      <button
-                        type="button"
-                        className={`h-6.5 px-2.5 text-xs font-medium rounded-md transition-all cursor-pointer ${
-                          clusterView === 'tree' ? 'bg-surface text-foreground shadow-xs font-semibold' : 'text-muted hover:text-foreground'
-                        }`}
-                        onClick={() => setClusterView('tree')}
+                    <ToggleGroup
+                      type="single"
+                      value={clusterView}
+                      onValueChange={(v) => v && setClusterView(v as 'tree' | 'map')}
+                      className="p-0.5 bg-surface-inset border border-border rounded-lg gap-0.5"
+                      data-od-id="cluster-view-toggle"
+                    >
+                      <ToggleGroupItem
+                        value="tree"
+                        className="h-6.5 px-2.5 text-xs font-medium rounded-md data-[state=on]:bg-surface data-[state=on]:text-foreground data-[state=on]:shadow-xs data-[state=on]:font-semibold cursor-pointer"
                       >
                         Tree
-                      </button>
-                      <button
-                        type="button"
-                        className={`h-6.5 px-2.5 text-xs font-medium rounded-md transition-all cursor-pointer ${
-                          clusterView === 'map' ? 'bg-surface text-foreground shadow-xs font-semibold' : 'text-muted hover:text-foreground'
-                        }`}
-                        onClick={() => setClusterView('map')}
+                      </ToggleGroupItem>
+                      <ToggleGroupItem
+                        value="map"
+                        className="h-6.5 px-2.5 text-xs font-medium rounded-md data-[state=on]:bg-surface data-[state=on]:text-foreground data-[state=on]:shadow-xs data-[state=on]:font-semibold cursor-pointer"
                       >
                         Cluster map
-                      </button>
-                    </div>
-                    <button
+                      </ToggleGroupItem>
+                    </ToggleGroup>
+                    <Button
                       type="button"
-                      className="inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer"
+                      variant="outline"
+                      size="sm"
                       id="new-cluster"
                       data-od-id="new-cluster-btn"
                       onClick={() => openClusterDlg(null)}
                     >
                       <Icon name="plus" className="w-3.5 h-3.5" />New cluster
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
-                      className="inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-md bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs font-medium shadow-xs transition-colors cursor-pointer"
+                      variant="accent"
+                      size="sm"
                       id="approve-design"
                       data-od-id="approve-clusters-btn"
                       onClick={() => { toast('4 clusters locked & shared with Design umbrella', 'check'); setReviewStageLive(true); }}
                     >
                       <Icon name="check" className="w-3.5 h-3.5" />Approve clusters
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
@@ -509,14 +524,16 @@ export default function Analysis() {
                           <div className="w-24 sm:w-28 h-1.5 bg-surface-inset rounded-full overflow-hidden">
                             <div className="h-full bg-success rounded-full" style={{ width: '38.2%' }} />
                           </div>
-                          <button
+                          <Button
                             type="button"
-                            className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
+                            variant="ghost"
+                            size="icon-xs"
+                            className="w-7 h-7 text-muted hover:text-foreground"
                             aria-label="Rename or merge cluster"
                             onClick={(e) => { e.stopPropagation(); openClusterDlg('cluster-billing'); }}
                           >
                             <Icon name="edit" className="w-3.5 h-3.5" />
-                          </button>
+                          </Button>
                         </div>
                         {billingOpen && (
                           <div className="p-2.5 bg-surface-inset/50 space-y-2 border-t border-border">
@@ -565,14 +582,16 @@ export default function Analysis() {
                           <div className="w-24 sm:w-28 h-1.5 bg-surface-inset rounded-full overflow-hidden">
                             <div className="h-full bg-accent-strong rounded-full" style={{ width: '24.1%' }} />
                           </div>
-                          <button
+                          <Button
                             type="button"
-                            className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
+                            variant="ghost"
+                            size="icon-xs"
+                            className="w-7 h-7 text-muted hover:text-foreground"
                             aria-label="Rename or merge cluster"
                             onClick={(e) => { e.stopPropagation(); openClusterDlg('cluster-connectivity'); }}
                           >
                             <Icon name="edit" className="w-3.5 h-3.5" />
-                          </button>
+                          </Button>
                         </div>
                       </div>
                     )}
@@ -625,30 +644,36 @@ export default function Analysis() {
                         </span>
                       ) : (
                         <>
-                          <button
+                          <Button
                             type="button"
-                            className="inline-flex items-center justify-center h-7 px-2.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer"
+                            variant="outline"
+                            size="sm"
+                            className="h-7 px-2.5 text-xs"
                             data-rv-act="new"
                             onClick={() => reviewAction(rv.id, 'new')}
                           >
                             Accept as new
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             type="button"
-                            className="inline-flex items-center justify-center h-7 px-2.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer"
+                            variant="outline"
+                            size="sm"
+                            className="h-7 px-2.5 text-xs"
                             data-rv-act="merge"
                             onClick={() => reviewAction(rv.id, 'merge')}
                           >
                             {rv.merge}
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             type="button"
-                            className="inline-flex items-center justify-center h-7 px-2.5 rounded-md bg-danger-soft hover:bg-danger-soft/80 border border-danger/30 text-danger-fg text-xs font-medium transition-colors cursor-pointer"
+                            variant="destructive"
+                            size="sm"
+                            className="h-7 px-2.5 text-xs bg-danger-soft hover:bg-danger-soft/80 border border-danger/30 text-danger-fg"
                             data-rv-act="reject"
                             onClick={() => reviewAction(rv.id, 'reject')}
                           >
                             Reject
-                          </button>
+                          </Button>
                         </>
                       )}
                     </div>
@@ -672,14 +697,16 @@ export default function Analysis() {
                     {paused ? 'Paused' : 'RUN-4821'}
                   </span>
                 </div>
-                <button
+                <Button
                   type="button"
-                  className="h-7 px-2.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2.5 text-xs"
                   id="run-toggle"
                   onClick={() => setPaused(!paused)}
                 >
                   {paused ? 'Resume' : 'Pause'}
-                </button>
+                </Button>
               </div>
 
               <div>
@@ -687,9 +714,7 @@ export default function Analysis() {
                   <span>Week-26 clustering refresh</span>
                   <span className="font-mono text-muted" id="run-pct">{pct}%</span>
                 </div>
-                <div className="h-1.5 w-full bg-surface-inset rounded-full overflow-hidden my-2">
-                  <div className="h-full bg-accent-strong rounded-full transition-all duration-300" id="run-fill" style={{ width: `${pct}%` }} />
-                </div>
+                <Progress value={pct} className="h-1.5 w-full my-2" id="run-fill" />
                 <div className="text-[11.5px] text-muted" id="run-eta">ETA ~14 min · new wave of records only</div>
               </div>
 
@@ -747,14 +772,16 @@ export default function Analysis() {
                     <div className="text-xs font-semibold text-foreground truncate">Genesys Cloud — calls</div>
                     <div className="text-[11px] text-muted truncate">4,812 transcripts · 12 min ago</div>
                   </div>
-                  <button
+                  <Button
                     type="button"
-                    className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
+                    variant="ghost"
+                    size="icon-xs"
+                    className="w-7 h-7 text-muted hover:text-foreground"
                     title="Download as .xlsx"
                     onClick={() => toast('genesys-calls-w26.xlsx downloading', 'download')}
                   >
                     <Icon name="download" className="w-3.5 h-3.5" />
-                  </button>
+                  </Button>
                 </div>
                 <div className="flex items-center gap-2.5 py-2">
                   <span className="inline-flex items-center gap-1.5 h-5 px-2 text-xs font-medium rounded-full bg-success-soft text-success-fg shrink-0">
@@ -764,14 +791,16 @@ export default function Analysis() {
                     <div className="text-xs font-semibold text-foreground truncate">Zendesk — conversations</div>
                     <div className="text-[11px] text-muted truncate">9,205 threads · 38 min ago</div>
                   </div>
-                  <button
+                  <Button
                     type="button"
-                    className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
+                    variant="ghost"
+                    size="icon-xs"
+                    className="w-7 h-7 text-muted hover:text-foreground"
                     title="Download as .xlsx"
                     onClick={() => toast('zendesk-threads-w26.xlsx downloading', 'download')}
                   >
                     <Icon name="download" className="w-3.5 h-3.5" />
-                  </button>
+                  </Button>
                 </div>
                 <div className="flex items-center gap-2.5 py-2">
                   <span className="inline-flex items-center gap-1.5 h-5 px-2 text-xs font-medium rounded-full bg-warn-soft text-warn-fg shrink-0">
@@ -781,7 +810,7 @@ export default function Analysis() {
                     <div className="text-xs font-semibold text-foreground truncate">CSV — CRM notes batch</div>
                     <div className="text-[11px] text-muted truncate">4,425 rows · manual upload</div>
                   </div>
-                  <OpenButton className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer" target="dlg-upload" title="Re-upload">
+                  <OpenButton variant="ghost" size="icon-xs" className="w-7 h-7 text-muted hover:text-foreground" target="dlg-upload" title="Re-upload">
                     <Icon name="upload" className="w-3.5 h-3.5" />
                   </OpenButton>
                 </div>
@@ -797,7 +826,7 @@ export default function Analysis() {
               </summary>
               <div className="p-3.5 border-t border-border space-y-3">
                 <div>
-                  <label className="block text-xs font-semibold text-foreground tracking-wide mb-1" htmlFor="adv-model">Extraction model</label>
+                  <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1" htmlFor="adv-model">Extraction model</Label>
                   <select className="w-full h-8 px-2.5 bg-surface-inset border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-accent" id="adv-model">
                     <option>tx-intent-v3.2 (recommended)</option>
                     <option>tx-intent-v3.1 — pinned</option>
@@ -805,16 +834,16 @@ export default function Analysis() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-foreground tracking-wide mb-1" htmlFor="adv-conf">Min. clustering confidence</label>
-                  <input className="w-full h-8 px-2.5 bg-surface-inset border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-accent" id="adv-conf" defaultValue="0.72" inputMode="decimal" />
+                  <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1" htmlFor="adv-conf">Min. clustering confidence</Label>
+                  <Input className="w-full h-8 px-2.5 bg-surface-inset text-xs" id="adv-conf" defaultValue="0.72" inputMode="decimal" />
                   <span className="text-[11px] text-muted mt-0.5 block">Records below this go to review queue.</span>
                 </div>
                 <div>
-                  <span className="block text-xs font-semibold text-foreground tracking-wide mb-1">Languages</span>
+                  <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1">Languages</Label>
                   <div className="flex flex-wrap gap-1.5">
-                    <button type="button" className={`h-6 px-2 text-xs font-medium rounded-full border transition-colors ${langChips.en ? 'bg-foreground text-surface border-foreground' : 'bg-surface border-border text-muted'}`} onClick={() => setLangChips((p) => ({ ...p, en: !p.en }))}>English</button>
-                    <button type="button" className={`h-6 px-2 text-xs font-medium rounded-full border transition-colors ${langChips.hi ? 'bg-foreground text-surface border-foreground' : 'bg-surface border-border text-muted'}`} onClick={() => setLangChips((p) => ({ ...p, hi: !p.hi }))}>Hindi · transliterated</button>
-                    <button type="button" className={`h-6 px-2 text-xs font-medium rounded-full border transition-colors ${langChips.reg ? 'bg-foreground text-surface border-foreground' : 'bg-surface border-border text-muted'}`} onClick={() => setLangChips((p) => ({ ...p, reg: !p.reg }))}>Regional mixed</button>
+                    <Button type="button" size="sm" variant={langChips.en ? 'default' : 'outline'} className="h-6 px-2 text-xs rounded-full" onClick={() => setLangChips((p) => ({ ...p, en: !p.en }))}>English</Button>
+                    <Button type="button" size="sm" variant={langChips.hi ? 'default' : 'outline'} className="h-6 px-2 text-xs rounded-full" onClick={() => setLangChips((p) => ({ ...p, hi: !p.hi }))}>Hindi · transliterated</Button>
+                    <Button type="button" size="sm" variant={langChips.reg ? 'default' : 'outline'} className="h-6 px-2 text-xs rounded-full" onClick={() => setLangChips((p) => ({ ...p, reg: !p.reg }))}>Regional mixed</Button>
                   </div>
                 </div>
                 <div className="flex items-center justify-between pt-1">
@@ -824,13 +853,14 @@ export default function Analysis() {
                   </div>
                   <Switch checked={piiEmbed} onCheckedChange={setPiiEmbed} aria-label="PII redaction before embedding" />
                 </div>
-                <button
+                <Button
                   type="button"
-                  className="h-7.5 px-3 rounded-md bg-surface hover:bg-surface-hover border border-border text-xs font-medium text-foreground transition-colors cursor-pointer"
+                  variant="outline"
+                  size="sm"
                   onClick={() => toast('Advanced settings saved for next run', 'gear')}
                 >
                   Save for next run
-                </button>
+                </Button>
               </div>
             </details>
           </div>
@@ -874,7 +904,7 @@ export default function Analysis() {
                 <Icon name="upload" className="w-8 h-8 mx-auto text-muted mb-2" />
                 <div className="text-xs sm:text-sm font-medium text-foreground">
                   {dropText ?? (
-                    <>Drop exports here, or <button type="button" className="text-accent-strong hover:underline font-semibold" id="browse-btn" onClick={() => toast('File picker is stubbed in this demo', 'info')}>browse files</button></>
+                    <>Drop exports here, or <Button variant="link" className="p-0 h-auto text-accent-strong hover:underline font-semibold text-xs sm:text-sm inline align-baseline" id="browse-btn" onClick={() => toast('File picker is stubbed in this demo', 'info')}>browse files</Button></>
                   )}
                 </div>
                 <div className="text-xs text-muted mt-1">CSV · JSON · JSONL · PDF · DOC · DOCX · WAV/MP3 — up to 2 GB per file</div>
@@ -885,7 +915,7 @@ export default function Analysis() {
           {uploadSrc === 's3' && (
             <div className="space-y-3" data-swap-panel="upsrc-s3" data-od-id="upload-s3">
               <div>
-                <label className="block text-xs font-semibold text-foreground tracking-wide mb-1" htmlFor="up-s3-bucket">Bucket</label>
+                <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1" htmlFor="up-s3-bucket">Bucket</Label>
                 <select className="w-full h-8 px-2.5 bg-surface border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-accent" id="up-s3-bucket">
                   <option>s3://skyline-cx-exports (ap-south-1)</option>
                   <option>s3://skyline-genesys-recordings (ap-south-1)</option>
@@ -893,13 +923,13 @@ export default function Analysis() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-foreground tracking-wide mb-1" htmlFor="up-s3-prefix">Prefix</label>
-                <input className="w-full h-8 px-2.5 bg-surface border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-accent" id="up-s3-prefix" defaultValue="zendesk/2026-w26/" />
+                <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1" htmlFor="up-s3-prefix">Prefix</Label>
+                <Input className="w-full h-8 px-2.5 bg-surface text-xs" id="up-s3-prefix" defaultValue="zendesk/2026-w26/" />
               </div>
               <div className="flex items-center gap-2">
-                <button type="button" className="h-7.5 px-3 rounded-md bg-surface hover:bg-surface-hover border border-border text-xs font-medium text-foreground transition-colors cursor-pointer" id="up-s3-scan" onClick={() => scanBucket('s3', 's3://skyline-cx-exports (ap-south-1)')}>
+                <Button type="button" variant="outline" size="sm" className="h-7.5 px-3 text-xs" id="up-s3-scan" onClick={() => scanBucket('s3', 's3://skyline-cx-exports (ap-south-1)')}>
                   <Icon name="sync" className="w-3.5 h-3.5 inline mr-1" />Scan bucket
-                </button>
+                </Button>
                 <span className="text-[11px] text-muted">Read-only via IAM role attached on Connectors.</span>
               </div>
               <div className="text-xs text-muted p-2 bg-surface-inset rounded-md" id="up-s3-result" dangerouslySetInnerHTML={{ __html: s3Result }} />
@@ -909,20 +939,20 @@ export default function Analysis() {
           {uploadSrc === 'gcs' && (
             <div className="space-y-3" data-swap-panel="upsrc-gcs" data-od-id="upload-gcs">
               <div>
-                <label className="block text-xs font-semibold text-foreground tracking-wide mb-1" htmlFor="up-gcs-bucket">Bucket</label>
+                <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1" htmlFor="up-gcs-bucket">Bucket</Label>
                 <select className="w-full h-8 px-2.5 bg-surface border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-accent" id="up-gcs-bucket">
                   <option>gs://skyline-cx-archive (asia-south1)</option>
                   <option>gs://skyline-nuance-docs (asia-south1)</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-foreground tracking-wide mb-1" htmlFor="up-gcs-prefix">Folder prefix</label>
-                <input className="w-full h-8 px-2.5 bg-surface border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-accent" id="up-gcs-prefix" defaultValue="cx/sops/2026/" />
+                <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1" htmlFor="up-gcs-prefix">Folder prefix</Label>
+                <Input className="w-full h-8 px-2.5 bg-surface text-xs" id="up-gcs-prefix" defaultValue="cx/sops/2026/" />
               </div>
               <div className="flex items-center gap-2">
-                <button type="button" className="h-7.5 px-3 rounded-md bg-surface hover:bg-surface-hover border border-border text-xs font-medium text-foreground transition-colors cursor-pointer" id="up-gcs-scan" onClick={() => scanBucket('gcs', 'gs://skyline-cx-archive (asia-south1)')}>
+                <Button type="button" variant="outline" size="sm" className="h-7.5 px-3 text-xs" id="up-gcs-scan" onClick={() => scanBucket('gcs', 'gs://skyline-cx-archive (asia-south1)')}>
                   <Icon name="sync" className="w-3.5 h-3.5 inline mr-1" />Scan bucket
-                </button>
+                </Button>
                 <span className="text-[11px] text-muted">Uses service account with objectViewer on bucket.</span>
               </div>
               <div className="text-xs text-muted p-2 bg-surface-inset rounded-md" id="up-gcs-result" dangerouslySetInnerHTML={{ __html: gcsResult }} />
@@ -955,18 +985,20 @@ export default function Analysis() {
           </div>
         </div>
         <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-end gap-2.5 rounded-b-xl">
-          <CloseButton className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer">
+          <CloseButton variant="outline" size="sm" className="h-8.5 px-3.5 text-xs">
             Cancel
           </CloseButton>
-          <button
+          <Button
             type="button"
-            className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs font-medium shadow-xs transition-colors cursor-pointer"
+            variant="accent"
+            size="sm"
+            className="h-8.5 px-3.5 text-xs"
             id="upload-confirm"
             data-od-id="upload-confirm"
             onClick={() => { close(); toast('1 file added to staging — joins the next run', 'upload'); }}
           >
             Add to staging
-          </button>
+          </Button>
         </div>
       </Dialog>
 
@@ -978,10 +1010,10 @@ export default function Analysis() {
         </div>
         <div className="p-5 space-y-4">
           <div>
-            <span className="block text-xs font-semibold text-foreground tracking-wide mb-1.5">Scope</span>
+            <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5">Scope</Label>
             <div className="flex items-center gap-2" data-chips data-od-id="run-scope">
-              <button type="button" className="h-6.5 px-3 rounded-full bg-foreground text-surface text-xs font-semibold">New records only</button>
-              <button type="button" className="h-6.5 px-3 rounded-full border border-border bg-surface text-muted text-xs hover:text-foreground">Full re-cluster</button>
+              <Button type="button" size="sm" className="h-6.5 px-3 rounded-full text-xs font-semibold">New records only</Button>
+              <Button type="button" variant="outline" size="sm" className="h-6.5 px-3 rounded-full text-muted text-xs hover:text-foreground">Full re-cluster</Button>
             </div>
           </div>
           <div className="flex items-center justify-between p-3 border border-border rounded-lg bg-surface-inset">
@@ -992,23 +1024,25 @@ export default function Analysis() {
             <Switch checked={express} onCheckedChange={setExpress} aria-label="Express mode" />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="run-note">Run note (shows in audit log)</label>
-            <input className="w-full h-9 px-3 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent" id="run-note" placeholder="e.g. Week-27 refresh after retention campaign" />
+            <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="run-note">Run note (shows in audit log)</Label>
+            <Input className="w-full h-9 bg-surface text-xs sm:text-sm" id="run-note" placeholder="e.g. Week-27 refresh after retention campaign" />
           </div>
         </div>
         <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-end gap-2.5 rounded-b-xl">
-          <CloseButton className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer">
+          <CloseButton variant="outline" size="sm" className="h-8.5 px-3.5 text-xs">
             Cancel
           </CloseButton>
-          <button
+          <Button
             type="button"
-            className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs font-medium shadow-xs transition-colors cursor-pointer"
+            variant="accent"
+            size="sm"
+            className="h-8.5 px-3.5 text-xs"
             id="run-confirm"
             data-od-id="run-confirm"
             onClick={() => { close(); toast(express ? 'Express run queued — full pipeline completes without manual gates' : 'RUN-4822 queued behind RUN-4821', 'play'); }}
           >
             Start run
-          </button>
+          </Button>
         </div>
       </Dialog>
 
@@ -1022,11 +1056,11 @@ export default function Analysis() {
         </div>
         <div className="p-5 space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="cl-name">Cluster name</label>
-            <input className="w-full h-9 px-3 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent" id="cl-name" placeholder="e.g. Billing & Payments" value={clName} onChange={(e) => setClName(e.target.value)} />
+            <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="cl-name">Cluster name</Label>
+            <Input className="w-full h-9 bg-surface text-xs sm:text-sm" id="cl-name" placeholder="e.g. Billing & Payments" value={clName} onChange={(e) => setClName(e.target.value)} />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="cl-level">Level</label>
+            <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="cl-level">Level</Label>
             <select className="w-full h-9 px-3 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent" id="cl-level">
               <option>L1 · top-level cluster</option>
               <option>L2 · sub-cluster</option>
@@ -1034,7 +1068,7 @@ export default function Analysis() {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="cl-merge">Merge into (optional)</label>
+            <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="cl-merge">Merge into (optional)</Label>
             <select className="w-full h-9 px-3 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent" id="cl-merge" value={clMerge} onChange={(e) => setClMerge(e.target.value)}>
               <option value="">— Don&apos;t merge —</option>
               <option>Connectivity & Outages</option>
@@ -1047,28 +1081,32 @@ export default function Analysis() {
           </div>
         </div>
         <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-between gap-2.5 rounded-b-xl">
-          <button
+          <Button
             type="button"
-            className="inline-flex items-center justify-center gap-1.5 px-3 h-8.5 rounded-md bg-danger-soft hover:bg-danger-soft/80 border border-danger/30 text-danger-fg text-xs font-medium transition-colors cursor-pointer"
+            variant="destructive"
+            size="sm"
+            className="h-8.5 px-3 text-xs gap-1.5"
             id="cl-delete"
             data-od-id="cluster-delete"
             onClick={() => { close(); if (clTarget) setHiddenClusters((prev) => new Set(prev).add(clTarget)); toast('Cluster archived — moved to the review queue', 'trash'); }}
           >
             <Icon name="trash" className="w-3.5 h-3.5" />Delete
-          </button>
+          </Button>
           <div className="flex items-center gap-2">
-            <CloseButton className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer">
+            <CloseButton variant="outline" size="sm" className="h-8.5 px-3.5 text-xs">
               Cancel
             </CloseButton>
-            <button
+            <Button
               type="button"
-              className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs font-medium shadow-xs transition-colors cursor-pointer"
+              variant="accent"
+              size="sm"
+              className="h-8.5 px-3.5 text-xs"
               id="cl-save"
               data-od-id="cluster-save"
               onClick={saveCluster}
             >
               Save cluster
-            </button>
+            </Button>
           </div>
         </div>
       </Dialog>
@@ -1082,7 +1120,7 @@ export default function Analysis() {
                 <div className="text-[10px] uppercase tracking-wider font-semibold text-muted">Intent · transcript evidence</div>
                 <div id="tr-title" className="text-sm sm:text-base font-bold text-foreground tracking-tight mt-0.5">&ldquo;{transcript.name}&rdquo;</div>
               </div>
-              <CloseButton className="inline-flex items-center justify-center w-8 h-8 rounded-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer" aria-label="Close">
+              <CloseButton variant="ghost" size="icon-xs" className="w-8 h-8 text-muted hover:text-foreground" aria-label="Close">
                 <Icon name="x" className="w-4 h-4" />
               </CloseButton>
             </div>
@@ -1099,19 +1137,19 @@ export default function Analysis() {
               </div>
 
               <div>
-                <span className="block text-xs font-semibold text-foreground tracking-wide mb-1.5">Sample call</span>
+                <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5">Sample call</Label>
                 <div className="flex items-center gap-1.5 mb-1.5" id="tr-picker" data-od-id="tr-picker">
                   {['Call 1', 'Call 2', 'Call 3'].map((v, i) => (
-                    <button
+                    <Toggle
                       key={v}
-                      type="button"
-                      className={`h-6.5 px-3 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
-                        trVar === i ? 'bg-foreground text-surface border-foreground font-semibold' : 'bg-surface border-border text-muted hover:text-foreground'
-                      }`}
-                      onClick={() => setTrVar(i)}
+                      pressed={trVar === i}
+                      onPressedChange={() => setTrVar(i)}
+                      variant="outline"
+                      size="sm"
+                      className="h-6.5 px-3 rounded-full text-xs font-medium border border-border data-[state=on]:bg-foreground data-[state=on]:text-surface data-[state=on]:border-foreground cursor-pointer"
                     >
                       {v}
-                    </button>
+                    </Toggle>
                   ))}
                 </div>
                 <span className="text-[11px] text-muted">Highlighted line is the span the classifier matched to this intent.</span>
@@ -1124,21 +1162,25 @@ export default function Analysis() {
                 <span className="inline-flex items-center gap-1.5 h-5 px-2 text-xs font-medium rounded-full bg-surface-inset border border-border text-foreground">
                   <span className="w-1.5 h-1.5 rounded-full bg-muted" />PII redacted
                 </span>
-                <button
+                <Button
                   type="button"
-                  className="inline-flex items-center justify-center gap-1.5 h-7 px-2.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2.5 text-xs gap-1.5"
                   id="tr-play"
                   onClick={() => toast('Recording playback is stubbed in this demo', 'info')}
                 >
                   <Icon name="play" className="w-3 h-3 text-muted" /><span id="tr-dur">Play 3:41</span>
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
-                  className="inline-flex items-center justify-center gap-1.5 h-7 px-2.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2.5 text-xs gap-1.5"
                   onClick={() => toast('Transcript exported as call-98231.txt', 'download')}
                 >
                   <Icon name="download" className="w-3 h-3 text-muted" />Download .txt
-                </button>
+                </Button>
               </div>
 
               <div id="tr-thread" className="space-y-1.5 pt-2 border-t border-border">
@@ -1158,18 +1200,20 @@ export default function Analysis() {
               </div>
             </div>
             <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-end gap-2.5 rounded-b-xl">
-              <CloseButton className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer">
+              <CloseButton variant="outline" size="sm" className="h-8.5 px-3.5 text-xs">
                 Close
               </CloseButton>
-              <button
+              <Button
                 type="button"
-                className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs font-medium shadow-xs transition-colors cursor-pointer"
+                variant="accent"
+                size="sm"
+                className="h-8.5 px-3.5 text-xs"
                 id="tr-confirm"
                 data-od-id="tr-confirm"
                 onClick={() => { close(); toast('Intent match confirmed — evidence attached to the taxonomy', 'check'); }}
               >
                 Confirm intent match
-              </button>
+              </Button>
             </div>
           </>
         )}
