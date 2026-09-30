@@ -245,13 +245,13 @@ export default function Develop() {
             <div className="text-muted mt-0.5">Process map v3 (Billing Dispute Resolution) + UML sequence v3 — read-only snapshot. Source edits in Design queue a new snapshot.</div>
           </div>
           <div className="flex items-center gap-2 origin-right scale-90 sm:scale-95">
-            <span className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-medium rounded-full bg-success-soft text-success-fg">
+            <Link to="/analysis" title="View upstream clusters in Analysis" className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-medium rounded-full bg-success-soft text-success-fg hover:opacity-80 transition-opacity cursor-pointer">
               <span className="w-3.5 h-3.5 rounded-full bg-success text-white grid place-items-center"><Icon name="check" style={{ width: 9, height: 9 }} /></span>Analysis
-            </span>
+            </Link>
             <span className="w-3.5 h-px bg-border shrink-0" />
-            <span className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-medium rounded-full bg-success-soft text-success-fg">
+            <Link to="/design" title="View approved map & UML in Design" className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-medium rounded-full bg-success-soft text-success-fg hover:opacity-80 transition-opacity cursor-pointer">
               <span className="w-3.5 h-3.5 rounded-full bg-success text-white grid place-items-center"><Icon name="check" style={{ width: 9, height: 9 }} /></span>Design
-            </span>
+            </Link>
             <span className="w-3.5 h-px bg-border shrink-0" />
             <span className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-semibold rounded-full border border-foreground text-foreground bg-surface">
               <span className="w-1.5 h-1.5 rounded-full bg-warn animate-pulse" />Develop

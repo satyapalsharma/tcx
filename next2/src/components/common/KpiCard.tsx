@@ -28,22 +28,22 @@ export function KpiCard({
       data-od-id={dataOdId}
       onClick={onClick}
       className={cn(
-        'p-4 bg-surface border border-border rounded-xl shadow-xs flex flex-col gap-1 transition-all',
+        'p-3 sm:p-4 bg-surface border border-border rounded-xl shadow-xs flex flex-col gap-0.5 sm:gap-1 transition-all min-w-0',
         onClick && 'cursor-pointer hover:bg-surface-hover/70',
         className
       )}
     >
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted truncate">
+      <div className="flex items-center justify-between gap-1.5 min-w-0">
+        <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted truncate">
           {label}
         </span>
         {badge ?? icon}
       </div>
-      <div className="text-2xl font-bold tracking-tight text-foreground">
+      <div className="text-xl sm:text-2xl font-bold tracking-tight text-foreground truncate">
         {value}
       </div>
       {description && (
-        <div className="text-xs text-muted">
+        <div className="text-[11px] sm:text-xs text-muted truncate sm:whitespace-normal">
           {description}
         </div>
       )}

@@ -273,7 +273,7 @@ export default function Analysis() {
         </div>
 
         {/* KPI Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4.5" data-od-id="kpi-row">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-4.5" data-od-id="kpi-row">
           <KpiCard
             label="Records in dataset"
             value="18,442"

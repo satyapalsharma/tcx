@@ -179,7 +179,7 @@ export default function Projects() {
           }
         />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6" data-od-id="kpi-row">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-6" data-od-id="kpi-row">
           <KpiCard
             label="Active projects"
             value="3"
@@ -275,67 +275,115 @@ export default function Projects() {
             />
           </div>
 
-          <Table id="proj-table" className="min-w-[680px]">
-            <TableHeader className="bg-surface border-b border-border">
-              <TableRow className="text-[11px] font-semibold uppercase tracking-wider text-muted hover:bg-transparent">
-                <TableHead className="px-4 py-2.5 text-muted">Project</TableHead>
-                <TableHead className="px-4 py-2.5 text-muted">Pipeline stage</TableHead>
-                <TableHead className="px-4 py-2.5 text-right text-muted">Records</TableHead>
-                <TableHead className="px-4 py-2.5 text-right text-muted">Intents</TableHead>
-                <TableHead className="px-4 py-2.5 text-muted">Owner</TableHead>
-                <TableHead className="px-4 py-2.5 text-muted">Last activity</TableHead>
-                <TableHead className="px-4 py-2.5 text-muted">Status</TableHead>
-                <TableHead className="px-3 py-2.5 w-9" />
-              </TableRow>
-            </TableHeader>
-            <TableBody className="divide-y divide-border">
-              {filtered.map((p) => {
-                const isWarn = p.statusClass.includes('badge-warn');
-                const isOk = p.statusClass.includes('badge-ok');
-                const isAcc = p.statusClass.includes('badge-acc');
-                const statusType = isWarn ? 'warn' : isOk ? 'ok' : isAcc ? 'accent' : 'neutral';
-                return (
-                  <TableRow
-                    key={p.id}
-                    className="hover:bg-surface-hover/70 transition-colors cursor-pointer group"
-                    data-od-id={p.id}
-                    onClick={() => navigate(p.href)}
-                  >
-                    <TableCell className="px-4 py-3">
-                      <div className="font-semibold text-xs sm:text-sm text-foreground">{p.name}</div>
-                      <div className="text-xs text-muted mt-0.5">{p.hint}</div>
-                    </TableCell>
-                    <TableCell className="px-4 py-3"><StageFlow stages={p.stages} /></TableCell>
-                    <TableCell className={`px-4 py-3 text-right font-mono text-xs ${p.recordsMuted ? 'text-muted' : 'text-foreground'}`}>
-                      {p.records}
-                    </TableCell>
-                    <TableCell className={`px-4 py-3 text-right font-mono text-xs ${p.intentsMuted ? 'text-muted' : 'text-foreground'}`}>
-                      {p.intents}
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <Avatar className="w-6 h-6 text-[10px] font-bold bg-foreground text-surface">
-                          <AvatarFallback className="bg-foreground text-surface font-bold text-[10px]">
-                            {p.ownerInitials}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-xs text-foreground font-medium">{p.owner}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-xs text-muted whitespace-nowrap">{p.activity}</TableCell>
-                    <TableCell className="px-4 py-3">
-                      <StatusBadge status={statusType} pulse={p.statusClass.includes('badge-run')}>
-                        {p.statusText}
-                      </StatusBadge>
-                    </TableCell>
-                    <TableCell className="px-3 py-3 text-right">
-                      <Icon name="chevr" className="w-4 h-4 text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+          {/* Desktop Table View */}
+          <div className="hidden sm:block overflow-x-auto">
+            <Table id="proj-table" className="min-w-[680px]">
+              <TableHeader className="bg-surface border-b border-border">
+                <TableRow className="text-[11px] font-semibold uppercase tracking-wider text-muted hover:bg-transparent">
+                  <TableHead className="px-4 py-2.5 text-muted">Project</TableHead>
+                  <TableHead className="px-4 py-2.5 text-muted">Pipeline stage</TableHead>
+                  <TableHead className="px-4 py-2.5 text-right text-muted">Records</TableHead>
+                  <TableHead className="px-4 py-2.5 text-right text-muted">Intents</TableHead>
+                  <TableHead className="px-4 py-2.5 text-muted">Owner</TableHead>
+                  <TableHead className="px-4 py-2.5 text-muted">Last activity</TableHead>
+                  <TableHead className="px-4 py-2.5 text-muted">Status</TableHead>
+                  <TableHead className="px-3 py-2.5 w-9" />
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-border">
+                {filtered.map((p) => {
+                  const isWarn = p.statusClass.includes('badge-warn');
+                  const isOk = p.statusClass.includes('badge-ok');
+                  const isAcc = p.statusClass.includes('badge-acc');
+                  const statusType = isWarn ? 'warn' : isOk ? 'ok' : isAcc ? 'accent' : 'neutral';
+                  return (
+                    <TableRow
+                      key={p.id}
+                      className="hover:bg-surface-hover/70 transition-colors cursor-pointer group"
+                      data-od-id={p.id}
+                      onClick={() => navigate(p.href)}
+                    >
+                      <TableCell className="px-4 py-3">
+                        <div className="font-semibold text-xs sm:text-sm text-foreground">{p.name}</div>
+                        <div className="text-xs text-muted mt-0.5">{p.hint}</div>
+                      </TableCell>
+                      <TableCell className="px-4 py-3"><StageFlow stages={p.stages} /></TableCell>
+                      <TableCell className={`px-4 py-3 text-right font-mono text-xs ${p.recordsMuted ? 'text-muted' : 'text-foreground'}`}>
+                        {p.records}
+                      </TableCell>
+                      <TableCell className={`px-4 py-3 text-right font-mono text-xs ${p.intentsMuted ? 'text-muted' : 'text-foreground'}`}>
+                        {p.intents}
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <Avatar className="w-6 h-6 text-[10px] font-bold bg-foreground text-surface">
+                            <AvatarFallback className="bg-foreground text-surface font-bold text-[10px]">
+                              {p.ownerInitials}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-xs text-foreground font-medium">{p.owner}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-xs text-muted whitespace-nowrap">{p.activity}</TableCell>
+                      <TableCell className="px-4 py-3">
+                        <StatusBadge status={statusType} pulse={p.statusClass.includes('badge-run')}>
+                          {p.statusText}
+                        </StatusBadge>
+                      </TableCell>
+                      <TableCell className="px-3 py-3 text-right">
+                        <Icon name="chevr" className="w-4 h-4 text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="sm:hidden divide-y divide-border">
+            {filtered.map((p) => {
+              const isWarn = p.statusClass.includes('badge-warn');
+              const isOk = p.statusClass.includes('badge-ok');
+              const isAcc = p.statusClass.includes('badge-acc');
+              const statusType = isWarn ? 'warn' : isOk ? 'ok' : isAcc ? 'accent' : 'neutral';
+              return (
+                <div
+                  key={p.id}
+                  className="p-3.5 hover:bg-surface-hover/70 transition-colors cursor-pointer space-y-2.5"
+                  data-od-id={p.id}
+                  onClick={() => navigate(p.href)}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-semibold text-xs text-foreground truncate">{p.name}</div>
+                      <div className="text-[11px] text-muted truncate mt-0.5">{p.hint}</div>
+                    </div>
+                    <StatusBadge status={statusType} pulse={p.statusClass.includes('badge-run')} className="shrink-0 text-[11px]">
+                      {p.statusText}
+                    </StatusBadge>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 text-xs">
+                    <StageFlow stages={p.stages} />
+                    <div className="flex items-center gap-1.5 shrink-0 text-muted text-[11px]">
+                      <Avatar className="w-5 h-5 text-[9px] font-bold bg-foreground text-surface">
+                        <AvatarFallback className="bg-foreground text-surface font-bold text-[9px]">
+                          {p.ownerInitials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span>{p.owner}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] text-muted pt-1 border-t border-border/40">
+                    <span className="font-mono">{p.records !== '—' ? `${p.records} records · ${p.intents} intents` : 'No records yet'}</span>
+                    <span>{p.activity}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
 
           {filtered.length === 0 && (
             <EmptyState

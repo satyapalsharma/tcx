@@ -109,7 +109,7 @@ export default function Jobs() {
           }
         />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6" data-od-id="job-kpis">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-6" data-od-id="job-kpis">
           <KpiCard
             label="Running now"
             value="2"
@@ -182,99 +182,181 @@ export default function Jobs() {
             </SearchToolbar>
           </div>
 
-          <Table id="jobs-table" className="min-w-[760px]">
-            <TableHeader className="bg-surface border-b border-border">
-              <TableRow className="text-[11px] font-semibold uppercase tracking-wider text-muted hover:bg-transparent">
-                <TableHead className="px-4 py-2.5 text-muted">Job</TableHead>
-                <TableHead className="px-4 py-2.5 text-muted">Client</TableHead>
-                <TableHead className="px-4 py-2.5 text-muted">Pipeline</TableHead>
-                <TableHead className="px-4 py-2.5 text-muted">Status</TableHead>
-                <TableHead className="px-4 py-2.5 min-w-[130px] text-muted">Progress</TableHead>
-                <TableHead className="px-4 py-2.5 text-muted">Started</TableHead>
-                <TableHead className="px-4 py-2.5 text-right text-muted">Cost</TableHead>
-                <TableHead className="px-3 py-2.5 w-24 text-right" />
-              </TableRow>
-            </TableHeader>
-            <TableBody id="jobs-body" className="divide-y divide-border">
-              {filtered.map((j) => {
-                const isWarn = j.badgeClass.includes('badge-warn');
-                const isOk = j.badgeClass.includes('badge-ok');
-                const isErr = j.badgeClass.includes('badge-err');
-                const isAcc = j.badgeClass.includes('badge-acc');
-                const statusType = isWarn ? 'warn' : isOk ? 'ok' : isErr ? 'danger' : isAcc ? 'accent' : 'neutral';
+          {/* Desktop Table View */}
+          <div className="hidden sm:block overflow-x-auto">
+            <Table id="jobs-table" className="min-w-[760px]">
+              <TableHeader className="bg-surface border-b border-border">
+                <TableRow className="text-[11px] font-semibold uppercase tracking-wider text-muted hover:bg-transparent">
+                  <TableHead className="px-4 py-2.5 text-muted">Job</TableHead>
+                  <TableHead className="px-4 py-2.5 text-muted">Client</TableHead>
+                  <TableHead className="px-4 py-2.5 text-muted">Pipeline</TableHead>
+                  <TableHead className="px-4 py-2.5 text-muted">Status</TableHead>
+                  <TableHead className="px-4 py-2.5 min-w-[130px] text-muted">Progress</TableHead>
+                  <TableHead className="px-4 py-2.5 text-muted">Started</TableHead>
+                  <TableHead className="px-4 py-2.5 text-right text-muted">Cost</TableHead>
+                  <TableHead className="px-3 py-2.5 w-24 text-right" />
+                </TableRow>
+              </TableHeader>
+              <TableBody id="jobs-body" className="divide-y divide-border">
+                {filtered.map((j) => {
+                  const isWarn = j.badgeClass.includes('badge-warn');
+                  const isOk = j.badgeClass.includes('badge-ok');
+                  const isErr = j.badgeClass.includes('badge-err');
+                  const isAcc = j.badgeClass.includes('badge-acc');
+                  const statusType = isWarn ? 'warn' : isOk ? 'ok' : isErr ? 'danger' : isAcc ? 'accent' : 'neutral';
 
-                return (
-                  <TableRow
-                    key={j.id}
-                    className="hover:bg-surface-hover/70 transition-colors cursor-pointer group"
-                    data-status={j.status}
-                    data-client={j.client}
-                    data-pipe={j.pipe}
-                    data-od-id={`job-${j.id.split('-')[1]}`}
-                    onClick={(e) => {
-                      if ((e.target as HTMLElement).closest('[data-del-job]')) return;
-                      openJob(j);
-                    }}
-                  >
-                    <TableCell className="px-4 py-3">
-                      <div className="font-mono text-xs sm:text-sm font-semibold text-foreground">{j.id}</div>
-                      <div className="text-[11.5px] text-muted mt-0.5">{j.subtitle}</div>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-xs sm:text-sm text-foreground">{j.client}</TableCell>
-                    <TableCell className="px-4 py-3 text-xs sm:text-sm text-foreground">{j.pipeline}</TableCell>
-                    <TableCell className="px-4 py-3">
-                      <StatusBadge status={statusType} pulse={j.badgeClass.includes('badge-run')}>
-                        {j.statusLabel}
-                      </StatusBadge>
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <div className="flex items-center gap-2.5">
-                        <div className="h-1.5 flex-1 bg-surface-inset rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full transition-all duration-300 ${
-                              j.progressFill === 'fill-ok' ? 'bg-success' :
-                              j.progressFill === 'fill-warn' ? 'bg-warn' :
-                              'bg-accent-strong'
-                            }`}
-                            style={{ width: `${j.progress}%` }}
-                          />
+                  return (
+                    <TableRow
+                      key={j.id}
+                      className="hover:bg-surface-hover/70 transition-colors cursor-pointer group"
+                      data-status={j.status}
+                      data-client={j.client}
+                      data-pipe={j.pipe}
+                      data-od-id={`job-${j.id.split('-')[1]}`}
+                      onClick={(e) => {
+                        if ((e.target as HTMLElement).closest('[data-del-job]')) return;
+                        openJob(j);
+                      }}
+                    >
+                      <TableCell className="px-4 py-3">
+                        <div className="font-mono text-xs sm:text-sm font-semibold text-foreground">{j.id}</div>
+                        <div className="text-[11.5px] text-muted mt-0.5">{j.subtitle}</div>
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-xs sm:text-sm text-foreground">{j.client}</TableCell>
+                      <TableCell className="px-4 py-3 text-xs sm:text-sm text-foreground">{j.pipeline}</TableCell>
+                      <TableCell className="px-4 py-3">
+                        <StatusBadge status={statusType} pulse={j.badgeClass.includes('badge-run')}>
+                          {j.statusLabel}
+                        </StatusBadge>
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="h-1.5 flex-1 bg-surface-inset rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-300 ${
+                                j.progressFill === 'fill-ok' ? 'bg-success' :
+                                j.progressFill === 'fill-warn' ? 'bg-warn' :
+                                'bg-accent-strong'
+                              }`}
+                              style={{ width: `${j.progress}%` }}
+                            />
+                          </div>
+                          <span className="text-[11.5px] font-mono text-muted tabular-nums whitespace-nowrap">
+                            {j.progressLabel}
+                          </span>
                         </div>
-                        <span className="text-[11.5px] font-mono text-muted tabular-nums whitespace-nowrap">
-                          {j.progressLabel}
-                        </span>
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-xs text-muted whitespace-nowrap">{j.started}</TableCell>
+                      <TableCell className={`px-4 py-3 text-right font-mono text-xs ${j.costMuted ? 'text-muted' : 'text-foreground'}`}>
+                        {j.cost}
+                      </TableCell>
+                      <TableCell className="px-3 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
+                            data-open-job
+                            aria-label="Job details"
+                            onClick={() => openJob(j)}
+                          >
+                            <Icon name="eye" className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-danger-fg hover:bg-danger-soft transition-colors cursor-pointer"
+                            data-del-job
+                            aria-label="Delete job"
+                            onClick={(e) => askDelete(j, e)}
+                          >
+                            <Icon name="trash" className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="sm:hidden divide-y divide-border">
+            {filtered.map((j) => {
+              const isWarn = j.badgeClass.includes('badge-warn');
+              const isOk = j.badgeClass.includes('badge-ok');
+              const isErr = j.badgeClass.includes('badge-err');
+              const isAcc = j.badgeClass.includes('badge-acc');
+              const statusType = isWarn ? 'warn' : isOk ? 'ok' : isErr ? 'danger' : isAcc ? 'accent' : 'neutral';
+
+              return (
+                <div
+                  key={j.id}
+                  className="p-3.5 hover:bg-surface-hover/70 transition-colors cursor-pointer space-y-2.5"
+                  data-status={j.status}
+                  data-od-id={`job-${j.id.split('-')[1]}`}
+                  onClick={(e) => {
+                    if ((e.target as HTMLElement).closest('[data-del-job]')) return;
+                    openJob(j);
+                  }}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="font-mono text-xs font-semibold text-foreground">{j.id}</div>
+                      <div className="text-[11px] text-muted mt-0.5">{j.subtitle}</div>
+                    </div>
+                    <StatusBadge status={statusType} pulse={j.badgeClass.includes('badge-run')} className="shrink-0 text-[11px]">
+                      {j.statusLabel}
+                    </StatusBadge>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs text-muted">
+                    <span className="text-foreground font-medium">{j.client}</span>
+                    <span>{j.pipeline}</span>
+                  </div>
+
+                  {j.progress > 0 && j.status === 'run' && (
+                    <div className="flex items-center gap-2">
+                      <div className="h-1.5 flex-1 bg-surface-inset rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-warn transition-all duration-300"
+                          style={{ width: `${j.progress}%` }}
+                        />
                       </div>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-xs text-muted whitespace-nowrap">{j.started}</TableCell>
-                    <TableCell className={`px-4 py-3 text-right font-mono text-xs ${j.costMuted ? 'text-muted' : 'text-foreground'}`}>
-                      {j.cost}
-                    </TableCell>
-                    <TableCell className="px-3 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          type="button"
-                          className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
-                          data-open-job
-                          aria-label="Job details"
-                          onClick={() => openJob(j)}
-                        >
-                          <Icon name="eye" className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-danger-fg hover:bg-danger-soft transition-colors cursor-pointer"
-                          data-del-job
-                          aria-label="Delete job"
-                          onClick={(e) => askDelete(j, e)}
-                        >
-                          <Icon name="trash" className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                      <span className="text-[11px] font-mono text-muted">{j.progressLabel}</span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between text-[11px] text-muted pt-1 border-t border-border/40">
+                    <div className="flex items-center gap-2">
+                      <span>{j.started}</span>
+                      <span>·</span>
+                      <span className="font-mono font-medium text-foreground">{j.cost}</span>
+                    </div>
+                    <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        type="button"
+                        className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
+                        data-open-job
+                        aria-label="Job details"
+                        onClick={() => openJob(j)}
+                      >
+                        <Icon name="eye" className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-danger-fg hover:bg-danger-soft transition-colors cursor-pointer"
+                        data-del-job
+                        aria-label="Delete job"
+                        onClick={(e) => askDelete(j, e)}
+                      >
+                        <Icon name="trash" className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
 
           {filtered.length === 0 && (
             <EmptyState
@@ -375,7 +457,7 @@ export default function Jobs() {
               </div>
             </div>
 
-            <div className="p-3 sm:p-4 border-t border-border flex items-center justify-between gap-2 bg-surface-inset/40">
+            <div className="sticky bottom-0 p-3 sm:p-4 border-t border-border flex items-center justify-between gap-2 bg-surface/95 backdrop-blur-sm z-10">
               <button
                 type="button"
                 className="h-8 px-3 rounded-md border border-border bg-surface hover:bg-surface-hover text-xs font-medium text-foreground transition-colors cursor-pointer"

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Link } from '../lib/navigation';
 import { AppShell } from '../components/AppShell';
 import { Icon } from '../components/Icon';
 import { ProcessMapSvg } from '../components/ProcessMapSvg';
@@ -92,20 +93,20 @@ export default function Design() {
           description="Verify and edit process maps generated from approved Analysis clusters, then review the UML sequence headers before handing off to Develop."
           dataOdId="page-title"
           actions={
-            <>
+            <div className="flex items-center gap-2 flex-wrap">
               <OpenButton
-                className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-surface hover:bg-surface-hover border border-border text-foreground text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-surface hover:bg-surface-hover border border-border text-foreground text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer mr-1"
                 target="dlg-export"
                 data-od-id="export-btn"
               >
                 <Icon name="download" className="w-4 h-4 text-muted" />Export
               </OpenButton>
               <OpenButton
-                className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-surface hover:bg-surface-hover border border-border text-foreground text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-surface hover:bg-warn-soft/40 border border-warn/30 text-warn-fg text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
                 target="dlg-changes"
                 data-od-id="request-changes-btn"
               >
-                <Icon name="mail" className="w-4 h-4 text-muted" />Request changes
+                <Icon name="mail" className="w-4 h-4" />Request changes
               </OpenButton>
               <OpenButton
                 className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
@@ -114,7 +115,7 @@ export default function Design() {
               >
                 <Icon name="check" className="w-4 h-4" />Approve &amp; hand off
               </OpenButton>
-            </>
+            </div>
           }
         />
 
@@ -126,21 +127,29 @@ export default function Design() {
             <div className="text-muted mt-0.5">Last verified by Riya Menon · 2 days ago. If upstream clusters change, maps are queued for regen — your edits stay as overlays.</div>
           </div>
           <div className="flex items-center gap-2 origin-right scale-90 sm:scale-95">
-            <span className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-medium rounded-full bg-success-soft text-success-fg">
+            <Link
+              to="/analysis"
+              title="View upstream clusters in Analysis"
+              className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-medium rounded-full bg-success-soft text-success-fg hover:opacity-80 transition-opacity cursor-pointer"
+            >
               <span className="w-3.5 h-3.5 rounded-full bg-success text-white grid place-items-center">
                 <Icon name="check" style={{ width: 9, height: 9 }} />
               </span>
               Analysis
-            </span>
+            </Link>
             <span className="w-3.5 h-px bg-border shrink-0" />
             <span className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-semibold rounded-full border border-foreground text-foreground bg-surface">
               <span className="w-1.5 h-1.5 rounded-full bg-warn animate-pulse" />
               Design
             </span>
             <span className="w-3.5 h-px bg-border shrink-0" />
-            <span className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-medium rounded-full border border-border text-muted bg-surface">
+            <Link
+              to="/develop"
+              title="View agent codegen in Develop"
+              className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-medium rounded-full border border-border text-muted bg-surface hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
+            >
               Develop
-            </span>
+            </Link>
           </div>
         </div>
 

@@ -224,71 +224,120 @@ export default function Dashboard() {
           </SearchToolbar>
         </div>
 
-        <Table id="d-table" className="min-w-[720px]">
-          <TableHeader className="bg-surface border-b border-border">
-            <TableRow className="text-[11px] font-semibold uppercase tracking-wider text-muted hover:bg-transparent">
-              <TableHead className="px-4 py-2.5 text-muted">Intent</TableHead>
-              <TableHead className="px-4 py-2.5 text-muted">L1 cluster</TableHead>
-              <TableHead
-                className={`px-4 py-2.5 text-right cursor-pointer hover:text-foreground transition-colors select-none ${sortKey === 'vol' ? 'text-foreground' : 'text-muted'}`}
-                role="button"
-                tabIndex={0}
-                data-sort="vol"
-                data-od-id="sort-vol"
-                onClick={() => doSort('vol')}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doSort('vol'); } }}
-              >
-                Volume <span className="text-[10px] ml-0.5">{sortArc('vol')}</span>
-              </TableHead>
-              <TableHead
-                className={`px-4 py-2.5 text-right cursor-pointer hover:text-foreground transition-colors select-none ${sortKey === 'conf' ? 'text-foreground' : 'text-muted'}`}
-                role="button"
-                tabIndex={0}
-                data-sort="conf"
-                data-od-id="sort-conf"
-                onClick={() => doSort('conf')}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doSort('conf'); } }}
-              >
-                Conf. <span className="text-[10px] ml-0.5">{sortArc('conf')}</span>
-              </TableHead>
-              <TableHead
-                className={`px-4 py-2.5 text-right cursor-pointer hover:text-foreground transition-colors select-none ${sortKey === 'esc' ? 'text-foreground' : 'text-muted'}`}
-                role="button"
-                tabIndex={0}
-                data-sort="esc"
-                data-od-id="sort-esc"
-                onClick={() => doSort('esc')}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doSort('esc'); } }}
-              >
-                Escalation <span className="text-[10px] ml-0.5">{sortArc('esc')}</span>
-              </TableHead>
-              <TableHead className="px-4 py-2.5 text-muted">Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody id="d-body" className="divide-y divide-border">
-            {filtered.map((r) => {
-              const isOk = r.status.badge.includes('bg-success');
-              const isWarn = r.status.badge.includes('bg-warn');
-              const isAcc = r.status.badge.includes('bg-accent');
-              const statusType = isOk ? 'ok' : isWarn ? 'warn' : isAcc ? 'accent' : 'neutral';
+        {/* Desktop Table View */}
+        <div className="hidden sm:block overflow-x-auto">
+          <Table id="d-table" className="min-w-[720px]">
+            <TableHeader className="bg-surface border-b border-border">
+              <TableRow className="text-[11px] font-semibold uppercase tracking-wider text-muted hover:bg-transparent">
+                <TableHead className="px-4 py-2.5 text-muted">Intent</TableHead>
+                <TableHead className="px-4 py-2.5 text-muted">L1 cluster</TableHead>
+                <TableHead
+                  className={`px-4 py-2.5 text-right cursor-pointer hover:text-foreground transition-colors select-none ${sortKey === 'vol' ? 'text-foreground' : 'text-muted'}`}
+                  role="button"
+                  tabIndex={0}
+                  data-sort="vol"
+                  data-od-id="sort-vol"
+                  onClick={() => doSort('vol')}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doSort('vol'); } }}
+                >
+                  Volume <span className="text-[10px] ml-0.5">{sortArc('vol')}</span>
+                </TableHead>
+                <TableHead
+                  className={`px-4 py-2.5 text-right cursor-pointer hover:text-foreground transition-colors select-none ${sortKey === 'conf' ? 'text-foreground' : 'text-muted'}`}
+                  role="button"
+                  tabIndex={0}
+                  data-sort="conf"
+                  data-od-id="sort-conf"
+                  onClick={() => doSort('conf')}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doSort('conf'); } }}
+                >
+                  Conf. <span className="text-[10px] ml-0.5">{sortArc('conf')}</span>
+                </TableHead>
+                <TableHead
+                  className={`px-4 py-2.5 text-right cursor-pointer hover:text-foreground transition-colors select-none ${sortKey === 'esc' ? 'text-foreground' : 'text-muted'}`}
+                  role="button"
+                  tabIndex={0}
+                  data-sort="esc"
+                  data-od-id="sort-esc"
+                  onClick={() => doSort('esc')}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doSort('esc'); } }}
+                >
+                  Escalation <span className="text-[10px] ml-0.5">{sortArc('esc')}</span>
+                </TableHead>
+                <TableHead className="px-4 py-2.5 text-muted">Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody id="d-body" className="divide-y divide-border">
+              {filtered.map((r) => {
+                const isOk = r.status.badge.includes('bg-success');
+                const isWarn = r.status.badge.includes('bg-warn');
+                const isAcc = r.status.badge.includes('bg-accent');
+                const statusType = isOk ? 'ok' : isWarn ? 'warn' : isAcc ? 'accent' : 'neutral';
 
-              return (
-                <TableRow key={r.intent} className="hover:bg-surface-hover/70 transition-colors" data-l1={r.l1} data-conf={r.conf} data-vol={r.vol} data-esc={r.esc}>
-                  <TableCell className="px-4 py-3 font-medium text-foreground text-xs sm:text-sm">{r.intent}</TableCell>
-                  <TableCell className="px-4 py-3 text-muted text-xs sm:text-sm">{r.l1}</TableCell>
-                  <TableCell className="px-4 py-3 text-right font-mono text-xs text-foreground">{r.vol.toLocaleString()}</TableCell>
-                  <TableCell className="px-4 py-3 text-right font-mono text-xs text-foreground">{r.conf.toFixed(2)}</TableCell>
-                  <TableCell className="px-4 py-3 text-right font-mono text-xs text-foreground">{r.esc}%</TableCell>
-                  <TableCell className="px-4 py-3">
-                    <StatusBadge status={statusType}>
-                      {r.status.label}
-                    </StatusBadge>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+                return (
+                  <TableRow key={r.intent} className="hover:bg-surface-hover/70 transition-colors" data-l1={r.l1} data-conf={r.conf} data-vol={r.vol} data-esc={r.esc}>
+                    <TableCell className="px-4 py-3 font-medium text-foreground text-xs sm:text-sm">{r.intent}</TableCell>
+                    <TableCell className="px-4 py-3 text-muted text-xs sm:text-sm">{r.l1}</TableCell>
+                    <TableCell className="px-4 py-3 text-right font-mono text-xs text-foreground">{r.vol.toLocaleString()}</TableCell>
+                    <TableCell className="px-4 py-3 text-right font-mono text-xs text-foreground">{r.conf.toFixed(2)}</TableCell>
+                    <TableCell className="px-4 py-3 text-right font-mono text-xs text-foreground">{r.esc}%</TableCell>
+                    <TableCell className="px-4 py-3">
+                      <StatusBadge status={statusType}>
+                        {r.status.label}
+                      </StatusBadge>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="sm:hidden divide-y divide-border" id="d-mobile-cards">
+          {filtered.map((r) => {
+            const isOk = r.status.badge.includes('bg-success');
+            const isWarn = r.status.badge.includes('bg-warn');
+            const isAcc = r.status.badge.includes('bg-accent');
+            const statusType = isOk ? 'ok' : isWarn ? 'warn' : isAcc ? 'accent' : 'neutral';
+
+            return (
+              <div
+                key={r.intent}
+                className="p-3.5 hover:bg-surface-hover/70 transition-colors space-y-2.5"
+                data-l1={r.l1}
+                data-conf={r.conf}
+                data-vol={r.vol}
+                data-esc={r.esc}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-xs text-foreground leading-snug">{r.intent}</div>
+                    <div className="text-[11px] text-muted mt-0.5">{r.l1}</div>
+                  </div>
+                  <StatusBadge status={statusType} className="shrink-0 text-[11px]">
+                    {r.status.label}
+                  </StatusBadge>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border/40 text-center font-mono">
+                  <div className="bg-surface-inset/60 rounded px-2 py-1.5">
+                    <span className="block text-[10px] uppercase font-sans tracking-wider text-muted">Vol</span>
+                    <span className="text-xs font-semibold text-foreground">{r.vol.toLocaleString()}</span>
+                  </div>
+                  <div className="bg-surface-inset/60 rounded px-2 py-1.5">
+                    <span className="block text-[10px] uppercase font-sans tracking-wider text-muted">Conf</span>
+                    <span className="text-xs font-semibold text-foreground">{r.conf.toFixed(2)}</span>
+                  </div>
+                  <div className="bg-surface-inset/60 rounded px-2 py-1.5">
+                    <span className="block text-[10px] uppercase font-sans tracking-wider text-muted">Esc</span>
+                    <span className="text-xs font-semibold text-foreground">{r.esc}%</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
 
         {filtered.length === 0 && (
           <EmptyState
@@ -635,7 +684,7 @@ export default function Dashboard() {
           }
         />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6" data-od-id="dash-kpis">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-6" data-od-id="dash-kpis">
           <KpiCard
             label="Records processed"
             value="18,442"
