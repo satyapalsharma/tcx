@@ -7,6 +7,10 @@ import { CloseButton, Dialog, OpenButton, useOverlay } from '../components/Overl
 import { useTextFilter } from '../components/ui';
 import { useToast } from '../components/Toast';
 import { useReveal } from '../hooks/useReveal';
+import { PageHeader, StatusBadge, EmptyState, SearchToolbar } from '@/components/common';
+import { Card } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 const ROLE_OPTIONS = ['Admin', 'Business Analyst', 'CX Designer', 'Developer', 'Viewer'];
 
@@ -153,46 +157,68 @@ export default function Rbac() {
   const [members, setMembers] = useState(INITIAL_MEMBERS);
   const [roles, setRoles] = useState(INITIAL_ROLES);
   const { query, setQuery, filtered, count } = useTextFilter(members, (m) => `${m.name} ${m.email} ${m.role}`);
+
   const [invite, setInvite] = useState({ name: '', email: '', role: 'Business Analyst' });
   const [inviteUmbrellas, setInviteUmbrellas] = useState(['Analysis']);
-  const [roleUmbrellas, setRoleUmbrellas] = useState(['Analysis']);
   const [roleForm, setRoleForm] = useState({ name: '', desc: '' });
+  const [roleUmbrellas, setRoleUmbrellas] = useState(['Analysis']);
   const [editingRole, setEditingRole] = useState<string | null>(null);
-  const [confirm, setConfirm] = useState<{ title: string; body: string; okLabel: string; onOk: () => void } | null>(null);
+
+  const [confirm, setConfirm] = useState<{
+    title: string;
+    body: string;
+    okLabel: string;
+    onOk: () => void;
+  } | null>(null);
 
   const askConfirm = (title: string, body: string, okLabel: string, onOk: () => void) => {
     setConfirm({ title, body, okLabel, onOk });
     open('dlg-confirm');
   };
 
-  const updateMemberRole = (id: string, role: string) => {
-    setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, role } : m)));
-    toast('Role updated — applies on next sign-in', 'users');
+  const updateMemberRole = (id: string, newRole: string) => {
+    setMembers((prev) => prev.map((m) => {
+      if (m.id !== id) return m;
+      const chips: UmbrellaChip[] = newRole === 'Admin'
+        ? [{ label: 'Analysis' }, { label: 'Design' }, { label: 'Develop' }, { label: 'Admin' }]
+        : newRole === 'Business Analyst'
+        ? [{ label: 'Analysis' }, { label: 'Design · view', off: true }, { label: 'Develop · —', off: true }]
+        : newRole === 'CX Designer'
+        ? [{ label: 'Analysis · view', off: true }, { label: 'Design' }, { label: 'Develop · —', off: true }]
+        : newRole === 'Developer'
+        ? [{ label: 'Analysis · —', off: true }, { label: 'Design · view', off: true }, { label: 'Develop' }]
+        : [{ label: 'Analysis · view', off: true }, { label: 'Design · view', off: true }, { label: 'Develop · view', off: true }];
+      return { ...m, role: newRole, chips };
+    }));
+    toast(`Role updated to ${newRole}`, 'check');
   };
 
   const sendInvite = () => {
-    const name = invite.name.trim() || 'New member';
-    const email = invite.email.trim() || '—';
-    const initials = name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase() || 'NM';
-    setMembers((prev) => [...prev, {
-      id: String(Date.now()),
+    const name = invite.name.trim();
+    const email = invite.email.trim();
+    if (!email) {
+      toast('Please provide a work email', 'warn');
+      return;
+    }
+    const initials = name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase() || email.slice(0, 2).toUpperCase();
+    const newMember: Member = {
+      id: `mem-${Date.now()}`,
       odId: `mem-${Date.now()}`,
-      name,
+      name: name || email.split('@')[0],
       email,
       role: invite.role,
-      roleDisabled: true,
-      roleOptions: [invite.role],
-      chips: [{ label: 'Umbrella · pending', off: true }],
-      lastActive: '—',
+      chips: inviteUmbrellas.map((u) => ({ label: u })),
+      lastActive: 'just now',
       statusLabel: 'Invite pending',
       statusBadge: 'warn',
       actionTitle: 'Resend invite',
       actionIcon: 'sync',
-      actionToast: 'Invite resent',
+      actionToast: `Invite resent to ${email}`,
       initials,
-    }]);
+    };
+    setMembers((prev) => [newMember, ...prev]);
     close();
-    toast(`Invite sent to ${email}`, 'mail');
+    toast(`Invitation sent to ${email}`, 'mail');
     setInvite({ name: '', email: '', role: 'Business Analyst' });
     setInviteUmbrellas(['Analysis']);
   };
@@ -245,43 +271,43 @@ export default function Rbac() {
   return (
     <AppShell crumb="Team & roles">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6" data-od-id="rbac-page">
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-4 border-b border-border">
-          <div className="flex-1">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground" data-od-id="page-title">Team &amp; roles</h1>
-            <p className="text-xs sm:text-sm text-muted mt-1 max-w-2xl leading-relaxed">
-              Roles map to umbrellas — Analysts own Analysis, Designers own Design, Developers own Develop. Everyone else watches. Access changes apply on next sign-in and are logged in the audit log.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md text-xs sm:text-sm font-medium border border-border bg-surface hover:bg-surface-hover transition-colors text-foreground shadow-xs cursor-pointer"
-              id="new-role-btn"
-              data-od-id="new-role-btn"
-              onClick={() => openRoleDialog()}
-            >
-              <Icon name="plus" />New role
-            </button>
-            <button
-              type="button"
-              className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md text-xs sm:text-sm font-medium border border-border bg-surface hover:bg-surface-hover transition-colors text-foreground shadow-xs cursor-pointer"
-              onClick={() => toast('Role report exported as roles-skyline.csv', 'download')}
-            >
-              <Icon name="download" />Export roles
-            </button>
-            <OpenButton
-              className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md text-xs sm:text-sm font-medium bg-accent-strong text-white hover:bg-accent-hover active:bg-accent-active transition-colors shadow-xs cursor-pointer"
-              target="dlg-invite"
-              data-od-id="invite-btn"
-            >
-              <Icon name="plus" />Invite member
-            </OpenButton>
-          </div>
-        </div>
+        <PageHeader
+          title="Team & roles"
+          description="Roles map to umbrellas — Analysts own Analysis, Designers own Design, Developers own Develop. Everyone else watches. Access changes apply on next sign-in and are logged in the audit log."
+          dataOdId="page-title"
+          className="pb-4 border-b border-border mb-0"
+          actions={
+            <>
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md text-xs sm:text-sm font-medium border border-border bg-surface hover:bg-surface-hover transition-colors text-foreground shadow-xs cursor-pointer"
+                id="new-role-btn"
+                data-od-id="new-role-btn"
+                onClick={() => openRoleDialog()}
+              >
+                <Icon name="plus" />New role
+              </button>
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md text-xs sm:text-sm font-medium border border-border bg-surface hover:bg-surface-hover transition-colors text-foreground shadow-xs cursor-pointer"
+                onClick={() => toast('Role report exported as roles-skyline.csv', 'download')}
+              >
+                <Icon name="download" />Export roles
+              </button>
+              <OpenButton
+                className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md text-xs sm:text-sm font-medium bg-accent-strong text-white hover:bg-accent-hover active:bg-accent-active transition-colors shadow-xs cursor-pointer"
+                target="dlg-invite"
+                data-od-id="invite-btn"
+              >
+                <Icon name="plus" />Invite member
+              </OpenButton>
+            </>
+          }
+        />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5" data-od-id="roles-strip">
           {roles.map((role) => (
-            <div key={role.id} className="bg-surface border border-border rounded-xl p-4 flex flex-col gap-2 shadow-xs hover:border-border-strong transition-all" data-od-id={role.id}>
+            <Card key={role.id} className="bg-surface border border-border rounded-xl p-4 flex flex-col gap-2 shadow-xs hover:border-border-strong transition-all" data-od-id={role.id}>
               <div className="flex items-center gap-2">
                 <Icon name={role.icon} className="text-muted" />
                 <strong className="text-[13px] font-semibold text-foreground truncate">{role.name}</strong>
@@ -308,54 +334,58 @@ export default function Rbac() {
                   </button>
                 )}
               </div>
-            </div>
+            </Card>
           ))}
         </div>
 
-        <div className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden" data-od-id="members-card">
+        <Card className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden p-0 gap-0" data-od-id="members-card">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:px-5 sm:py-3.5 border-b border-border">
             <h3 className="text-sm font-semibold text-foreground">
               Members <span className="font-normal text-muted">· {members.length}</span>
             </h3>
-            <div className="relative">
-              <Icon name="search" className="absolute left-2.5 top-2.5 text-muted pointer-events-none" />
-              <input
-                className="h-8 pl-8 pr-3 w-full sm:w-56 rounded-md border border-border bg-surface text-xs text-foreground placeholder:text-muted/60 focus:outline-none focus:ring-1 focus:ring-accent"
-                placeholder="Search members"
-                aria-label="Search members"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-              />
-            </div>
+            <SearchToolbar
+              query={query}
+              onQueryChange={setQuery}
+              placeholder="Search members"
+              inputClassName="w-full sm:w-56"
+            />
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse" id="members-table">
-              <thead className="bg-surface-inset/60 text-muted font-semibold border-b border-border">
-                <tr>
-                  <th className="px-4 py-2.5 whitespace-nowrap">Member</th>
-                  <th className="px-4 py-2.5 whitespace-nowrap w-44">Role</th>
-                  <th className="px-4 py-2.5 whitespace-nowrap">Umbrella access</th>
-                  <th className="px-4 py-2.5 whitespace-nowrap">Last active</th>
-                  <th className="px-4 py-2.5 whitespace-nowrap">Status</th>
-                  <th className="px-4 py-2.5 whitespace-nowrap w-20" />
-                </tr>
-              </thead>
-              <tbody id="members-body" className="divide-y divide-border/60">
-                {filtered.map((m) => (
-                  <tr key={m.id} className="hover:bg-surface-hover/30 transition-colors" data-filter-row data-od-id={m.odId}>
-                    <td className="px-4 py-3 whitespace-nowrap">
+          <Table id="members-table">
+            <TableHeader className="bg-surface-inset/60 text-muted font-semibold border-b border-border">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="px-4 py-2.5 whitespace-nowrap text-muted font-semibold">Member</TableHead>
+                <TableHead className="px-4 py-2.5 whitespace-nowrap w-44 text-muted font-semibold">Role</TableHead>
+                <TableHead className="px-4 py-2.5 whitespace-nowrap text-muted font-semibold">Umbrella access</TableHead>
+                <TableHead className="px-4 py-2.5 whitespace-nowrap text-muted font-semibold">Last active</TableHead>
+                <TableHead className="px-4 py-2.5 whitespace-nowrap text-muted font-semibold">Status</TableHead>
+                <TableHead className="px-4 py-2.5 whitespace-nowrap w-20" />
+              </TableRow>
+            </TableHeader>
+            <TableBody id="members-body" className="divide-y divide-border/60">
+              {filtered.map((m) => {
+                const statusType = m.statusBadge === 'ok' || m.statusBadge.includes('badge-ok')
+                  ? 'ok'
+                  : m.statusBadge === 'warn' || m.statusBadge.includes('badge-warn')
+                  ? 'warn'
+                  : 'neutral';
+
+                return (
+                  <TableRow key={m.id} className="hover:bg-surface-hover/30 transition-colors" data-filter-row data-od-id={m.odId}>
+                    <TableCell className="px-4 py-3 whitespace-nowrap">
                       <div className="flex items-center gap-2.5">
-                        <span className={`w-7 h-7 rounded-full text-[11px] font-bold flex items-center justify-center shrink-0 ${m.avatarMuted ? 'bg-surface-inset text-muted' : 'bg-foreground text-surface'}`}>
-                          {m.initials}
-                        </span>
+                        <Avatar className={`w-7 h-7 text-[11px] font-bold ${m.avatarMuted ? 'bg-surface-inset text-muted' : 'bg-foreground text-surface'}`}>
+                          <AvatarFallback className={m.avatarMuted ? 'bg-surface-inset text-muted' : 'bg-foreground text-surface font-bold text-[11px]'}>
+                            {m.initials}
+                          </AvatarFallback>
+                        </Avatar>
                         <div>
                           <div className="font-semibold text-foreground text-xs">{m.name}</div>
                           <div className="text-[11.5px] text-muted">{m.email}</div>
                         </div>
                       </div>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    </TableCell>
+                    <TableCell className="px-4 py-3 whitespace-nowrap">
                       <select
                         className="h-7.5 px-2.5 rounded-md border border-border bg-surface text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-50 disabled:bg-surface-inset"
                         data-role-select
@@ -365,8 +395,8 @@ export default function Rbac() {
                       >
                         {(m.roleOptions ?? ROLE_OPTIONS).map((r) => <option key={r} value={r}>{r}</option>)}
                       </select>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    </TableCell>
+                    <TableCell className="px-4 py-3 whitespace-nowrap">
                       <div className="flex flex-wrap gap-1">
                         {m.chips.map((c) => (
                           <span
@@ -381,21 +411,14 @@ export default function Rbac() {
                           </span>
                         ))}
                       </div>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-muted">{m.lastActive}</td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className={`inline-flex items-center gap-1.5 h-5 px-2 rounded-full text-[11px] font-medium ${
-                        m.statusBadge === 'ok' || m.statusBadge.includes('badge-ok')
-                          ? 'bg-success-soft text-success-fg'
-                          : m.statusBadge === 'warn' || m.statusBadge.includes('badge-warn')
-                          ? 'bg-warn-soft text-warn-fg'
-                          : 'bg-surface-inset text-muted'
-                      }`}>
-                        <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                    </TableCell>
+                    <TableCell className="px-4 py-3 whitespace-nowrap text-muted">{m.lastActive}</TableCell>
+                    <TableCell className="px-4 py-3 whitespace-nowrap">
+                      <StatusBadge status={statusType}>
                         {m.statusLabel}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                      </StatusBadge>
+                    </TableCell>
+                    <TableCell className="px-4 py-3 whitespace-nowrap">
                       <div className="flex items-center gap-1 justify-end">
                         <button
                           type="button"
@@ -415,26 +438,27 @@ export default function Rbac() {
                           <Icon name="trash" />
                         </button>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
 
           {filtered.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-12 text-center text-xs text-muted" id="members-empty" data-od-id="members-empty">
-              <div className="mb-2 text-muted"><Icon name="filter" large className="w-4.5 h-4.5" /></div>
-              No members match this search.
-            </div>
+            <EmptyState
+              icon="filter"
+              title="No members match this search."
+              dataOdId="members-empty"
+            />
           )}
 
           <div className="flex items-center justify-end px-4 py-2.5 border-t border-border bg-surface-inset/20 text-xs text-muted">
             <span><span id="members-count" className="font-semibold text-foreground">{count}</span> shown</span>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden" data-od-id="matrix-card">
+        <Card className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden p-0 gap-0" data-od-id="matrix-card">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:px-5 sm:py-3.5 border-b border-border">
             <h3 className="text-sm font-semibold text-foreground">Permission matrix</h3>
             <div className="flex items-center gap-4 text-xs text-muted">
@@ -443,33 +467,31 @@ export default function Rbac() {
               <span className="inline-flex items-center gap-1.5"><Perm type="n" />None</span>
             </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs border-collapse" data-od-id="perm-matrix">
-              <thead className="bg-surface-inset/60 text-muted font-semibold border-b border-border">
-                <tr>
-                  <th className="px-4 py-2.5 text-left">Capability</th>
-                  <th className="px-4 py-2.5 text-center">Admin</th>
-                  <th className="px-4 py-2.5 text-center">Business Analyst</th>
-                  <th className="px-4 py-2.5 text-center">CX Designer</th>
-                  <th className="px-4 py-2.5 text-center">Developer</th>
-                  <th className="px-4 py-2.5 text-center">Viewer</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60">
-                {MATRIX_ROWS.map((row) => (
-                  <tr key={row.cap} className="hover:bg-surface-hover/30 transition-colors">
-                    <td className="px-4 py-2.5 font-medium text-foreground">{row.cap}</td>
-                    {row.perms.map((p, i) => (
-                      <td key={i} className="px-4 py-2.5 text-center">
-                        <Perm type={p} />
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+          <Table data-od-id="perm-matrix">
+            <TableHeader className="bg-surface-inset/60 text-muted font-semibold border-b border-border">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="px-4 py-2.5 text-left text-muted font-semibold">Capability</TableHead>
+                <TableHead className="px-4 py-2.5 text-center text-muted font-semibold">Admin</TableHead>
+                <TableHead className="px-4 py-2.5 text-center text-muted font-semibold">Business Analyst</TableHead>
+                <TableHead className="px-4 py-2.5 text-center text-muted font-semibold">CX Designer</TableHead>
+                <TableHead className="px-4 py-2.5 text-center text-muted font-semibold">Developer</TableHead>
+                <TableHead className="px-4 py-2.5 text-center text-muted font-semibold">Viewer</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody className="divide-y divide-border/60">
+              {MATRIX_ROWS.map((row) => (
+                <TableRow key={row.cap} className="hover:bg-surface-hover/30 transition-colors">
+                  <TableCell className="px-4 py-2.5 font-medium text-foreground">{row.cap}</TableCell>
+                  {row.perms.map((p, i) => (
+                    <TableCell key={i} className="px-4 py-2.5 text-center">
+                      <Perm type={p} />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
       </div>
 
       <Dialog id="dlg-invite" data-od-id="invite-dialog">

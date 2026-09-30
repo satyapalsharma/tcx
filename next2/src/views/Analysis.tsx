@@ -6,9 +6,12 @@ import { AppShell } from '../components/AppShell';
 import { ClusterMapSvg } from '../components/ClusterMapSvg';
 import { Icon } from '../components/Icon';
 import { CloseButton, Dialog, Drawer, OpenButton, useOverlay } from '../components/Overlay';
-import { ChipGroup, Switch } from '../components/ui';
+import { ChipGroup } from '../components/ui';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '../components/Toast';
 import { useReveal } from '../hooks/useReveal';
+import { KpiCard, PageHeader, StatusBadge, EmptyState } from '@/components/common';
+import { Card } from '@/components/ui/card';
 
 type Intent = { name: string; l1: string; vol: string; share: string; conf: string; esc: string; status: string; badge: string };
 
@@ -208,37 +211,35 @@ export default function Analysis() {
     <AppShell
       crumb="Analysis"
       badge={
-        <span className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-semibold rounded-full bg-warn-soft text-warn-fg mr-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-warn animate-pulse" />
+        <StatusBadge status="warn" pulse className="mr-2">
           RUN-4821 · {pct}% · ETA 14 min
-        </span>
+        </StatusBadge>
       }
     >
       <div className="p-4 sm:p-6 lg:p-7 max-w-[1240px] mx-auto w-full pb-16" data-od-id="analysis-page">
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground" data-od-id="page-title">Analysis</h1>
-            <p className="text-xs sm:text-sm text-muted mt-1 max-w-[660px]">
-              Customer interactions flow in from connectors, intents get extracted, then clustered into L1 → L2 → L3. Approve clusters to unblock the Design team.
-            </p>
-          </div>
-          <div className="flex items-center gap-2.5 shrink-0">
-            <OpenButton
-              className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-surface hover:bg-surface-hover border border-border text-foreground text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
-              target="dlg-upload"
-              data-od-id="upload-btn"
-            >
-              <Icon name="upload" className="w-4 h-4 text-muted" />Upload data
-            </OpenButton>
-            <OpenButton
-              className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
-              target="dlg-run"
-              data-od-id="run-btn"
-            >
-              <Icon name="play" className="w-4 h-4" />Run pipeline
-            </OpenButton>
-          </div>
-        </div>
+        <PageHeader
+          title="Analysis"
+          description="Customer interactions flow in from connectors, intents get extracted, then clustered into L1 → L2 → L3. Approve clusters to unblock the Design team."
+          dataOdId="page-title"
+          actions={
+            <>
+              <OpenButton
+                className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-surface hover:bg-surface-hover border border-border text-foreground text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
+                target="dlg-upload"
+                data-od-id="upload-btn"
+              >
+                <Icon name="upload" className="w-4 h-4 text-muted" />Upload data
+              </OpenButton>
+              <OpenButton
+                className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
+                target="dlg-run"
+                data-od-id="run-btn"
+              >
+                <Icon name="play" className="w-4 h-4" />Run pipeline
+              </OpenButton>
+            </>
+          }
+        />
 
         {/* Pipeline Stage Bar */}
         <div className="p-3.5 sm:px-5 bg-surface border border-border rounded-xl shadow-xs mb-4.5 overflow-x-auto" data-od-id="stage-strip">
@@ -273,26 +274,30 @@ export default function Analysis() {
 
         {/* KPI Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4.5" data-od-id="kpi-row">
-          <div className="p-4 bg-surface border border-border rounded-xl shadow-xs flex flex-col gap-1" data-od-id="kpi-records">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">Records in dataset</div>
-            <div className="text-2xl font-bold tracking-tight text-foreground">18,442</div>
-            <div className="text-xs text-muted">3 sources · updated 12 min ago</div>
-          </div>
-          <div className="p-4 bg-surface border border-border rounded-xl shadow-xs flex flex-col gap-1" data-od-id="kpi-intents">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">Canonical intents</div>
-            <div className="text-2xl font-bold tracking-tight text-foreground">286</div>
-            <div className="text-xs text-muted">3,214 raw → deduped</div>
-          </div>
-          <div className="p-4 bg-surface border border-border rounded-xl shadow-xs flex flex-col gap-1" data-od-id="kpi-coverage">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">Cluster coverage</div>
-            <div className="text-2xl font-bold tracking-tight text-foreground">94.6%</div>
-            <div className="text-xs text-muted">of volume assigned to a cluster</div>
-          </div>
-          <div className="p-4 bg-surface border border-border rounded-xl shadow-xs flex flex-col gap-1" data-od-id="kpi-escalation">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">Escalation-flagged</div>
-            <div className="text-2xl font-bold tracking-tight text-foreground">1,244</div>
-            <div className="text-xs text-muted">6.7% of all interactions</div>
-          </div>
+          <KpiCard
+            label="Records in dataset"
+            value="18,442"
+            description="3 sources · updated 12 min ago"
+            dataOdId="kpi-records"
+          />
+          <KpiCard
+            label="Canonical intents"
+            value="286"
+            description="3,214 raw → deduped"
+            dataOdId="kpi-intents"
+          />
+          <KpiCard
+            label="Cluster coverage"
+            value="94.6%"
+            description="of volume assigned to a cluster"
+            dataOdId="kpi-coverage"
+          />
+          <KpiCard
+            label="Escalation-flagged"
+            value="1,244"
+            description="6.7% of all interactions"
+            dataOdId="kpi-escalation"
+          />
         </div>
 
         {/* Work Area Grid */}
@@ -817,7 +822,7 @@ export default function Analysis() {
                     <div className="text-xs font-semibold text-foreground">PII redaction before embedding</div>
                     <div className="text-[11px] text-muted">Numbers, IDs and addresses masked.</div>
                   </div>
-                  <Switch checked={piiEmbed} onChange={setPiiEmbed} label="PII redaction before embedding" />
+                  <Switch checked={piiEmbed} onCheckedChange={setPiiEmbed} aria-label="PII redaction before embedding" />
                 </div>
                 <button
                   type="button"
@@ -946,7 +951,7 @@ export default function Analysis() {
               <div className="text-xs font-semibold text-foreground">Redact PII on ingest</div>
               <div className="text-[11px] text-muted">Recommended for calls with card numbers.</div>
             </div>
-            <Switch checked={piiIngest} onChange={setPiiIngest} label="Redact PII on ingest" />
+            <Switch checked={piiIngest} onCheckedChange={setPiiIngest} aria-label="Redact PII on ingest" />
           </div>
         </div>
         <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-end gap-2.5 rounded-b-xl">
@@ -984,7 +989,7 @@ export default function Analysis() {
               <div className="text-xs font-semibold text-foreground">Express mode</div>
               <div className="text-[11px] text-muted">Runs intent extraction → clustering → process map → UML end-to-end with no manual review gates.</div>
             </div>
-            <Switch checked={express} onChange={setExpress} label="Express mode" />
+            <Switch checked={express} onCheckedChange={setExpress} aria-label="Express mode" />
           </div>
           <div>
             <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="run-note">Run note (shows in audit log)</label>

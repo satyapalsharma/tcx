@@ -4,9 +4,12 @@ import { useState } from 'react';
 import { AppShell } from '../components/AppShell';
 import { Icon } from '../components/Icon';
 import { CloseButton, Drawer, OpenButton, useOverlay } from '../components/Overlay';
-import { Switch, useTextFilter } from '../components/ui';
+import { useTextFilter } from '../components/ui';
 import { useToast } from '../components/Toast';
 import { useReveal } from '../hooks/useReveal';
+import { PageHeader, StatusBadge, EmptyState, SearchToolbar } from '@/components/common';
+import { Card } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 
 type Conn = {
   id: string;
@@ -60,63 +63,62 @@ export default function Connectors() {
     );
   };
 
-  const getBadgeClass = (badge: string) => {
-    if (badge === 'ok' || badge === 'badge-ok') return 'bg-success-soft text-success-fg';
-    if (badge === 'warn' || badge === 'badge-warn') return 'bg-warn-soft text-warn-fg';
-    return 'bg-surface-inset text-muted';
+  const getStatusType = (badge: string) => {
+    if (badge === 'ok' || badge === 'badge-ok') return 'ok';
+    if (badge === 'warn' || badge === 'badge-warn') return 'warn';
+    return 'neutral';
   };
 
   return (
     <AppShell
       crumb="Connectors"
       badge={
-        <span className="inline-flex items-center gap-1.5 h-5 px-2 rounded-full text-xs font-medium bg-warn-soft text-warn-fg">
-          <span className="w-1.5 h-1.5 rounded-full bg-current" />
+        <StatusBadge status="warn" pulse className="mr-2">
           1 needs re-auth
-        </span>
+        </StatusBadge>
       }
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6" data-od-id="connectors-page">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
-          <div className="flex-1">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground" data-od-id="page-title">Connectors</h1>
-            <p className="text-xs sm:text-sm text-muted mt-1 max-w-2xl leading-relaxed">
-              Point Transform.cx at the places your customer interactions already live. Syncs run hourly; credentials sit in the workspace vault, never inside pipeline runs.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md text-xs sm:text-sm font-medium border border-border bg-surface hover:bg-surface-hover transition-colors text-foreground shadow-xs cursor-pointer"
-              onClick={() => toast('Connector SDK docs (stub for demo)', 'ext')}
-            >
-              <Icon name="ext" />SDK docs
-            </button>
-            <OpenButton
-              className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md text-xs sm:text-sm font-medium bg-accent-strong text-white hover:bg-accent-hover active:bg-accent-active transition-colors shadow-xs cursor-pointer"
-              target="dw-newconn"
-              data-od-id="add-connector-btn"
-            >
-              <Icon name="plus" />Add connector
-            </OpenButton>
-          </div>
-        </div>
+        <PageHeader
+          title="Connectors"
+          description="Point Transform.cx at the places your customer interactions already live. Syncs run hourly; credentials sit in the workspace vault, never inside pipeline runs."
+          dataOdId="page-title"
+          className="pb-4 border-b border-border mb-0"
+          actions={
+            <>
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md text-xs sm:text-sm font-medium border border-border bg-surface hover:bg-surface-hover transition-colors text-foreground shadow-xs cursor-pointer"
+                onClick={() => toast('Connector SDK docs (stub for demo)', 'ext')}
+              >
+                <Icon name="ext" />SDK docs
+              </button>
+              <OpenButton
+                className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md text-xs sm:text-sm font-medium bg-accent-strong text-white hover:bg-accent-hover active:bg-accent-active transition-colors shadow-xs cursor-pointer"
+                target="dw-newconn"
+                data-od-id="add-connector-btn"
+              >
+                <Icon name="plus" />Add connector
+              </OpenButton>
+            </>
+          }
+        />
 
         <div className="flex items-center gap-2 pb-1" data-od-id="conn-filters">
-          <input
-            className="h-9 px-3 w-64 sm:w-72 rounded-md border border-border bg-surface text-xs sm:text-sm text-foreground placeholder:text-muted/60 focus:outline-none focus:ring-1 focus:ring-accent"
+          <SearchToolbar
+            query={query}
+            onQueryChange={setQuery}
             placeholder="Search connectors"
-            aria-label="Search connectors"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            count={query.trim() ? count : count + 1}
+            countLabel="shown"
+            className="w-full"
+            inputClassName="w-64 sm:w-72"
           />
-          <span className="flex-1" />
-          <span className="text-xs text-muted font-medium"><span>{query.trim() ? count : count + 1}</span> shown</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5" data-od-id="conn-grid">
           {filtered.map((c) => (
-            <div
+            <Card
               key={c.id}
               className="group bg-surface border border-border rounded-xl p-4 flex flex-col gap-3 cursor-pointer hover:border-border-strong hover:bg-surface-hover/30 transition-all text-left shadow-xs"
               data-od-id={`conn-${c.id}`}
@@ -127,10 +129,9 @@ export default function Connectors() {
                   {c.mark}
                 </span>
                 <strong className="text-[13px] font-semibold text-foreground truncate">{c.name}</strong>
-                <span className={`inline-flex items-center gap-1.5 h-5 px-2 rounded-full text-[11px] font-medium shrink-0 ml-auto ${getBadgeClass(c.badge)}`}>
-                  <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                <StatusBadge status={getStatusType(c.badge)} className="ml-auto shrink-0">
                   {c.badgeText}
-                </span>
+                </StatusBadge>
               </div>
               <span className="text-xs text-muted leading-relaxed line-clamp-2">{c.desc}</span>
               <div className="flex flex-col gap-1 pt-2 border-t border-border/60 mt-auto">
@@ -141,7 +142,7 @@ export default function Connectors() {
                   </div>
                 ))}
               </div>
-            </div>
+            </Card>
           ))}
 
           <OpenButton
@@ -158,10 +159,11 @@ export default function Connectors() {
         </div>
 
         {filtered.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-16 text-center text-sm text-muted border border-dashed border-border rounded-xl bg-surface/40" data-od-id="conn-empty">
-            <div className="mb-2 text-muted"><Icon name="filter" large className="w-4.5 h-4.5" /></div>
-            No connectors match this search.
-          </div>
+          <EmptyState
+            icon="filter"
+            title="No connectors match this search."
+            dataOdId="conn-empty"
+          />
         )}
       </div>
 
@@ -174,10 +176,9 @@ export default function Connectors() {
               <div className="text-xs text-muted mt-0.5">{selected.kind}</div>
             </div>
           </div>
-          <span className={`inline-flex items-center gap-1.5 h-5 px-2 rounded-full text-xs font-medium shrink-0 ${getBadgeClass(selected.badge)}`}>
-            <span className="w-1.5 h-1.5 rounded-full bg-current" />
+          <StatusBadge status={getStatusType(selected.badge)} className="shrink-0">
             {selected.badgeText}
-          </span>
+          </StatusBadge>
           <CloseButton className="inline-flex items-center justify-center w-8 h-8 rounded-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer" title="Close">
             <Icon name="x" />
           </CloseButton>
@@ -199,32 +200,6 @@ export default function Connectors() {
                 <Icon name="sync" />Sync now
               </button>
             </div>
-            <div className="w-full h-1.5 bg-surface-inset rounded-full overflow-hidden mt-2">
-              <div className="h-full bg-success rounded-full" style={{ width: '100%' }} />
-            </div>
-          </div>
-
-          <div className="h-px bg-border" />
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-foreground mb-1.5" htmlFor="dw-field-name">Name</label>
-              <input className="w-full h-9 px-3 rounded-md border border-border bg-surface text-xs sm:text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent" id="dw-field-name" defaultValue="Skyline exports bucket" />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-foreground mb-1.5" htmlFor="dw-region">Region</label>
-              <select className="w-full h-9 px-3 rounded-md border border-border bg-surface text-xs sm:text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent" id="dw-region">
-                <option>ap-south-1 (Mumbai)</option>
-                <option>us-east-1</option>
-                <option>eu-central-1</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-foreground mb-1.5" htmlFor="dw-prefix">Prefix filter</label>
-            <input className="w-full h-9 px-3 rounded-md border border-border bg-surface font-mono text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent" id="dw-prefix" defaultValue="transcripts/wk*/" />
-            <span className="text-[11.5px] text-muted mt-1 block">Only objects under this prefix join the pipeline.</span>
           </div>
 
           <div className="flex items-center justify-between py-1">
@@ -232,7 +207,7 @@ export default function Connectors() {
               <div className="text-xs font-semibold text-foreground">PII redaction on ingest</div>
               <div className="text-[11.5px] text-muted">Masks numbers and IDs before embedding.</div>
             </div>
-            <Switch checked={piiRedaction} onChange={setPiiRedaction} label="PII redaction" />
+            <Switch checked={piiRedaction} onCheckedChange={setPiiRedaction} aria-label="PII redaction" />
           </div>
 
           <div className="flex items-center justify-between py-1">
@@ -240,7 +215,7 @@ export default function Connectors() {
               <div className="text-xs font-semibold text-foreground">Live source</div>
               <div className="text-[11.5px] text-muted">Off = frozen snapshot from last sync.</div>
             </div>
-            <Switch checked={liveSource} onChange={setLiveSource} label="Live source" />
+            <Switch checked={liveSource} onCheckedChange={setLiveSource} aria-label="Live source" />
           </div>
 
           <details className="group border border-border rounded-lg p-3 bg-surface-inset/40 text-xs">

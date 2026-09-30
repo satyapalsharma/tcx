@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useNavigate } from '../lib/navigation';
 import { Icon } from '../components/Icon';
-import { Switch } from '../components/ui';
+import { Switch } from '@/components/ui/switch';
+import { Card } from '@/components/ui/card';
 import { useToast } from '../components/Toast';
 
 export default function Login() {
@@ -46,74 +47,71 @@ export default function Login() {
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground" data-od-id="login-heading">Sign in</h1>
         <p className="text-muted text-xs sm:text-sm mt-1.5 mb-5">Continue to your workspace where conversations become deployed agents.</p>
 
-        <form id="login-form" className="bg-surface border border-border rounded-xl p-5 shadow-xs space-y-4" onSubmit={submit} noValidate>
-          <div>
-            <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="email">Work email</label>
-            <input
-              className={`w-full h-9 px-3 bg-surface border rounded-md text-xs sm:text-sm text-foreground placeholder:text-muted focus:outline-none transition-colors ${
-                emailErr ? 'border-danger focus:ring-1 focus:ring-danger' : 'border-border focus:border-accent focus:ring-1 focus:ring-accent'
-              }`}
-              id="email"
-              type="email"
-              autoComplete="email"
-              placeholder="name@company.com"
-              value={email}
-              onChange={(e) => { setEmail(e.target.value); setEmailErr(false); }}
-            />
-            {emailErr && (
-              <span className="text-xs text-danger-fg flex items-center gap-1.5 mt-1">
-                <Icon name="warn" className="w-3.5 h-3.5 text-danger" />Enter a valid company email address.
-              </span>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="password">Password</label>
-            <div className="relative">
+        <Card className="p-5 shadow-xs border-border">
+          <form id="login-form" className="space-y-4" onSubmit={submit} noValidate>
+            <div>
+              <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="email">Work email</label>
               <input
-                className={`w-full h-9 pl-3 pr-10 bg-surface border rounded-md text-xs sm:text-sm text-foreground placeholder:text-muted focus:outline-none transition-colors ${
-                  pwdErr ? 'border-danger focus:ring-1 focus:ring-danger' : 'border-border focus:border-accent focus:ring-1 focus:ring-accent'
+                className={`w-full h-9 px-3 bg-surface border rounded-md text-xs sm:text-sm text-foreground placeholder:text-muted focus:outline-none transition-colors ${
+                  emailErr ? 'border-danger focus:ring-1 focus:ring-danger' : 'border-border focus:border-accent focus:ring-1 focus:ring-accent'
                 }`}
-                id="password"
-                type={showPwd ? 'text' : 'password'}
-                autoComplete="current-password"
-                placeholder="8+ characters"
-                value={password}
-                onChange={(e) => { setPassword(e.target.value); setPwdErr(false); }}
+                id="email"
+                type="email"
+                autoComplete="email"
+                placeholder="name@company.com"
+                value={email}
+                onChange={(e) => { setEmail(e.target.value); setEmailErr(false); }}
               />
+              {emailErr && (
+                <span className="text-xs text-danger-fg flex items-center gap-1.5 mt-1">
+                  <Icon name="warn" className="w-3.5 h-3.5 text-danger" />Enter a valid company email address.
+                </span>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="password">Password</label>
+              <div className="relative">
+                <input
+                  className={`w-full h-9 pl-3 pr-10 bg-surface border rounded-md text-xs sm:text-sm text-foreground placeholder:text-muted focus:outline-none transition-colors ${
+                    pwdErr ? 'border-danger focus:ring-1 focus:ring-danger' : 'border-border focus:border-accent focus:ring-1 focus:ring-accent'
+                  }`}
+                  id="password"
+                  type={showPwd ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  placeholder="8+ characters"
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); setPwdErr(false); }}
+                />
+                <button
+                  type="button"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 inline-flex items-center justify-center text-muted hover:text-foreground cursor-pointer rounded-md transition-colors"
+                  aria-label={showPwd ? 'Hide password' : 'Show password'}
+                  onClick={() => setShowPwd(!showPwd)}
+                >
+                  <Icon name="eye" className="w-4 h-4" />
+                </button>
+              </div>
+              {pwdErr && (
+                <span className="text-xs text-danger-fg flex items-center gap-1.5 mt-1">
+                  <Icon name="warn" className="w-3.5 h-3.5 text-danger" />Password must be at least 8 characters.
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between text-xs text-muted pt-1">
+              <label className="flex items-center gap-2 cursor-pointer text-muted hover:text-foreground transition-colors select-none">
+                <Switch checked={remember} onCheckedChange={setRemember} aria-label="Keep me signed in" />
+                <span>Keep me signed in</span>
+              </label>
               <button
                 type="button"
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 inline-flex items-center justify-center text-muted hover:text-foreground cursor-pointer rounded-md transition-colors"
-                aria-label={showPwd ? 'Hide password' : 'Show password'}
-                onClick={() => setShowPwd(!showPwd)}
+                className="text-accent-strong hover:underline cursor-pointer font-medium"
+                onClick={() => toast(`Password reset link sent to ${email.trim() || 'your email'}`, 'mail')}
               >
-                <Icon name="eye" className="w-4 h-4" />
+                Forgot password?
               </button>
             </div>
-            {pwdErr && (
-              <span className="text-xs text-danger-fg flex items-center gap-1.5 mt-1">
-                <Icon name="warn" className="w-3.5 h-3.5 text-danger" />Password must be at least 8 characters.
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center justify-between text-xs text-muted pt-1">
-            <button
-              type="button"
-              className="flex items-center gap-2 cursor-pointer text-muted hover:text-foreground transition-colors"
-              onClick={() => setRemember(!remember)}
-            >
-              <Switch checked={remember} onChange={setRemember} label="Keep me signed in" />
-              <span>Keep me signed in</span>
-            </button>
-            <button
-              type="button"
-              className="text-accent-strong hover:underline cursor-pointer font-medium"
-              onClick={() => toast(`Password reset link sent to ${email.trim() || 'your email'}`, 'mail')}
-            >
-              Forgot password?
-            </button>
-          </div>
 
           <button
             className="w-full h-10 mt-2 bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs sm:text-sm font-semibold rounded-md shadow-sm transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
@@ -160,6 +158,7 @@ export default function Login() {
             Demo build — use any 8+ character password to enter the workspace.
           </p>
         </form>
+        </Card>
 
         <div className="mt-6 flex flex-col gap-3.5 items-center text-center text-xs text-muted" data-od-id="login-footer">
           <div className="flex items-center origin-center scale-90 sm:scale-100" aria-hidden="true">

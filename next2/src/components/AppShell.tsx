@@ -1,9 +1,36 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React from 'react';
 import { Link, usePathname } from '../lib/navigation';
 import { Icon } from './Icon';
 import { useToast } from './Toast';
+import {
+  SidebarProvider,
+  Sidebar,
+  SidebarHeader,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarMenuBadge,
+  SidebarFooter,
+  SidebarTrigger,
+  SidebarInset,
+  SidebarRail,
+} from '@/components/ui/sidebar';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 export type Persona = { initials: string; name: string; role: string };
 
@@ -52,159 +79,164 @@ export function AppShell({ children, crumb, middleCrumb, badge, actions }: {
 }) {
   const pathname = usePathname();
   const toast = useToast();
-  const [mobileOpen, setMobileOpen] = useState(false);
   const key = pathname.replace(/^\//, '') || 'projects';
   const persona = PERSONAS[key] ?? PERSONAS.projects;
 
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
-
-  useEffect(() => {
-    if (mobileOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [mobileOpen]);
-
   return (
-    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-[232px_1fr] bg-background text-foreground" data-od-id="app-shell">
-      {/* Mobile Backdrop Scrim */}
-      <div
-        className={`fixed inset-0 bg-black/40 z-40 lg:hidden transition-opacity duration-200 ${
-          mobileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-        }`}
-        onClick={() => setMobileOpen(false)}
-        aria-hidden="true"
-      />
+    <SidebarProvider defaultOpen={true}>
+      <div className="flex min-h-screen w-full bg-background text-foreground" data-od-id="app-shell">
+        <Sidebar data-od-id="sidebar" className="border-r border-border bg-surface">
+          {/* Header */}
+          <SidebarHeader className="border-b border-border p-3.5">
+            <div className="flex items-center gap-2.5">
+              <img className="h-4.5 w-auto block shrink-0" src="/EXL_Service_logo.svg.webp" alt="EXL" />
+              <span className="w-px h-4 bg-border shrink-0" aria-hidden="true" />
+              <div className="min-w-0 flex-1">
+                <div className="font-bold text-sm tracking-tight text-foreground">Transform.cx</div>
+                <div className="text-[10px] uppercase tracking-wider font-semibold text-muted">Skyline workspace</div>
+              </div>
+            </div>
+          </SidebarHeader>
 
-      {/* Sidebar */}
-      <aside
-        className={`fixed lg:sticky top-0 h-screen w-[260px] lg:w-[232px] bg-surface border-r border-border flex flex-col z-50 lg:z-auto transition-transform duration-200 ease-out lg:translate-x-0 ${
-          mobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'
-        }`}
-        data-od-id="sidebar"
-      >
-        <div className="flex items-center gap-2.5 p-3.5 border-b border-border">
-          <img className="h-4.5 w-auto block shrink-0" src="/EXL_Service_logo.svg.webp" alt="EXL" />
-          <span className="w-px h-4 bg-border shrink-0" aria-hidden="true" />
-          <div className="min-w-0 flex-1">
-            <div className="font-bold text-sm tracking-tight text-foreground">Transform.cx</div>
-            <div className="text-[10px] uppercase tracking-wider font-semibold text-muted">Skyline workspace</div>
-          </div>
-          <button
-            type="button"
-            className="lg:hidden inline-flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-foreground hover:bg-surface-hover cursor-pointer transition-colors"
-            onClick={() => setMobileOpen(false)}
-            aria-label="Close menu"
-          >
-            <Icon name="x" className="w-4 h-4" />
-          </button>
-        </div>
+          {/* Navigation content */}
+          <SidebarContent className="p-2" data-od-id="side-nav">
+            {NAV.map((group, gi) => (
+              <SidebarGroup key={gi} className="p-0 mb-2">
+                {group.section && (
+                  <SidebarGroupLabel className="px-2.5 pt-2 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted h-auto">
+                    {group.section}
+                  </SidebarGroupLabel>
+                )}
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {group.items.map((item) => {
+                      const isActive = pathname === item.to;
+                      return (
+                        <SidebarMenuItem key={item.to}>
+                          <SidebarMenuButton
+                            asChild
+                            isActive={isActive}
+                            className={`h-8 px-2.5 my-0.5 rounded-md text-xs sm:text-[13px] font-medium transition-colors ${
+                              isActive
+                                ? 'bg-foreground text-surface font-semibold shadow-xs hover:bg-foreground hover:text-surface'
+                                : 'text-foreground hover:bg-surface-hover'
+                            }`}
+                          >
+                            <Link
+                              to={item.to}
+                              onClick={() => {
+                                try { localStorage.setItem('tx-last-page', item.to.slice(1)); } catch { /* noop */ }
+                              }}
+                            >
+                              <Icon
+                                name={item.icon}
+                                className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-surface' : 'text-muted'}`}
+                              />
+                              <span className="truncate">{item.label}</span>
+                              {item.tail && (
+                                <SidebarMenuBadge
+                                  className={`ml-auto text-[11px] font-medium px-1.5 py-0.5 rounded ${
+                                    isActive
+                                      ? 'text-[oklch(80%_0.04_250)] bg-transparent'
+                                      : 'text-muted bg-surface-inset'
+                                  }`}
+                                >
+                                  {item.tail}
+                                </SidebarMenuBadge>
+                              )}
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            ))}
+          </SidebarContent>
 
-        <nav className="p-2 flex-1 overflow-y-auto space-y-2" data-od-id="side-nav">
-          {NAV.map((group, gi) => (
-            <div key={gi}>
-              {group.section && (
-                <div className="px-2.5 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
-                  {group.section}
-                </div>
-              )}
-              {group.items.map((item) => {
-                const isActive = pathname === item.to;
-                return (
+          {/* User profile footer */}
+          <SidebarFooter className="p-2.5 border-t border-border mt-auto">
+            <div className="flex items-center gap-2.5 p-1 rounded-md">
+              <Avatar className="w-7 h-7 text-[10.5px] font-bold bg-foreground text-surface">
+                <AvatarFallback className="bg-foreground text-surface font-bold text-[10.5px]">
+                  {persona.initials}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-semibold text-foreground truncate">{persona.name}</div>
+                <div className="text-[11px] text-muted truncate">{persona.role}</div>
+              </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
                   <Link
-                    key={item.to}
-                    className={`flex items-center gap-2.5 w-full h-8 px-2.5 my-0.5 rounded-md text-xs sm:text-[13px] font-medium transition-colors ${
-                      isActive
-                        ? 'bg-foreground text-surface font-semibold shadow-xs'
-                        : 'text-foreground hover:bg-surface-hover'
-                    }`}
-                    to={item.to}
-                    onClick={() => {
-                      setMobileOpen(false);
-                      try { localStorage.setItem('tx-last-page', item.to.slice(1)); } catch { /* noop */ }
-                    }}
+                    className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
+                    to="/login"
+                    title="Sign out"
+                    aria-label="Sign out"
                   >
-                    <Icon name={item.icon} className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-surface' : 'text-muted'}`} />
-                    <span className="truncate">{item.label}</span>
-                    {item.tail && (
-                      <span className={`ml-auto text-[11px] ${isActive ? 'text-[oklch(80%_0.04_250)] font-medium' : 'text-muted'}`}>
-                        {item.tail}
-                      </span>
-                    )}
+                    <Icon name="out" className="w-3.5 h-3.5" />
                   </Link>
-                );
-              })}
+                </TooltipTrigger>
+                <TooltipContent>Sign out</TooltipContent>
+              </Tooltip>
             </div>
-          ))}
-        </nav>
+          </SidebarFooter>
+          <SidebarRail />
+        </Sidebar>
 
-        <div className="p-2.5 border-t border-border mt-auto">
-          <div className="flex items-center gap-2.5 p-1 rounded-md">
-            <span className="w-7 h-7 rounded-full bg-foreground text-surface grid place-items-center text-[10.5px] font-bold shrink-0">
-              {persona.initials}
-            </span>
-            <div className="min-w-0 flex-1">
-              <div className="text-xs font-semibold text-foreground truncate">{persona.name}</div>
-              <div className="text-[11px] text-muted truncate">{persona.role}</div>
+        {/* Main Area */}
+        <SidebarInset className="min-w-0 flex-1 flex flex-col bg-background">
+          <header className="sticky top-0 z-30 h-[52px] px-4 sm:px-6 bg-surface/85 backdrop-blur-md border-b border-border flex items-center gap-3.5" data-od-id="topbar">
+            <SidebarTrigger className="text-muted hover:text-foreground" />
+            <Breadcrumb className="flex items-center">
+              <BreadcrumbList className="text-xs sm:text-sm">
+                <BreadcrumbItem className="hidden sm:inline-flex">
+                  <BreadcrumbLink href="/projects" className="text-muted hover:text-foreground">
+                    Skyline workspace
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator className="hidden sm:inline-flex" />
+                {middleCrumb ? (
+                  <>
+                    <BreadcrumbItem className="hidden md:inline-flex max-w-[200px] truncate">
+                      {middleCrumb}
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator className="hidden md:inline-flex" />
+                  </>
+                ) : null}
+                <BreadcrumbItem>
+                  <BreadcrumbPage className="font-semibold text-foreground truncate">
+                    {crumb}
+                  </BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+            <div className="flex-1" />
+            <div className="flex items-center gap-2">
+              {actions}
+              <div className="hidden sm:flex items-center gap-2">
+                {badge}
+              </div>
             </div>
-            <Link
-              className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
-              to="/login"
-              title="Sign out"
-              aria-label="Sign out"
-            >
-              <Icon name="out" className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Content Area */}
-      <div className="min-w-0 flex-1 flex flex-col">
-        <header className="sticky top-0 z-30 h-[52px] px-4 sm:px-6 bg-surface/85 backdrop-blur-md border-b border-border flex items-center gap-3.5" data-od-id="topbar">
-          <button
-            type="button"
-            className="lg:hidden inline-flex items-center justify-center w-8 h-8 rounded-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
-            onClick={() => setMobileOpen(true)}
-            aria-label="Open navigation menu"
-          >
-            <Icon name="menu" className="w-4 h-4" />
-          </button>
-          <div className="flex items-center gap-2 text-xs sm:text-sm min-w-0 text-muted">
-            <span className="hidden sm:inline hover:text-foreground transition-colors">Skyline workspace</span>
-            <span className="hidden sm:inline text-border">/</span>
-            {middleCrumb ? (
-              <>
-                <span className="hidden md:inline hover:text-foreground transition-colors truncate max-w-[200px]">{middleCrumb}</span>
-                <span className="hidden md:inline text-border">/</span>
-              </>
-            ) : null}
-            <span className="font-semibold text-foreground truncate">{crumb}</span>
-          </div>
-          <div className="flex-1" />
-          <div className="flex items-center gap-2">
-            {actions}
-            <div className="hidden sm:flex items-center gap-2">
-              {badge}
-            </div>
-          </div>
-          <button
-            type="button"
-            className="inline-flex items-center justify-center w-8 h-8 rounded-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
-            title="Notifications"
-            onClick={() => toast('No new notifications', 'bell')}
-          >
-            <Icon name="bell" className="w-4 h-4" />
-          </button>
-        </header>
-        {children}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  className="inline-flex items-center justify-center w-8 h-8 rounded-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
+                  title="Notifications"
+                  aria-label="Notifications"
+                  onClick={() => toast('No new notifications', 'bell')}
+                >
+                  <Icon name="bell" className="w-4 h-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Notifications</TooltipContent>
+            </Tooltip>
+          </header>
+          {children}
+        </SidebarInset>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }

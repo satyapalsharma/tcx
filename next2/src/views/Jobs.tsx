@@ -4,10 +4,13 @@ import { useMemo, useState } from 'react';
 import { AppShell } from '../components/AppShell';
 import { Icon } from '../components/Icon';
 import { CloseButton, Dialog, Drawer, OpenButton, useOverlay } from '../components/Overlay';
-import { Switch } from '../components/ui';
 import { useToast } from '../components/Toast';
 import { useReveal } from '../hooks/useReveal';
 import { JOBS, JOB_STEPS, type Job, type StepStatus } from '../data/jobs';
+import { KpiCard, PageHeader, StatusBadge, EmptyState, SearchToolbar } from '@/components/common';
+import { Card } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Switch } from '@/components/ui/switch';
 
 const STEP_ICONS: Record<StepStatus, Parameters<typeof Icon>[0]['name']> = {
   done: 'check',
@@ -76,76 +79,69 @@ export default function Jobs() {
     <AppShell
       crumb="Jobs"
       badge={
-        <span className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-semibold rounded-full bg-warn-soft text-warn-fg mr-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-warn animate-pulse" />
+        <StatusBadge status="warn" pulse className="mr-2">
           2 running
-        </span>
+        </StatusBadge>
       }
     >
       <div className="p-4 sm:p-6 lg:p-7 max-w-[1240px] mx-auto w-full pb-16" data-od-id="jobs-page">
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground" data-od-id="page-title">Jobs</h1>
-            <p className="text-xs sm:text-sm text-muted mt-1 max-w-[660px]">
-              Every pipeline run, map generation and agent build in one place — with live status, client cost tag and the ability to cancel, rerun or delete a job.
-            </p>
-          </div>
-          <div className="flex items-center gap-2.5 shrink-0">
-            <button
-              type="button"
-              className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-surface hover:bg-surface-hover border border-border text-foreground text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
-              onClick={() => toast('Job history exported as jobs-30d.csv', 'download')}
-            >
-              <Icon name="download" className="w-4 h-4 text-muted" />Export CSV
-            </button>
-            <OpenButton
-              className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
-              target="dlg-newjob"
-              data-od-id="new-job-btn"
-            >
-              <Icon name="plus" className="w-4 h-4" />New job
-            </OpenButton>
-          </div>
-        </div>
+        <PageHeader
+          title="Jobs"
+          description="Every pipeline run, map generation and agent build in one place — with live status, client cost tag and the ability to cancel, rerun or delete a job."
+          dataOdId="page-title"
+          actions={
+            <>
+              <button
+                type="button"
+                className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-surface hover:bg-surface-hover border border-border text-foreground text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
+                onClick={() => toast('Job history exported as jobs-30d.csv', 'download')}
+              >
+                <Icon name="download" className="w-4 h-4 text-muted" />Export CSV
+              </button>
+              <OpenButton
+                className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
+                target="dlg-newjob"
+                data-od-id="new-job-btn"
+              >
+                <Icon name="plus" className="w-4 h-4" />New job
+              </OpenButton>
+            </>
+          }
+        />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6" data-od-id="job-kpis">
-          <div className="p-4 bg-surface border border-border rounded-xl shadow-xs flex flex-col gap-1">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">Running now</div>
-            <div className="text-2xl font-bold tracking-tight text-foreground">2</div>
-            <div className="text-xs text-muted">1 queued behind RUN-4821</div>
-          </div>
-          <div className="p-4 bg-surface border border-border rounded-xl shadow-xs flex flex-col gap-1">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">Completed · 30d</div>
-            <div className="text-2xl font-bold tracking-tight text-foreground">1,204</div>
-            <div className="text-xs text-muted">98.1% success rate</div>
-          </div>
-          <div className="p-4 bg-surface border border-border rounded-xl shadow-xs flex flex-col gap-1">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">Failed · 30d</div>
-            <div className="text-2xl font-bold tracking-tight text-foreground">23</div>
-            <div className="text-xs text-muted">mostly Bedrock auth scope</div>
-          </div>
-          <div className="p-4 bg-surface border border-border rounded-xl shadow-xs flex flex-col gap-1">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">Spend · 30d</div>
-            <div className="text-2xl font-bold tracking-tight text-foreground">₹10.7L</div>
-            <div className="text-xs text-muted">across 4 clients</div>
-          </div>
+          <KpiCard
+            label="Running now"
+            value="2"
+            description="1 queued behind RUN-4821"
+          />
+          <KpiCard
+            label="Completed · 30d"
+            value="1,204"
+            description="98.1% success rate"
+          />
+          <KpiCard
+            label="Failed · 30d"
+            value="23"
+            description="mostly Bedrock auth scope"
+          />
+          <KpiCard
+            label="Spend · 30d"
+            value="₹10.7L"
+            description="across 4 clients"
+          />
         </div>
 
-        <div className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden">
+        <Card className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden p-0 gap-0">
           <div className="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <h3 className="text-sm font-semibold text-foreground">All jobs</h3>
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="relative">
-                <Icon name="search" className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted pointer-events-none" />
-                <input
-                  className="h-8 pl-8 pr-3 w-[180px] sm:w-[190px] bg-surface-inset border border-border rounded-md text-xs text-foreground placeholder:text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
-                  id="j-search"
-                  placeholder="Search job or project"
-                  aria-label="Search jobs"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
+            <SearchToolbar
+              query={search}
+              onQueryChange={setSearch}
+              placeholder="Search job or project"
+              count={filtered.length}
+              countLabel="shown"
+            >
               <select
                 className="h-8 px-2.5 bg-surface-inset border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
                 id="j-status"
@@ -183,29 +179,32 @@ export default function Jobs() {
                 <option>Design</option>
                 <option>Develop</option>
               </select>
-              <span className="text-xs text-muted whitespace-nowrap pl-1">
-                <span id="j-count" className="font-semibold text-foreground">{filtered.length}</span> shown
-              </span>
-            </div>
+            </SearchToolbar>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm border-collapse min-w-[760px]" id="jobs-table">
-              <thead className="bg-surface border-b border-border">
-                <tr className="text-[11px] font-semibold uppercase tracking-wider text-muted">
-                  <th className="px-4 py-2.5">Job</th>
-                  <th className="px-4 py-2.5">Client</th>
-                  <th className="px-4 py-2.5">Pipeline</th>
-                  <th className="px-4 py-2.5">Status</th>
-                  <th className="px-4 py-2.5 min-w-[130px]">Progress</th>
-                  <th className="px-4 py-2.5">Started</th>
-                  <th className="px-4 py-2.5 text-right">Cost</th>
-                  <th className="px-3 py-2.5 w-24 text-right" />
-                </tr>
-              </thead>
-              <tbody id="jobs-body" className="divide-y divide-border">
-                {filtered.map((j) => (
-                  <tr
+          <Table id="jobs-table" className="min-w-[760px]">
+            <TableHeader className="bg-surface border-b border-border">
+              <TableRow className="text-[11px] font-semibold uppercase tracking-wider text-muted hover:bg-transparent">
+                <TableHead className="px-4 py-2.5 text-muted">Job</TableHead>
+                <TableHead className="px-4 py-2.5 text-muted">Client</TableHead>
+                <TableHead className="px-4 py-2.5 text-muted">Pipeline</TableHead>
+                <TableHead className="px-4 py-2.5 text-muted">Status</TableHead>
+                <TableHead className="px-4 py-2.5 min-w-[130px] text-muted">Progress</TableHead>
+                <TableHead className="px-4 py-2.5 text-muted">Started</TableHead>
+                <TableHead className="px-4 py-2.5 text-right text-muted">Cost</TableHead>
+                <TableHead className="px-3 py-2.5 w-24 text-right" />
+              </TableRow>
+            </TableHeader>
+            <TableBody id="jobs-body" className="divide-y divide-border">
+              {filtered.map((j) => {
+                const isWarn = j.badgeClass.includes('badge-warn');
+                const isOk = j.badgeClass.includes('badge-ok');
+                const isErr = j.badgeClass.includes('badge-err');
+                const isAcc = j.badgeClass.includes('badge-acc');
+                const statusType = isWarn ? 'warn' : isOk ? 'ok' : isErr ? 'danger' : isAcc ? 'accent' : 'neutral';
+
+                return (
+                  <TableRow
                     key={j.id}
                     className="hover:bg-surface-hover/70 transition-colors cursor-pointer group"
                     data-status={j.status}
@@ -217,31 +216,18 @@ export default function Jobs() {
                       openJob(j);
                     }}
                   >
-                    <td className="px-4 py-3">
+                    <TableCell className="px-4 py-3">
                       <div className="font-mono text-xs sm:text-sm font-semibold text-foreground">{j.id}</div>
                       <div className="text-[11.5px] text-muted mt-0.5">{j.subtitle}</div>
-                    </td>
-                    <td className="px-4 py-3 text-xs sm:text-sm text-foreground">{j.client}</td>
-                    <td className="px-4 py-3 text-xs sm:text-sm text-foreground">{j.pipeline}</td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex items-center gap-1.5 h-5.5 px-2 text-xs font-medium rounded-full whitespace-nowrap ${
-                        j.badgeClass.includes('badge-warn') ? 'bg-warn-soft text-warn-fg' :
-                        j.badgeClass.includes('badge-ok') ? 'bg-success-soft text-success-fg' :
-                        j.badgeClass.includes('badge-err') ? 'bg-danger-soft text-danger-fg' :
-                        j.badgeClass.includes('badge-acc') ? 'bg-accent-soft text-accent-strong' :
-                        'bg-surface-inset text-foreground'
-                      }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${
-                          j.badgeClass.includes('badge-run') ? 'bg-warn animate-pulse' :
-                          j.badgeClass.includes('badge-ok') ? 'bg-success' :
-                          j.badgeClass.includes('badge-err') ? 'bg-danger' :
-                          j.badgeClass.includes('badge-acc') ? 'bg-accent' :
-                          'bg-muted'
-                        }`} />
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-xs sm:text-sm text-foreground">{j.client}</TableCell>
+                    <TableCell className="px-4 py-3 text-xs sm:text-sm text-foreground">{j.pipeline}</TableCell>
+                    <TableCell className="px-4 py-3">
+                      <StatusBadge status={statusType} pulse={j.badgeClass.includes('badge-run')}>
                         {j.statusLabel}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
+                      </StatusBadge>
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
                         <div className="h-1.5 flex-1 bg-surface-inset rounded-full overflow-hidden">
                           <div
@@ -257,12 +243,12 @@ export default function Jobs() {
                           {j.progressLabel}
                         </span>
                       </div>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-muted whitespace-nowrap">{j.started}</td>
-                    <td className={`px-4 py-3 text-right font-mono text-xs ${j.costMuted ? 'text-muted' : 'text-foreground'}`}>
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-xs text-muted whitespace-nowrap">{j.started}</TableCell>
+                    <TableCell className={`px-4 py-3 text-right font-mono text-xs ${j.costMuted ? 'text-muted' : 'text-foreground'}`}>
                       {j.cost}
-                    </td>
-                    <td className="px-3 py-3 text-right">
+                    </TableCell>
+                    <TableCell className="px-3 py-3 text-right">
                       <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                         <button
                           type="button"
@@ -283,26 +269,29 @@ export default function Jobs() {
                           <Icon name="trash" className="w-3.5 h-3.5" />
                         </button>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
 
           {filtered.length === 0 && (
-            <div className="p-12 text-center text-muted text-xs sm:text-sm flex flex-col items-center justify-center gap-2" id="jobs-empty" data-od-id="jobs-empty">
-              <Icon name="filter" className="w-6 h-6 text-muted mb-1" />
-              <span>No jobs match these filters.</span>
-              <button
-                type="button"
-                className="mt-2 h-7.5 px-3 rounded-md border border-border bg-surface hover:bg-surface-hover text-xs font-medium text-foreground transition-colors cursor-pointer"
-                id="jobs-reset"
-                onClick={resetFilters}
-              >
-                Reset filters
-              </button>
-            </div>
+            <EmptyState
+              icon="filter"
+              title="No jobs match these filters."
+              dataOdId="jobs-empty"
+              action={
+                <button
+                  type="button"
+                  className="mt-2 h-7.5 px-3 rounded-md border border-border bg-surface hover:bg-surface-hover text-xs font-medium text-foreground transition-colors cursor-pointer"
+                  id="jobs-reset"
+                  onClick={resetFilters}
+                >
+                  Reset filters
+                </button>
+              }
+            />
           )}
 
           <div className="p-3.5 border-t border-border bg-surface-inset/30 flex justify-end">
@@ -310,7 +299,7 @@ export default function Jobs() {
               Showing <span id="j-shown" className="font-semibold text-foreground">{filtered.length}</span> of 1,229 jobs · older pages load on scroll
             </span>
           </div>
-        </div>
+        </Card>
       </div>
 
       <Drawer id="dw-job" dataOdId="job-drawer">
@@ -327,23 +316,25 @@ export default function Jobs() {
             </div>
             <div className="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1">
               <div className="grid grid-cols-2 gap-2.5">
-                <div className="p-3 bg-surface border border-border rounded-lg shadow-xs">
+                <Card className="p-3 bg-surface border border-border rounded-lg shadow-xs">
                   <div className="text-[10px] uppercase tracking-wider font-semibold text-muted">Status</div>
                   <div id="jd-status" className="mt-1.5">
-                    <span className={`inline-flex items-center gap-1.5 h-5 px-2 text-xs font-medium rounded-full ${
-                      selected.badgeClass.includes('badge-warn') ? 'bg-warn-soft text-warn-fg' :
-                      selected.badgeClass.includes('badge-ok') ? 'bg-success-soft text-success-fg' :
-                      selected.badgeClass.includes('badge-err') ? 'bg-danger-soft text-danger-fg' :
-                      'bg-surface-inset text-foreground'
-                    }`}>
-                      <span className="w-1.5 h-1.5 rounded-full bg-current" />{selected.statusLabel}
-                    </span>
+                    <StatusBadge
+                      status={
+                        selected.badgeClass.includes('badge-warn') ? 'warn' :
+                        selected.badgeClass.includes('badge-ok') ? 'ok' :
+                        selected.badgeClass.includes('badge-err') ? 'danger' : 'neutral'
+                      }
+                      pulse={selected.badgeClass.includes('badge-run')}
+                    >
+                      {selected.statusLabel}
+                    </StatusBadge>
                   </div>
-                </div>
-                <div className="p-3 bg-surface border border-border rounded-lg shadow-xs">
+                </Card>
+                <Card className="p-3 bg-surface border border-border rounded-lg shadow-xs">
                   <div className="text-[10px] uppercase tracking-wider font-semibold text-muted">Cost so far</div>
                   <div className="font-mono text-base font-bold text-foreground mt-1" id="jd-cost">{selected.cost}</div>
-                </div>
+                </Card>
               </div>
 
               <div className="space-y-2 py-3 border-y border-border text-xs">
@@ -354,76 +345,108 @@ export default function Jobs() {
               </div>
 
               <div>
-                <div className="text-[10.5px] uppercase tracking-wider font-semibold text-muted mb-2">Step timeline</div>
-                <div id="jd-steps" className="space-y-1.5">
-                  {(JOB_STEPS[selected.id] ?? [['done', 'Run completed']]).map(([st, label]) => (
-                    <div key={label} className={`flex items-center gap-2.5 py-1 text-xs ${st === 'wait' ? 'text-muted' : 'text-foreground'}`}>
-                      <span className={`w-5 h-5 rounded-full grid place-items-center text-xs shrink-0 ${
-                        st === 'done' ? 'bg-success-soft text-success' :
-                        st === 'run' ? 'bg-accent-soft text-accent-strong animate-spin' :
-                        st === 'failed' ? 'bg-danger-soft text-danger' :
-                        'bg-surface-inset text-muted'
-                      }`}>
-                        <Icon name={STEP_ICONS[st]} className="w-3 h-3" />
-                      </span>
-                      <span>{label}</span>
-                    </div>
-                  ))}
+                <div className="text-xs font-semibold text-foreground mb-2">Execution steps</div>
+                <div className="space-y-1.5" id="jd-steps">
+                  {(JOB_STEPS[selected.id] ?? [['done', 'Run completed']]).map(([st, label], idx) => {
+                    const icon = STEP_ICONS[st];
+                    const isRun = st === 'run';
+                    const isDone = st === 'done';
+                    const isFailed = st === 'failed';
+                    return (
+                      <div key={idx} className="flex items-center gap-2.5 p-2 rounded-md bg-surface-inset text-xs">
+                        <span className={`w-5 h-5 rounded-full grid place-items-center shrink-0 ${
+                          isDone ? 'bg-success text-white' :
+                          isRun ? 'bg-warn text-warn-fg' :
+                          isFailed ? 'bg-danger text-white' :
+                          'bg-border text-muted'
+                        }`}>
+                          <Icon name={icon} style={{ width: 11, height: 11 }} className={isRun ? 'animate-spin' : ''} />
+                        </span>
+                        <span className="font-medium text-foreground flex-1 truncate">{label}</span>
+                      </div>
+                    );
+                  })}
                 </div>
+              </div>
+
+              <div className="p-3 bg-surface-inset rounded-lg text-xs space-y-1">
+                <div className="font-semibold text-foreground">Worker pod</div>
+                <div className="font-mono text-[11px] text-muted">ip-10-42-8-19.ap-south-1 · 4 vCPU · 16 GB</div>
               </div>
             </div>
 
-            <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-end gap-2 flex-wrap">
+            <div className="p-3 sm:p-4 border-t border-border flex items-center justify-between gap-2 bg-surface-inset/40">
               <button
                 type="button"
-                className="inline-flex items-center justify-center gap-1.5 h-8.5 px-3 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer"
-                id="jd-cancel"
-                onClick={() => { close(); toast('Run cancellation requested', 'x'); }}
+                className="h-8 px-3 rounded-md border border-border bg-surface hover:bg-surface-hover text-xs font-medium text-foreground transition-colors cursor-pointer"
+                onClick={() => toast(`Raw log for ${selected.id} downloaded`, 'download')}
               >
-                <Icon name="x" className="w-3.5 h-3.5 text-muted" />Cancel job
+                Download log
               </button>
-              <button
-                type="button"
-                className="inline-flex items-center justify-center gap-1.5 h-8.5 px-3 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer"
-                id="jd-logs"
-                onClick={() => toast('job-logs.zip downloading', 'download')}
-              >
-                <Icon name="download" className="w-3.5 h-3.5 text-muted" />Download logs
-              </button>
-              <button
-                type="button"
-                className="inline-flex items-center justify-center gap-1.5 h-8.5 px-3 rounded-md bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs font-medium shadow-xs transition-colors cursor-pointer"
-                id="jd-rerun"
-                onClick={() => { close(); toast('Rerun queued with the same inputs', 'sync'); }}
-              >
-                <Icon name="sync" className="w-3.5 h-3.5" />Rerun
-              </button>
+              <div className="flex items-center gap-2">
+                {selected.status === 'run' ? (
+                  <button
+                    type="button"
+                    className="h-8 px-3 rounded-md bg-danger-soft hover:bg-danger/20 text-danger-fg text-xs font-medium transition-colors cursor-pointer"
+                    id="jd-action-btn"
+                    onClick={() => {
+                      setJobs((prev) => prev.map((j) => (j.id === selected.id ? { ...j, status: 'failed', statusLabel: 'Cancelled', badgeClass: 'badge-err' } : j)));
+                      toast(`${selected.id} cancelled`, 'x');
+                      close();
+                    }}
+                  >
+                    Cancel job
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="h-8 px-3 rounded-md bg-accent-strong hover:bg-accent-hover text-white text-xs font-medium shadow-xs transition-colors cursor-pointer"
+                    id="jd-action-btn"
+                    onClick={() => {
+                      toast(`Rerun queued for ${selected.id}`, 'play');
+                      close();
+                    }}
+                  >
+                    Rerun job
+                  </button>
+                )}
+              </div>
             </div>
           </>
         )}
       </Drawer>
 
-      <Dialog id="dlg-newjob" dataOdId="newjob-dialog">
+      <Dialog id="dlg-confirm" dataOdId="confirm-dialog">
         <div className="p-5 border-b border-border">
-          <h2 className="text-base font-semibold text-foreground tracking-tight">New job</h2>
-          <p className="text-xs text-muted mt-1">Runs against an existing project. The client tag decides who the cost is billed to.</p>
+          <h2 className="text-base font-semibold text-foreground tracking-tight">Delete job record?</h2>
+          <p className="text-xs text-muted mt-1">This removes the job from the ledger. Cost tracking remains recorded under the client.</p>
+        </div>
+        <div className="p-5 text-xs text-foreground">
+          Are you sure you want to delete <strong className="font-mono">{deleteTarget?.id}</strong> ({deleteTarget?.subtitle})? This cannot be undone.
+        </div>
+        <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-end gap-2.5 rounded-b-xl">
+          <CloseButton className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer">
+            Cancel
+          </CloseButton>
+          <button
+            type="button"
+            className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md bg-danger-fg hover:opacity-90 text-white text-xs font-medium shadow-xs transition-opacity cursor-pointer"
+            id="dlg-confirm-del"
+            onClick={confirmDelete}
+          >
+            Delete job
+          </button>
+        </div>
+      </Dialog>
+
+      <Dialog id="dlg-newjob" dataOdId="new-job-dialog">
+        <div className="p-5 border-b border-border">
+          <h2 className="text-base font-semibold text-foreground tracking-tight">Start a new job</h2>
+          <p className="text-xs text-muted mt-1">Run any pipeline stage against connected interaction data.</p>
         </div>
         <div className="p-5 space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="nj-project">Project</label>
-            <select
-              className="w-full h-9 px-3 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
-              id="nj-project"
-            >
-              <option>Skyline Broadband — Winter CX Automation</option>
-              <option>Network Ops Copilot — outage triage</option>
-              <option>Escalation Playbooks refresh</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="nj-client">
-              Client <span className="text-muted font-normal">· cost tag</span>
-            </label>
+            <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="nj-client">Client</label>
             <select
               className="w-full h-9 px-3 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
               id="nj-client"
@@ -436,22 +459,36 @@ export default function Jobs() {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="nj-pipe">Pipeline</label>
+            <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="nj-pipe">Pipeline stage</label>
             <select
               className="w-full h-9 px-3 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
               id="nj-pipe"
             >
-              <option>Analysis — intents + clustering</option>
-              <option>Design — process map + UML</option>
-              <option>Develop — agent codegen</option>
+              <option>Analysis — intent extraction &amp; clustering</option>
+              <option>Design — process map &amp; UML generation</option>
+              <option>Develop — agent code generation (ADK / Bedrock)</option>
+              <option>Full pipeline (Analysis → Design → Develop)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="nj-source">Data source</label>
+            <select
+              className="w-full h-9 px-3 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+              id="nj-source"
+            >
+              <option>Genesys Cloud — last 30 days (18,442 records)</option>
+              <option>Zendesk — last 14 days (6,211 records)</option>
+              <option>Manual CSV upload</option>
             </select>
           </div>
           <div className="flex items-center justify-between p-3 border border-border rounded-lg bg-surface-inset">
             <div>
               <div className="text-xs font-semibold text-foreground">Express mode</div>
-              <div className="text-[11px] text-muted leading-tight mt-0.5">Runs intent → clustering → map → UML with no review gates.</div>
+              <div className="text-[11px] text-muted leading-tight mt-0.5">Runs all stages without pausing for manual review gates.</div>
             </div>
-            <Switch checked={express} onChange={setExpress} label="Express mode" />
+            <span data-od-id="nj-express">
+              <Switch checked={express} onCheckedChange={setExpress} aria-label="Express mode" />
+            </span>
           </div>
         </div>
         <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-end gap-2.5 rounded-b-xl">
@@ -462,32 +499,9 @@ export default function Jobs() {
             type="button"
             className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs font-medium shadow-xs transition-colors cursor-pointer"
             id="nj-start"
-            data-od-id="nj-start"
             onClick={startJob}
           >
             Start job
-          </button>
-        </div>
-      </Dialog>
-
-      <Dialog id="dlg-confirm" dataOdId="confirm-dialog">
-        <div className="p-5 border-b border-border">
-          <h2 className="text-base font-semibold text-foreground tracking-tight" id="cf-title">Delete {deleteTarget?.id ?? 'job'}?</h2>
-          <p className="text-xs text-muted mt-1 leading-relaxed" id="cf-body">
-            The job and its step timeline are removed from this list. Outputs already handed to Design or Develop are not affected. This is written to the audit log.
-          </p>
-        </div>
-        <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-end gap-2.5 rounded-b-xl">
-          <CloseButton className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-foreground text-xs font-medium transition-colors cursor-pointer">
-            Cancel
-          </CloseButton>
-          <button
-            type="button"
-            className="inline-flex items-center justify-center px-3.5 h-8.5 rounded-md bg-danger-soft hover:bg-danger-soft/80 border border-danger/30 text-danger-fg text-xs font-medium transition-colors cursor-pointer"
-            id="cf-ok"
-            onClick={confirmDelete}
-          >
-            Delete job
           </button>
         </div>
       </Dialog>

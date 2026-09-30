@@ -5,9 +5,13 @@ import { Link } from '../lib/navigation';
 import { AppShell } from '../components/AppShell';
 import { Icon } from '../components/Icon';
 import { CloseButton, Dialog, OpenButton, useOverlay } from '../components/Overlay';
-import { Switch, Tabs } from '../components/ui';
+import { Tabs } from '../components/ui';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '../components/Toast';
 import { useReveal } from '../hooks/useReveal';
+import { PageHeader, StatusBadge } from '@/components/common';
+import { Card } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const TARGETS = [
   { id: 'adk', name: 'Google ADK', desc: 'Python agents with FunctionTools, direct Vertex AI deploy.', badge: 'bg-accent-soft text-accent-strong', badgeText: 'Recommended' },
@@ -203,36 +207,35 @@ export default function Develop() {
       middleCrumb="Skyline Broadband — Winter CX"
       crumb="Develop"
       badge={
-        <span className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-semibold rounded-full bg-success-soft text-success-fg mr-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-success" />Snapshot v3 locked
-        </span>
+        <StatusBadge status="ok" className="mr-2">
+          Snapshot v3 locked
+        </StatusBadge>
       }
     >
       <div className="p-4 sm:p-6 lg:p-7 max-w-[1240px] mx-auto w-full pb-16" data-od-id="develop-page">
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground" data-od-id="page-title">Develop</h1>
-            <p className="text-xs sm:text-sm text-muted mt-1 max-w-[660px]">
-              Generate production agent code from the approved process map and UML snapshot. Pick a target runtime, review the scaffold, then deploy to staging.
-            </p>
-          </div>
-          <div className="flex items-center gap-2.5 shrink-0">
-            <button
-              type="button"
-              className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-surface hover:bg-surface-hover border border-border text-foreground text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
-              onClick={() => toast('Runtime docs open in vendor documentation (stub for demo)', 'ext')}
-            >
-              <Icon name="ext" className="w-4 h-4 text-muted" />Runtime docs
-            </button>
-            <OpenButton
-              className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
-              target="dlg-gen"
-              data-od-id="generate-btn"
-            >
-              <Icon name="bolt" className="w-4 h-4" />Generate agent build
-            </OpenButton>
-          </div>
-        </div>
+        <PageHeader
+          title="Develop"
+          description="Generate production agent code from the approved process map and UML snapshot. Pick a target runtime, review the scaffold, then deploy to staging."
+          dataOdId="page-title"
+          actions={
+            <>
+              <button
+                type="button"
+                className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-surface hover:bg-surface-hover border border-border text-foreground text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
+                onClick={() => toast('Runtime docs open in vendor documentation (stub for demo)', 'ext')}
+              >
+                <Icon name="ext" className="w-4 h-4 text-muted" />Runtime docs
+              </button>
+              <OpenButton
+                className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
+                target="dlg-gen"
+                data-od-id="generate-btn"
+              >
+                <Icon name="bolt" className="w-4 h-4" />Generate agent build
+              </OpenButton>
+            </>
+          }
+        />
 
         {/* Handoff Banner */}
         <div className="p-3.5 sm:px-4 bg-surface border border-border rounded-xl shadow-xs mb-4 flex items-center gap-3 flex-wrap" data-od-id="handoff-banner">
@@ -769,14 +772,14 @@ export default function Develop() {
               <div className="text-xs font-semibold text-foreground">Include unit tests</div>
               <div className="text-[11px] text-muted">4 scenarios incl. supervisor-token edge case.</div>
             </div>
-            <Switch checked={includeTests} onChange={setIncludeTests} />
+            <Switch checked={includeTests} onCheckedChange={setIncludeTests} aria-label="Include unit tests" />
           </div>
           <div className="flex items-center justify-between p-3 border border-border rounded-lg bg-surface-inset">
             <div>
               <div className="text-xs font-semibold text-foreground">Apply guardrails policy</div>
               <div className="text-[11px] text-muted">₹2,500 credit cap · escalate after 2 declines.</div>
             </div>
-            <Switch checked={applyGuardrails} onChange={setApplyGuardrails} />
+            <Switch checked={applyGuardrails} onCheckedChange={setApplyGuardrails} aria-label="Apply guardrails policy" />
           </div>
           <div>
             <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="gen-env">Environment</label>

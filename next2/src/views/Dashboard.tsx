@@ -4,9 +4,12 @@ import { useMemo, useState } from 'react';
 import { Link } from '../lib/navigation';
 import { AppShell } from '../components/AppShell';
 import { Icon } from '../components/Icon';
-import { Tabs } from '../components/ui';
 import { useToast } from '../components/Toast';
 import { useReveal } from '../hooks/useReveal';
+import { KpiCard, PageHeader, StatusBadge, EmptyState, SearchToolbar } from '@/components/common';
+import { Card } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 type IntentRow = {
   intent: string;
@@ -48,60 +51,81 @@ function ClusterMap() {
         <text x="98" y="62" textAnchor="middle" fontSize="12" fill="var(--color-surface)">canonical intents</text>
         <text x="98" y="80" textAnchor="middle" fontSize="11" fill="oklch(80% 0.02 250)">6 L1 · 19 L2 · 57 L3</text>
       </g>
-      <path d="M220 208 C260 208 260 35 300 35" fill="none" stroke="var(--color-border)" strokeWidth="1.5" />
-      <path d="M220 208 C260 208 260 103 300 103" fill="none" stroke="var(--color-border)" strokeWidth="1.5" />
-      <path d="M220 208 C260 208 260 171 300 171" fill="none" stroke="var(--color-border)" strokeWidth="1.5" />
-      <path d="M220 208 C260 208 260 239 300 239" fill="none" stroke="var(--color-border)" strokeWidth="1.5" />
-      <path d="M220 208 C260 208 260 307 300 307" fill="none" stroke="var(--color-border)" strokeWidth="1.5" />
-      <path d="M220 208 C260 208 260 375 300 375" fill="none" stroke="var(--color-border)" strokeWidth="1.5" />
-      <g transform="translate(300,8)">
-        <rect width="616" height="54" rx="10" fill="var(--color-surface)" stroke="var(--color-accent-strong)" strokeWidth="1.5" />
-        <text x="16" y="22" fontSize="12.5" fontWeight="580" fill="var(--color-fg)">Billing &amp; Payments</text>
-        <text x="296" y="22" fontSize="11" fill="var(--color-muted)">4 L2 · 12 L3</text>
-        <text x="600" y="22" textAnchor="end" fontSize="11.5" fill="var(--color-muted)">7,045 · 38.2%</text>
-        <rect x="16" y="32" width="584" height="6" rx="3" fill="var(--color-surface-inset)" />
-        <rect x="16" y="32" width="584" height="6" rx="3" fill="var(--color-accent-strong)" />
+      <path d="M 220 208 C 248 208, 248 50, 276 50" fill="none" stroke="var(--color-border-strong)" strokeWidth="1.5" />
+      <path d="M 220 208 C 248 208, 248 114, 276 114" fill="none" stroke="var(--color-border-strong)" strokeWidth="1.5" />
+      <path d="M 220 208 C 248 208, 248 178, 276 178" fill="none" stroke="var(--color-border-strong)" strokeWidth="1.5" />
+      <path d="M 220 208 C 248 208, 248 242, 276 242" fill="none" stroke="var(--color-border-strong)" strokeWidth="1.5" />
+      <path d="M 220 208 C 248 208, 248 306, 276 306" fill="none" stroke="var(--color-border-strong)" strokeWidth="1.5" />
+      <path d="M 220 208 C 248 208, 248 370, 276 370" fill="none" stroke="var(--color-border-strong)" strokeWidth="1.5" />
+      <g transform="translate(280,24)">
+        <rect width="636" height="52" rx="8" fill="var(--color-surface)" stroke="var(--color-border)" />
+        <rect width="4" height="52" rx="2" fill="var(--color-accent-strong)" />
+        <text x="16" y="22" fontWeight="640" fontSize="13" fill="var(--color-fg)">Billing &amp; Payments</text>
+        <text x="160" y="22" fontSize="11" fill="var(--color-muted)">86 intents</text>
+        <text x="296" y="22" fontSize="11" fill="var(--color-muted)">3 L2 · 11 L3</text>
+        <text x="620" y="22" textAnchor="end" fontSize="11.5" fontWeight="640" fill="var(--color-fg)">7,045 · 38.2%</text>
+        <rect x="16" y="32" width="604" height="6" rx="3" fill="var(--color-surface-inset)" />
+        <rect x="16" y="32" width="230.7" height="6" rx="3" fill="var(--color-accent-strong)" />
       </g>
-      <g transform="translate(300,76)">
-        <rect width="616" height="54" rx="10" fill="var(--color-surface)" stroke="var(--color-border)" strokeWidth="1" />
-        <text x="16" y="22" fontSize="12.5" fontWeight="580" fill="var(--color-fg)">Connectivity &amp; Outages</text>
-        <text x="296" y="22" fontSize="11" fill="var(--color-muted)">5 L2 · 18 L3</text>
-        <text x="600" y="22" textAnchor="end" fontSize="11.5" fill="var(--color-muted)">4,445 · 24.1%</text>
-        <rect x="16" y="32" width="584" height="6" rx="3" fill="var(--color-surface-inset)" />
-        <rect x="16" y="32" width="368.5" height="6" rx="3" fill="var(--color-accent-strong)" />
+      <g transform="translate(280,88)">
+        <rect width="636" height="52" rx="8" fill="var(--color-surface)" stroke="var(--color-border)" />
+        <rect width="4" height="52" rx="2" fill="var(--color-accent-strong)" />
+        <text x="16" y="22" fontWeight="640" fontSize="13" fill="var(--color-fg)">Connectivity &amp; Outages</text>
+        <text x="180" y="22" fontSize="11" fill="var(--color-muted)">74 intents</text>
+        <text x="296" y="22" fontSize="11" fill="var(--color-muted)">4 L2 · 14 L3</text>
+        <text x="620" y="22" textAnchor="end" fontSize="11.5" fontWeight="640" fill="var(--color-fg)">4,445 · 24.1%</text>
+        <rect x="16" y="32" width="604" height="6" rx="3" fill="var(--color-surface-inset)" />
+        <rect x="16" y="32" width="145.6" height="6" rx="3" fill="var(--color-accent-strong)" />
       </g>
-      <g transform="translate(300,144)">
-        <rect width="616" height="54" rx="10" fill="var(--color-surface)" stroke="var(--color-border)" strokeWidth="1" />
-        <text x="16" y="22" fontSize="12.5" fontWeight="580" fill="var(--color-fg)">New Installation &amp; Provisioning</text>
+      <g transform="translate(280,152)">
+        <rect width="636" height="52" rx="8" fill="var(--color-surface)" stroke="var(--color-border)" />
+        <text x="16" y="22" fontWeight="640" fontSize="13" fill="var(--color-fg)">New Installation</text>
+        <text x="144" y="22" fontSize="11" fill="var(--color-muted)">41 intents</text>
         <text x="296" y="22" fontSize="11" fill="var(--color-muted)">3 L2 · 9 L3</text>
-        <text x="600" y="22" textAnchor="end" fontSize="11.5" fill="var(--color-muted)">2,545 · 13.8%</text>
-        <rect x="16" y="32" width="584" height="6" rx="3" fill="var(--color-surface-inset)" />
-        <rect x="16" y="32" width="211" height="6" rx="3" fill="var(--color-accent-strong)" />
+        <text x="620" y="22" textAnchor="end" fontSize="11.5" fill="var(--color-muted)">2,545 · 13.8%</text>
+        <rect x="16" y="32" width="604" height="6" rx="3" fill="var(--color-surface-inset)" />
+        <rect x="16" y="32" width="83.4" height="6" rx="3" fill="var(--color-accent-strong)" />
       </g>
-      <g transform="translate(300,212)">
-        <rect width="616" height="54" rx="10" fill="var(--color-surface)" stroke="var(--color-border)" strokeWidth="1" />
-        <text x="16" y="22" fontSize="12.5" fontWeight="580" fill="var(--color-fg)">Plan Changes &amp; Upgrades</text>
-        <text x="296" y="22" fontSize="11" fill="var(--color-muted)">3 L2 · 7 L3</text>
-        <text x="600" y="22" textAnchor="end" fontSize="11.5" fill="var(--color-muted)">1,697 · 9.2%</text>
-        <rect x="16" y="32" width="584" height="6" rx="3" fill="var(--color-surface-inset)" />
-        <rect x="16" y="32" width="140.6" height="6" rx="3" fill="var(--color-accent-strong)" />
+      <g transform="translate(280,216)">
+        <rect width="636" height="52" rx="8" fill="var(--color-surface)" stroke="var(--color-border)" />
+        <text x="16" y="22" fontWeight="640" fontSize="13" fill="var(--color-fg)">Plan Changes</text>
+        <text x="124" y="22" fontSize="11" fill="var(--color-muted)">38 intents</text>
+        <text x="296" y="22" fontSize="11" fill="var(--color-muted)">4 L2 · 10 L3</text>
+        <text x="620" y="22" textAnchor="end" fontSize="11.5" fill="var(--color-muted)">1,697 · 9.2%</text>
+        <rect x="16" y="32" width="604" height="6" rx="3" fill="var(--color-surface-inset)" />
+        <rect x="16" y="32" width="55.6" height="6" rx="3" fill="var(--color-accent-strong)" />
       </g>
-      <g transform="translate(300,280)">
-        <rect width="616" height="54" rx="10" fill="var(--color-surface)" stroke="var(--color-border)" strokeWidth="1" />
-        <text x="16" y="22" fontSize="12.5" fontWeight="580" fill="var(--color-fg)">Cancellation &amp; Port-out</text>
-        <text x="296" y="22" fontSize="11" fill="var(--color-muted)">2 L2 · 6 L3</text>
-        <text x="600" y="22" textAnchor="end" fontSize="11.5" fill="var(--color-muted)">1,550 · 8.4%</text>
-        <rect x="16" y="32" width="584" height="6" rx="3" fill="var(--color-surface-inset)" />
-        <rect x="16" y="32" width="128.4" height="6" rx="3" fill="var(--color-accent-strong)" />
+      <g transform="translate(280,280)">
+        <rect width="636" height="52" rx="8" fill="var(--color-surface)" stroke="var(--color-border)" />
+        <text x="16" y="22" fontWeight="640" fontSize="13" fill="var(--color-fg)">Cancellation &amp; Port-out</text>
+        <text x="180" y="22" fontSize="11" fill="var(--color-muted)">27 intents</text>
+        <text x="296" y="22" fontSize="11" fill="var(--color-muted)">3 L2 · 8 L3</text>
+        <text x="620" y="22" textAnchor="end" fontSize="11.5" fill="var(--color-muted)">1,550 · 8.4%</text>
+        <rect x="16" y="32" width="604" height="6" rx="3" fill="var(--color-surface-inset)" />
+        <rect x="16" y="32" width="50.7" height="6" rx="3" fill="var(--color-accent-strong)" />
       </g>
-      <g transform="translate(300,348)">
-        <rect width="616" height="54" rx="10" fill="var(--color-surface)" stroke="var(--color-border)" strokeWidth="1" />
-        <text x="16" y="22" fontSize="12.5" fontWeight="580" fill="var(--color-fg)">Account &amp; Identity</text>
+      <g transform="translate(280,344)">
+        <rect width="636" height="52" rx="8" fill="var(--color-surface)" stroke="var(--color-border)" />
+        <text x="16" y="22" fontWeight="640" fontSize="13" fill="var(--color-fg)">Account &amp; Identity</text>
+        <text x="156" y="22" fontSize="11" fill="var(--color-muted)">20 intents</text>
         <text x="296" y="22" fontSize="11" fill="var(--color-muted)">2 L2 · 5 L3</text>
-        <text x="600" y="22" textAnchor="end" fontSize="11.5" fill="var(--color-muted)">1,160 · 6.3%</text>
-        <rect x="16" y="32" width="584" height="6" rx="3" fill="var(--color-surface-inset)" />
-        <rect x="16" y="32" width="96.3" height="6" rx="3" fill="var(--color-accent-strong)" />
+        <text x="620" y="22" textAnchor="end" fontSize="11.5" fill="var(--color-muted)">1,160 · 6.3%</text>
+        <rect x="16" y="32" width="604" height="6" rx="3" fill="var(--color-surface-inset)" />
+        <rect x="16" y="32" width="38.1" height="6" rx="3" fill="var(--color-accent-strong)" />
       </g>
+    </svg>
+  );
+}
+
+function DistributionSvg() {
+  return (
+    <svg className="w-full h-8 block" viewBox="0 0 600 32" preserveAspectRatio="none">
+      <rect x="0" y="4" width="229.2" height="24" rx="4" fill="var(--color-accent-strong)" />
+      <rect x="231.2" y="4" width="144.6" height="24" fill="var(--color-accent-hover)" />
+      <rect x="377.8" y="4" width="82.8" height="24" fill="var(--color-accent-active)" />
+      <rect x="462.6" y="4" width="55.2" height="24" fill="var(--color-border-strong)" />
+      <rect x="519.8" y="4" width="50.4" height="24" fill="var(--color-muted)" />
+      <rect x="572.2" y="4" width="27.8" height="24" rx="4" fill="var(--color-surface-inset)" stroke="var(--color-border)" />
     </svg>
   );
 }
@@ -153,22 +177,17 @@ export default function Dashboard() {
   };
 
   const intentsPanel = (
-    <div data-od-id="panel-d-intents" className="mt-4">
-      <div className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden">
+    <div data-od-id="panel-d-intents">
+      <Card className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden p-0 gap-0">
         <div className="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <h3 className="text-sm font-semibold text-foreground">Intent ledger</h3>
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="relative">
-              <Icon name="search" className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted pointer-events-none" />
-              <input
-                className="h-8 pl-8 pr-3 w-[180px] sm:w-[190px] bg-surface-inset border border-border rounded-md text-xs text-foreground placeholder:text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
-                id="d-search"
-                placeholder="Search intent"
-                aria-label="Search intents"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
+          <SearchToolbar
+            query={search}
+            onQueryChange={setSearch}
+            placeholder="Search intent"
+            count={filtered.length}
+            countLabel="shown"
+          >
             <select
               className="h-8 px-2.5 bg-surface-inset border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
               id="d-l1"
@@ -202,236 +221,248 @@ export default function Dashboard() {
               <option value="40">Escalation ≥ 40%</option>
               <option value="20">Escalation ≥ 20%</option>
             </select>
-            <span className="text-xs text-muted whitespace-nowrap pl-1">
-              <span id="d-count" className="font-semibold text-foreground">{filtered.length}</span> shown
-            </span>
-          </div>
+          </SearchToolbar>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm border-collapse min-w-[720px]" id="d-table">
-            <thead className="bg-surface border-b border-border">
-              <tr className="text-[11px] font-semibold uppercase tracking-wider text-muted">
-                <th className="px-4 py-2.5">Intent</th>
-                <th className="px-4 py-2.5">L1 cluster</th>
-                <th
-                  className={`px-4 py-2.5 text-right cursor-pointer hover:text-foreground transition-colors select-none ${sortKey === 'vol' ? 'text-foreground' : ''}`}
-                  role="button"
-                  tabIndex={0}
-                  data-sort="vol"
-                  data-od-id="sort-vol"
-                  onClick={() => doSort('vol')}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doSort('vol'); } }}
-                >
-                  Volume <span className="text-[10px] ml-0.5">{sortArc('vol')}</span>
-                </th>
-                <th
-                  className={`px-4 py-2.5 text-right cursor-pointer hover:text-foreground transition-colors select-none ${sortKey === 'conf' ? 'text-foreground' : ''}`}
-                  role="button"
-                  tabIndex={0}
-                  data-sort="conf"
-                  data-od-id="sort-conf"
-                  onClick={() => doSort('conf')}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doSort('conf'); } }}
-                >
-                  Conf. <span className="text-[10px] ml-0.5">{sortArc('conf')}</span>
-                </th>
-                <th
-                  className={`px-4 py-2.5 text-right cursor-pointer hover:text-foreground transition-colors select-none ${sortKey === 'esc' ? 'text-foreground' : ''}`}
-                  role="button"
-                  tabIndex={0}
-                  data-sort="esc"
-                  data-od-id="sort-esc"
-                  onClick={() => doSort('esc')}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doSort('esc'); } }}
-                >
-                  Escalation <span className="text-[10px] ml-0.5">{sortArc('esc')}</span>
-                </th>
-                <th className="px-4 py-2.5">Status</th>
-              </tr>
-            </thead>
-            <tbody id="d-body" className="divide-y divide-border">
-              {filtered.map((r) => (
-                <tr key={r.intent} className="hover:bg-surface-hover/70 transition-colors" data-l1={r.l1} data-conf={r.conf} data-vol={r.vol} data-esc={r.esc}>
-                  <td className="px-4 py-3 font-medium text-foreground text-xs sm:text-sm">{r.intent}</td>
-                  <td className="px-4 py-3 text-muted text-xs sm:text-sm">{r.l1}</td>
-                  <td className="px-4 py-3 text-right font-mono text-xs text-foreground">{r.vol.toLocaleString()}</td>
-                  <td className="px-4 py-3 text-right font-mono text-xs text-foreground">{r.conf.toFixed(2)}</td>
-                  <td className="px-4 py-3 text-right font-mono text-xs text-foreground">{r.esc}%</td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-flex items-center gap-1.5 h-5.5 px-2 text-xs font-medium rounded-full ${r.status.badge}`}>
-                      <span className="w-1.5 h-1.5 rounded-full bg-current" />
+        <Table id="d-table" className="min-w-[720px]">
+          <TableHeader className="bg-surface border-b border-border">
+            <TableRow className="text-[11px] font-semibold uppercase tracking-wider text-muted hover:bg-transparent">
+              <TableHead className="px-4 py-2.5 text-muted">Intent</TableHead>
+              <TableHead className="px-4 py-2.5 text-muted">L1 cluster</TableHead>
+              <TableHead
+                className={`px-4 py-2.5 text-right cursor-pointer hover:text-foreground transition-colors select-none ${sortKey === 'vol' ? 'text-foreground' : 'text-muted'}`}
+                role="button"
+                tabIndex={0}
+                data-sort="vol"
+                data-od-id="sort-vol"
+                onClick={() => doSort('vol')}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doSort('vol'); } }}
+              >
+                Volume <span className="text-[10px] ml-0.5">{sortArc('vol')}</span>
+              </TableHead>
+              <TableHead
+                className={`px-4 py-2.5 text-right cursor-pointer hover:text-foreground transition-colors select-none ${sortKey === 'conf' ? 'text-foreground' : 'text-muted'}`}
+                role="button"
+                tabIndex={0}
+                data-sort="conf"
+                data-od-id="sort-conf"
+                onClick={() => doSort('conf')}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doSort('conf'); } }}
+              >
+                Conf. <span className="text-[10px] ml-0.5">{sortArc('conf')}</span>
+              </TableHead>
+              <TableHead
+                className={`px-4 py-2.5 text-right cursor-pointer hover:text-foreground transition-colors select-none ${sortKey === 'esc' ? 'text-foreground' : 'text-muted'}`}
+                role="button"
+                tabIndex={0}
+                data-sort="esc"
+                data-od-id="sort-esc"
+                onClick={() => doSort('esc')}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doSort('esc'); } }}
+              >
+                Escalation <span className="text-[10px] ml-0.5">{sortArc('esc')}</span>
+              </TableHead>
+              <TableHead className="px-4 py-2.5 text-muted">Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody id="d-body" className="divide-y divide-border">
+            {filtered.map((r) => {
+              const isOk = r.status.badge.includes('bg-success');
+              const isWarn = r.status.badge.includes('bg-warn');
+              const isAcc = r.status.badge.includes('bg-accent');
+              const statusType = isOk ? 'ok' : isWarn ? 'warn' : isAcc ? 'accent' : 'neutral';
+
+              return (
+                <TableRow key={r.intent} className="hover:bg-surface-hover/70 transition-colors" data-l1={r.l1} data-conf={r.conf} data-vol={r.vol} data-esc={r.esc}>
+                  <TableCell className="px-4 py-3 font-medium text-foreground text-xs sm:text-sm">{r.intent}</TableCell>
+                  <TableCell className="px-4 py-3 text-muted text-xs sm:text-sm">{r.l1}</TableCell>
+                  <TableCell className="px-4 py-3 text-right font-mono text-xs text-foreground">{r.vol.toLocaleString()}</TableCell>
+                  <TableCell className="px-4 py-3 text-right font-mono text-xs text-foreground">{r.conf.toFixed(2)}</TableCell>
+                  <TableCell className="px-4 py-3 text-right font-mono text-xs text-foreground">{r.esc}%</TableCell>
+                  <TableCell className="px-4 py-3">
+                    <StatusBadge status={statusType}>
                       {r.status.label}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    </StatusBadge>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
 
         {filtered.length === 0 && (
-          <div className="p-12 text-center text-muted text-xs sm:text-sm flex flex-col items-center justify-center gap-2" id="d-empty">
-            <Icon name="filter" className="w-6 h-6 text-muted mb-1" />
-            <span>No intents match these filters.</span>
-            <button
-              type="button"
-              className="mt-2 h-7.5 px-3 rounded-md border border-border bg-surface hover:bg-surface-hover text-xs font-medium text-foreground transition-colors cursor-pointer"
-              id="d-reset"
-              onClick={resetFilters}
-            >
-              Reset filters
-            </button>
-          </div>
+          <EmptyState
+            icon="filter"
+            title="No intents match these filters."
+            dataOdId="d-empty"
+            action={
+              <button
+                type="button"
+                className="mt-2 h-7.5 px-3 rounded-md border border-border bg-surface hover:bg-surface-hover text-xs font-medium text-foreground transition-colors cursor-pointer"
+                id="d-reset"
+                onClick={resetFilters}
+              >
+                Reset filters
+              </button>
+            }
+          />
         )}
-      </div>
+      </Card>
     </div>
   );
 
   const clustersPanel = (
-    <div data-od-id="panel-d-clusters" className="mt-4">
+    <div data-od-id="panel-d-clusters" className="space-y-4">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-        <div className="p-4 sm:p-5 bg-surface border border-border rounded-xl shadow-xs" data-od-id="dash-cluster-map">
+        <Card className="p-4 sm:p-5 bg-surface border border-border rounded-xl shadow-xs" data-od-id="dash-cluster-map">
           <div className="pb-3 border-b border-border">
-            <h3 className="text-sm font-semibold text-foreground">Cluster shape</h3>
+            <h3 className="text-sm font-semibold text-foreground">Cluster hierarchy</h3>
+            <p className="text-xs text-muted mt-0.5">286 canonical intents grouped into six L1 clusters sized by volume.</p>
           </div>
-          <div className="overflow-x-auto py-2 scrollbar-none">
+          <div className="pt-3 overflow-x-auto">
             <ClusterMap />
           </div>
-          <p className="text-xs text-muted mt-2">
-            Bar width is proportional to each L1 cluster&apos;s share of the 18,442 labelled records.
-          </p>
-        </div>
+        </Card>
 
-        <div className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden">
-          <div className="p-4 border-b border-border">
-            <h3 className="text-sm font-semibold text-foreground">L1 → L2 → L3 breakdown</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm border-collapse min-w-[420px]">
-              <thead className="bg-surface border-b border-border">
-                <tr className="text-[11px] font-semibold uppercase tracking-wider text-muted">
-                  <th className="px-4 py-2.5">Cluster</th>
-                  <th className="px-4 py-2.5 text-right">Intents</th>
-                  <th className="px-4 py-2.5 text-right">Volume</th>
-                  <th className="px-4 py-2.5 text-right">Share</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                <tr className="hover:bg-surface-hover/70 transition-colors bg-surface">
-                  <td className="px-4 py-2.5 font-semibold text-foreground text-xs sm:text-sm">
+        <div className="space-y-4">
+          <Card className="p-4 sm:p-5 bg-surface border border-border rounded-xl shadow-xs" data-od-id="dash-cluster-distribution">
+            <h3 className="text-sm font-semibold text-foreground mb-1">Volume share</h3>
+            <div className="mt-3">
+              <DistributionSvg />
+            </div>
+            <p className="text-xs text-muted mt-2">
+              Bar width is proportional to each L1 cluster&apos;s share of the 18,442 labelled records.
+            </p>
+          </Card>
+
+          <Card className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden p-0 gap-0">
+            <div className="p-4 border-b border-border">
+              <h3 className="text-sm font-semibold text-foreground">L1 → L2 → L3 breakdown</h3>
+            </div>
+            <Table className="min-w-[420px]">
+              <TableHeader className="bg-surface border-b border-border">
+                <TableRow className="text-[11px] font-semibold uppercase tracking-wider text-muted hover:bg-transparent">
+                  <TableHead className="px-4 py-2.5 text-muted">Cluster</TableHead>
+                  <TableHead className="px-4 py-2.5 text-right text-muted">Intents</TableHead>
+                  <TableHead className="px-4 py-2.5 text-right text-muted">Volume</TableHead>
+                  <TableHead className="px-4 py-2.5 text-right text-muted">Share</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-border">
+                <TableRow className="hover:bg-surface-hover/70 transition-colors bg-surface">
+                  <TableCell className="px-4 py-2.5 font-semibold text-foreground text-xs sm:text-sm">
                     Billing &amp; Payments <span className="ml-1 text-[10px] font-semibold tracking-wider uppercase text-muted bg-surface-inset px-1.5 py-0.5 rounded">L1</span>
-                  </td>
-                  <td className="px-4 py-2.5 text-right font-mono text-xs">86</td>
-                  <td className="px-4 py-2.5 text-right font-mono text-xs">7,045</td>
-                  <td className="px-4 py-2.5 text-right font-mono text-xs font-semibold">38.2%</td>
-                </tr>
-                <tr className="hover:bg-surface-hover/70 transition-colors">
-                  <td className="px-4 py-2 pl-8 text-foreground text-xs font-medium">
+                  </TableCell>
+                  <TableCell className="px-4 py-2.5 text-right font-mono text-xs">86</TableCell>
+                  <TableCell className="px-4 py-2.5 text-right font-mono text-xs">7,045</TableCell>
+                  <TableCell className="px-4 py-2.5 text-right font-mono text-xs font-semibold">38.2%</TableCell>
+                </TableRow>
+                <TableRow className="hover:bg-surface-hover/70 transition-colors">
+                  <TableCell className="px-4 py-2 pl-8 text-foreground text-xs font-medium">
                     Invoice Disputes <span className="ml-1 text-[10px] font-semibold tracking-wider uppercase text-muted bg-surface-inset px-1.5 py-0.5 rounded">L2</span>
-                  </td>
-                  <td className="px-4 py-2 text-right font-mono text-xs text-muted">34</td>
-                  <td className="px-4 py-2 text-right font-mono text-xs text-muted">2,847</td>
-                  <td className="px-4 py-2 text-right font-mono text-xs text-muted">15.4%</td>
-                </tr>
-                <tr className="hover:bg-surface-hover/70 transition-colors">
-                  <td className="px-4 py-1.5 pl-14 text-muted text-xs">
+                  </TableCell>
+                  <TableCell className="px-4 py-2 text-right font-mono text-xs text-muted">34</TableCell>
+                  <TableCell className="px-4 py-2 text-right font-mono text-xs text-muted">2,847</TableCell>
+                  <TableCell className="px-4 py-2 text-right font-mono text-xs text-muted">15.4%</TableCell>
+                </TableRow>
+                <TableRow className="hover:bg-surface-hover/70 transition-colors">
+                  <TableCell className="px-4 py-1.5 pl-14 text-muted text-xs">
                     Charged for cancelled line <span className="ml-1 text-[10px] font-semibold tracking-wider uppercase text-muted/70 bg-surface-inset px-1 py-0.5 rounded">L3</span>
-                  </td>
-                  <td className="px-4 py-1.5 text-right font-mono text-xs text-muted">—</td>
-                  <td className="px-4 py-1.5 text-right font-mono text-xs text-muted">1,842</td>
-                  <td className="px-4 py-1.5 text-right font-mono text-xs text-muted">10.0%</td>
-                </tr>
-                <tr className="hover:bg-surface-hover/70 transition-colors">
-                  <td className="px-4 py-1.5 pl-14 text-muted text-xs">
+                  </TableCell>
+                  <TableCell className="px-4 py-1.5 text-right font-mono text-xs text-muted">—</TableCell>
+                  <TableCell className="px-4 py-1.5 text-right font-mono text-xs text-muted">1,842</TableCell>
+                  <TableCell className="px-4 py-1.5 text-right font-mono text-xs text-muted">10.0%</TableCell>
+                </TableRow>
+                <TableRow className="hover:bg-surface-hover/70 transition-colors">
+                  <TableCell className="px-4 py-1.5 pl-14 text-muted text-xs">
                     Promotional credit missing <span className="ml-1 text-[10px] font-semibold tracking-wider uppercase text-muted/70 bg-surface-inset px-1 py-0.5 rounded">L3</span>
-                  </td>
-                  <td className="px-4 py-1.5 text-right font-mono text-xs text-muted">—</td>
-                  <td className="px-4 py-1.5 text-right font-mono text-xs text-muted">641</td>
-                  <td className="px-4 py-1.5 text-right font-mono text-xs text-muted">3.5%</td>
-                </tr>
-                <tr className="hover:bg-surface-hover/70 transition-colors">
-                  <td className="px-4 py-2 pl-8 text-foreground text-xs font-medium">
+                  </TableCell>
+                  <TableCell className="px-4 py-1.5 text-right font-mono text-xs text-muted">—</TableCell>
+                  <TableCell className="px-4 py-1.5 text-right font-mono text-xs text-muted">641</TableCell>
+                  <TableCell className="px-4 py-1.5 text-right font-mono text-xs text-muted">3.5%</TableCell>
+                </TableRow>
+                <TableRow className="hover:bg-surface-hover/70 transition-colors">
+                  <TableCell className="px-4 py-2 pl-8 text-foreground text-xs font-medium">
                     Late fees &amp; credits <span className="ml-1 text-[10px] font-semibold tracking-wider uppercase text-muted bg-surface-inset px-1.5 py-0.5 rounded">L2</span>
-                  </td>
-                  <td className="px-4 py-2 text-right font-mono text-xs text-muted">21</td>
-                  <td className="px-4 py-2 text-right font-mono text-xs text-muted">1,206</td>
-                  <td className="px-4 py-2 text-right font-mono text-xs text-muted">6.5%</td>
-                </tr>
-                <tr className="hover:bg-surface-hover/70 transition-colors">
-                  <td className="px-4 py-2 pl-8 text-foreground text-xs font-medium">
+                  </TableCell>
+                  <TableCell className="px-4 py-2 text-right font-mono text-xs text-muted">21</TableCell>
+                  <TableCell className="px-4 py-2 text-right font-mono text-xs text-muted">1,206</TableCell>
+                  <TableCell className="px-4 py-2 text-right font-mono text-xs text-muted">6.5%</TableCell>
+                </TableRow>
+                <TableRow className="hover:bg-surface-hover/70 transition-colors">
+                  <TableCell className="px-4 py-2 pl-8 text-foreground text-xs font-medium">
                     Auto-pay failures <span className="ml-1 text-[10px] font-semibold tracking-wider uppercase text-muted bg-surface-inset px-1.5 py-0.5 rounded">L2</span>
-                  </td>
-                  <td className="px-4 py-2 text-right font-mono text-xs text-muted">18</td>
-                  <td className="px-4 py-2 text-right font-mono text-xs text-muted">1,033</td>
-                  <td className="px-4 py-2 text-right font-mono text-xs text-muted">5.6%</td>
-                </tr>
-                <tr className="hover:bg-surface-hover/70 transition-colors bg-surface">
-                  <td className="px-4 py-2.5 font-semibold text-foreground text-xs sm:text-sm">
+                  </TableCell>
+                  <TableCell className="px-4 py-2 text-right font-mono text-xs text-muted">18</TableCell>
+                  <TableCell className="px-4 py-2 text-right font-mono text-xs text-muted">1,033</TableCell>
+                  <TableCell className="px-4 py-2 text-right font-mono text-xs text-muted">5.6%</TableCell>
+                </TableRow>
+                <TableRow className="hover:bg-surface-hover/70 transition-colors bg-surface">
+                  <TableCell className="px-4 py-2.5 font-semibold text-foreground text-xs sm:text-sm">
                     Connectivity &amp; Outages <span className="ml-1 text-[10px] font-semibold tracking-wider uppercase text-muted bg-surface-inset px-1.5 py-0.5 rounded">L1</span>
-                  </td>
-                  <td className="px-4 py-2.5 text-right font-mono text-xs">74</td>
-                  <td className="px-4 py-2.5 text-right font-mono text-xs">4,445</td>
-                  <td className="px-4 py-2.5 text-right font-mono text-xs font-semibold">24.1%</td>
-                </tr>
-                <tr className="hover:bg-surface-hover/70 transition-colors">
-                  <td className="px-4 py-2 pl-8 text-foreground text-xs font-medium">
+                  </TableCell>
+                  <TableCell className="px-4 py-2.5 text-right font-mono text-xs">74</TableCell>
+                  <TableCell className="px-4 py-2.5 text-right font-mono text-xs">4,445</TableCell>
+                  <TableCell className="px-4 py-2.5 text-right font-mono text-xs font-semibold">24.1%</TableCell>
+                </TableRow>
+                <TableRow className="hover:bg-surface-hover/70 transition-colors">
+                  <TableCell className="px-4 py-2 pl-8 text-foreground text-xs font-medium">
                     NOIA / area outage <span className="ml-1 text-[10px] font-semibold tracking-wider uppercase text-muted bg-surface-inset px-1.5 py-0.5 rounded">L2</span>
-                  </td>
-                  <td className="px-4 py-2 text-right font-mono text-xs text-muted">29</td>
-                  <td className="px-4 py-2 text-right font-mono text-xs text-muted">2,104</td>
-                  <td className="px-4 py-2 text-right font-mono text-xs text-muted">11.4%</td>
-                </tr>
-                <tr className="hover:bg-surface-hover/70 transition-colors bg-surface">
-                  <td className="px-4 py-2.5 font-semibold text-foreground text-xs sm:text-sm">
+                  </TableCell>
+                  <TableCell className="px-4 py-2 text-right font-mono text-xs text-muted">29</TableCell>
+                  <TableCell className="px-4 py-2 text-right font-mono text-xs text-muted">2,104</TableCell>
+                  <TableCell className="px-4 py-2 text-right font-mono text-xs text-muted">11.4%</TableCell>
+                </TableRow>
+                <TableRow className="hover:bg-surface-hover/70 transition-colors bg-surface">
+                  <TableCell className="px-4 py-2.5 font-semibold text-foreground text-xs sm:text-sm">
                     New Installation <span className="ml-1 text-[10px] font-semibold tracking-wider uppercase text-muted bg-surface-inset px-1.5 py-0.5 rounded">L1</span>
-                  </td>
-                  <td className="px-4 py-2.5 text-right font-mono text-xs">41</td>
-                  <td className="px-4 py-2.5 text-right font-mono text-xs">2,545</td>
-                  <td className="px-4 py-2.5 text-right font-mono text-xs font-semibold">13.8%</td>
-                </tr>
-                <tr className="hover:bg-surface-hover/70 transition-colors bg-surface">
-                  <td className="px-4 py-2.5 font-semibold text-foreground text-xs sm:text-sm">
+                  </TableCell>
+                  <TableCell className="px-4 py-2.5 text-right font-mono text-xs">41</TableCell>
+                  <TableCell className="px-4 py-2.5 text-right font-mono text-xs">2,545</TableCell>
+                  <TableCell className="px-4 py-2.5 text-right font-mono text-xs font-semibold">13.8%</TableCell>
+                </TableRow>
+                <TableRow className="hover:bg-surface-hover/70 transition-colors bg-surface">
+                  <TableCell className="px-4 py-2.5 font-semibold text-foreground text-xs sm:text-sm">
                     Plan Changes <span className="ml-1 text-[10px] font-semibold tracking-wider uppercase text-muted bg-surface-inset px-1.5 py-0.5 rounded">L1</span>
-                  </td>
-                  <td className="px-4 py-2.5 text-right font-mono text-xs">38</td>
-                  <td className="px-4 py-2.5 text-right font-mono text-xs">1,697</td>
-                  <td className="px-4 py-2.5 text-right font-mono text-xs font-semibold">9.2%</td>
-                </tr>
-                <tr className="hover:bg-surface-hover/70 transition-colors bg-surface">
-                  <td className="px-4 py-2.5 font-semibold text-foreground text-xs sm:text-sm">
+                  </TableCell>
+                  <TableCell className="px-4 py-2.5 text-right font-mono text-xs">38</TableCell>
+                  <TableCell className="px-4 py-2.5 text-right font-mono text-xs">1,697</TableCell>
+                  <TableCell className="px-4 py-2.5 text-right font-mono text-xs font-semibold">9.2%</TableCell>
+                </TableRow>
+                <TableRow className="hover:bg-surface-hover/70 transition-colors bg-surface">
+                  <TableCell className="px-4 py-2.5 font-semibold text-foreground text-xs sm:text-sm">
                     Cancellation &amp; Port-out <span className="ml-1 text-[10px] font-semibold tracking-wider uppercase text-muted bg-surface-inset px-1.5 py-0.5 rounded">L1</span>
-                  </td>
-                  <td className="px-4 py-2.5 text-right font-mono text-xs">27</td>
-                  <td className="px-4 py-2.5 text-right font-mono text-xs">1,550</td>
-                  <td className="px-4 py-2.5 text-right font-mono text-xs font-semibold">8.4%</td>
-                </tr>
-                <tr className="hover:bg-surface-hover/70 transition-colors bg-surface">
-                  <td className="px-4 py-2.5 font-semibold text-foreground text-xs sm:text-sm">
+                  </TableCell>
+                  <TableCell className="px-4 py-2.5 text-right font-mono text-xs">27</TableCell>
+                  <TableCell className="px-4 py-2.5 text-right font-mono text-xs">1,550</TableCell>
+                  <TableCell className="px-4 py-2.5 text-right font-mono text-xs font-semibold">8.4%</TableCell>
+                </TableRow>
+                <TableRow className="hover:bg-surface-hover/70 transition-colors bg-surface">
+                  <TableCell className="px-4 py-2.5 font-semibold text-foreground text-xs sm:text-sm">
                     Account &amp; Identity <span className="ml-1 text-[10px] font-semibold tracking-wider uppercase text-muted bg-surface-inset px-1.5 py-0.5 rounded">L1</span>
-                  </td>
-                  <td className="px-4 py-2.5 text-right font-mono text-xs">20</td>
-                  <td className="px-4 py-2.5 text-right font-mono text-xs">1,160</td>
-                  <td className="px-4 py-2.5 text-right font-mono text-xs font-semibold">6.3%</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+                  </TableCell>
+                  <TableCell className="px-4 py-2.5 text-right font-mono text-xs">20</TableCell>
+                  <TableCell className="px-4 py-2.5 text-right font-mono text-xs">1,160</TableCell>
+                  <TableCell className="px-4 py-2.5 text-right font-mono text-xs font-semibold">6.3%</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </Card>
         </div>
       </div>
     </div>
   );
 
   const agentsPanel = (
-    <div data-od-id="panel-d-agents" className="mt-4 space-y-4">
+    <div data-od-id="panel-d-agents" className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div className="p-4 bg-surface border border-border rounded-xl shadow-xs flex flex-col gap-2.5">
+        <Card className="p-4 bg-surface border border-border rounded-xl shadow-xs flex flex-col gap-2.5">
           <div className="flex items-center gap-2">
             <Icon name="robot" className="w-5 h-5 text-foreground shrink-0" />
             <strong className="text-xs sm:text-sm font-semibold text-foreground truncate">Billing Dispute Agent</strong>
-            <span className="ml-auto inline-flex items-center gap-1.5 h-5 px-2 text-xs font-medium rounded-full bg-success-soft text-success-fg shrink-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-success" />Deployed
-            </span>
+            <StatusBadge status="ok" className="ml-auto shrink-0">
+              Deployed
+            </StatusBadge>
           </div>
           <div className="space-y-1.5 py-2 border-y border-border text-xs">
             <div className="flex justify-between items-center"><span className="text-muted">Runtime</span><span className="font-mono text-foreground">Google ADK</span></div>
@@ -442,15 +473,15 @@ export default function Dashboard() {
           <Link className="flex items-center gap-1.5 text-xs font-medium text-accent-strong hover:underline mt-auto pt-1" to="/develop">
             <Icon name="code" className="w-3.5 h-3.5" />Open in Develop<Icon name="chevr" className="w-3.5 h-3.5 ml-auto" />
           </Link>
-        </div>
+        </Card>
 
-        <div className="p-4 bg-surface border border-border rounded-xl shadow-xs flex flex-col gap-2.5">
+        <Card className="p-4 bg-surface border border-border rounded-xl shadow-xs flex flex-col gap-2.5">
           <div className="flex items-center gap-2">
             <Icon name="robot" className="w-5 h-5 text-foreground shrink-0" />
             <strong className="text-xs sm:text-sm font-semibold text-foreground truncate">Outage Triage Agent</strong>
-            <span className="ml-auto inline-flex items-center gap-1.5 h-5 px-2 text-xs font-medium rounded-full bg-success-soft text-success-fg shrink-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-success" />Deployed
-            </span>
+            <StatusBadge status="ok" className="ml-auto shrink-0">
+              Deployed
+            </StatusBadge>
           </div>
           <div className="space-y-1.5 py-2 border-y border-border text-xs">
             <div className="flex justify-between items-center"><span className="text-muted">Runtime</span><span className="font-mono text-foreground">CX Agent Studio</span></div>
@@ -461,15 +492,15 @@ export default function Dashboard() {
           <Link className="flex items-center gap-1.5 text-xs font-medium text-accent-strong hover:underline mt-auto pt-1" to="/develop">
             <Icon name="code" className="w-3.5 h-3.5" />Open in Develop<Icon name="chevr" className="w-3.5 h-3.5 ml-auto" />
           </Link>
-        </div>
+        </Card>
 
-        <div className="p-4 bg-surface border border-border rounded-xl shadow-xs flex flex-col gap-2.5">
+        <Card className="p-4 bg-surface border border-border rounded-xl shadow-xs flex flex-col gap-2.5">
           <div className="flex items-center gap-2">
             <Icon name="robot" className="w-5 h-5 text-foreground shrink-0" />
             <strong className="text-xs sm:text-sm font-semibold text-foreground truncate">Retention Save Agent</strong>
-            <span className="ml-auto inline-flex items-center gap-1.5 h-5 px-2 text-xs font-medium rounded-full bg-warn-soft text-warn-fg shrink-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-warn" />1 flaky test
-            </span>
+            <StatusBadge status="warn" className="ml-auto shrink-0">
+              1 flaky test
+            </StatusBadge>
           </div>
           <div className="space-y-1.5 py-2 border-y border-border text-xs">
             <div className="flex justify-between items-center"><span className="text-muted">Runtime</span><span className="font-mono text-foreground">LangGraph</span></div>
@@ -480,83 +511,81 @@ export default function Dashboard() {
           <Link className="flex items-center gap-1.5 text-xs font-medium text-accent-strong hover:underline mt-auto pt-1" to="/develop">
             <Icon name="code" className="w-3.5 h-3.5" />Open in Develop<Icon name="chevr" className="w-3.5 h-3.5 ml-auto" />
           </Link>
-        </div>
+        </Card>
       </div>
 
-      <div className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden">
+      <Card className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden p-0 gap-0">
         <div className="p-4 border-b border-border">
           <h3 className="text-sm font-semibold text-foreground">All builds from this run</h3>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm border-collapse min-w-[640px]">
-            <thead className="bg-surface border-b border-border">
-              <tr className="text-[11px] font-semibold uppercase tracking-wider text-muted">
-                <th className="px-4 py-2.5">Build</th>
-                <th className="px-4 py-2.5">Agent</th>
-                <th className="px-4 py-2.5">Runtime</th>
-                <th className="px-4 py-2.5">From map</th>
-                <th className="px-4 py-2.5 text-right">Tests</th>
-                <th className="px-4 py-2.5">Environment</th>
-                <th className="px-4 py-2.5">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              <tr className="hover:bg-surface-hover/70 transition-colors">
-                <td className="px-4 py-3 font-mono text-xs text-foreground">ADK-0143</td>
-                <td className="px-4 py-3 font-medium text-xs sm:text-sm text-foreground">Billing Dispute Agent</td>
-                <td className="px-4 py-3 text-xs sm:text-sm text-foreground">Google ADK</td>
-                <td className="px-4 py-3 font-mono text-xs text-muted">billing-dispute@v3</td>
-                <td className="px-4 py-3 text-right font-mono text-xs">4/4</td>
-                <td className="px-4 py-3 text-xs text-muted">staging</td>
-                <td className="px-4 py-3">
-                  <span className="inline-flex items-center gap-1.5 h-5 px-2 text-xs font-medium rounded-full bg-success-soft text-success-fg">
-                    <span className="w-1.5 h-1.5 rounded-full bg-success" />Deployed
-                  </span>
-                </td>
-              </tr>
-              <tr className="hover:bg-surface-hover/70 transition-colors">
-                <td className="px-4 py-3 font-mono text-xs text-foreground">ADK-0142</td>
-                <td className="px-4 py-3 font-medium text-xs sm:text-sm text-foreground">Billing Dispute Agent</td>
-                <td className="px-4 py-3 text-xs sm:text-sm text-foreground">Google ADK</td>
-                <td className="px-4 py-3 font-mono text-xs text-muted">billing-dispute@v2</td>
-                <td className="px-4 py-3 text-right font-mono text-xs">4/4</td>
-                <td className="px-4 py-3 text-xs text-muted">staging</td>
-                <td className="px-4 py-3">
-                  <span className="inline-flex items-center gap-1.5 h-5 px-2 text-xs font-medium rounded-full bg-success-soft text-success-fg">
-                    <span className="w-1.5 h-1.5 rounded-full bg-success" />Deployed
-                  </span>
-                </td>
-              </tr>
-              <tr className="hover:bg-surface-hover/70 transition-colors">
-                <td className="px-4 py-3 font-mono text-xs text-foreground">CXA-0031</td>
-                <td className="px-4 py-3 font-medium text-xs sm:text-sm text-foreground">Outage Triage Agent</td>
-                <td className="px-4 py-3 text-xs sm:text-sm text-foreground">CX Agent Studio</td>
-                <td className="px-4 py-3 font-mono text-xs text-muted">outage-triage@v2</td>
-                <td className="px-4 py-3 text-right font-mono text-xs">5/5</td>
-                <td className="px-4 py-3 text-xs text-muted">production</td>
-                <td className="px-4 py-3">
-                  <span className="inline-flex items-center gap-1.5 h-5 px-2 text-xs font-medium rounded-full bg-success-soft text-success-fg">
-                    <span className="w-1.5 h-1.5 rounded-full bg-success" />Deployed
-                  </span>
-                </td>
-              </tr>
-              <tr className="hover:bg-surface-hover/70 transition-colors">
-                <td className="px-4 py-3 font-mono text-xs text-foreground">BRK-0037</td>
-                <td className="px-4 py-3 font-medium text-xs sm:text-sm text-foreground">Invoice Explanation Agent</td>
-                <td className="px-4 py-3 text-xs sm:text-sm text-foreground">Amazon Bedrock</td>
-                <td className="px-4 py-3 font-mono text-xs text-muted">billing-dispute@v2</td>
-                <td className="px-4 py-3 text-right font-mono text-xs">2/4</td>
-                <td className="px-4 py-3 text-xs text-muted">—</td>
-                <td className="px-4 py-3">
-                  <span className="inline-flex items-center gap-1.5 h-5 px-2 text-xs font-medium rounded-full bg-danger-soft text-danger-fg">
-                    <span className="w-1.5 h-1.5 rounded-full bg-danger" />Failed · auth scope
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+        <Table className="min-w-[640px]">
+          <TableHeader className="bg-surface border-b border-border">
+            <TableRow className="text-[11px] font-semibold uppercase tracking-wider text-muted hover:bg-transparent">
+              <TableHead className="px-4 py-2.5 text-muted">Build</TableHead>
+              <TableHead className="px-4 py-2.5 text-muted">Agent</TableHead>
+              <TableHead className="px-4 py-2.5 text-muted">Runtime</TableHead>
+              <TableHead className="px-4 py-2.5 text-muted">From map</TableHead>
+              <TableHead className="px-4 py-2.5 text-right text-muted">Tests</TableHead>
+              <TableHead className="px-4 py-2.5 text-muted">Environment</TableHead>
+              <TableHead className="px-4 py-2.5 text-muted">Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody className="divide-y divide-border">
+            <TableRow className="hover:bg-surface-hover/70 transition-colors">
+              <TableCell className="px-4 py-3 font-mono text-xs text-foreground">ADK-0143</TableCell>
+              <TableCell className="px-4 py-3 font-medium text-xs sm:text-sm text-foreground">Billing Dispute Agent</TableCell>
+              <TableCell className="px-4 py-3 text-xs sm:text-sm text-foreground">Google ADK</TableCell>
+              <TableCell className="px-4 py-3 font-mono text-xs text-muted">billing-dispute@v3</TableCell>
+              <TableCell className="px-4 py-3 text-right font-mono text-xs">4/4</TableCell>
+              <TableCell className="px-4 py-3 text-xs text-muted">staging</TableCell>
+              <TableCell className="px-4 py-3">
+                <StatusBadge status="ok">
+                  Deployed
+                </StatusBadge>
+              </TableCell>
+            </TableRow>
+            <TableRow className="hover:bg-surface-hover/70 transition-colors">
+              <TableCell className="px-4 py-3 font-mono text-xs text-foreground">ADK-0142</TableCell>
+              <TableCell className="px-4 py-3 font-medium text-xs sm:text-sm text-foreground">Billing Dispute Agent</TableCell>
+              <TableCell className="px-4 py-3 text-xs sm:text-sm text-foreground">Google ADK</TableCell>
+              <TableCell className="px-4 py-3 font-mono text-xs text-muted">billing-dispute@v2</TableCell>
+              <TableCell className="px-4 py-3 text-right font-mono text-xs">4/4</TableCell>
+              <TableCell className="px-4 py-3 text-xs text-muted">staging</TableCell>
+              <TableCell className="px-4 py-3">
+                <StatusBadge status="ok">
+                  Deployed
+                </StatusBadge>
+              </TableCell>
+            </TableRow>
+            <TableRow className="hover:bg-surface-hover/70 transition-colors">
+              <TableCell className="px-4 py-3 font-mono text-xs text-foreground">CXA-0031</TableCell>
+              <TableCell className="px-4 py-3 font-medium text-xs sm:text-sm text-foreground">Outage Triage Agent</TableCell>
+              <TableCell className="px-4 py-3 text-xs sm:text-sm text-foreground">CX Agent Studio</TableCell>
+              <TableCell className="px-4 py-3 font-mono text-xs text-muted">outage-triage@v2</TableCell>
+              <TableCell className="px-4 py-3 text-right font-mono text-xs">5/5</TableCell>
+              <TableCell className="px-4 py-3 text-xs text-muted">production</TableCell>
+              <TableCell className="px-4 py-3">
+                <StatusBadge status="ok">
+                  Deployed
+                </StatusBadge>
+              </TableCell>
+            </TableRow>
+            <TableRow className="hover:bg-surface-hover/70 transition-colors">
+              <TableCell className="px-4 py-3 font-mono text-xs text-foreground">BRK-0037</TableCell>
+              <TableCell className="px-4 py-3 font-medium text-xs sm:text-sm text-foreground">Invoice Explanation Agent</TableCell>
+              <TableCell className="px-4 py-3 text-xs sm:text-sm text-foreground">Amazon Bedrock</TableCell>
+              <TableCell className="px-4 py-3 font-mono text-xs text-muted">billing-dispute@v2</TableCell>
+              <TableCell className="px-4 py-3 text-right font-mono text-xs">2/4</TableCell>
+              <TableCell className="px-4 py-3 text-xs text-muted">—</TableCell>
+              <TableCell className="px-4 py-3">
+                <StatusBadge status="danger">
+                  Failed · auth scope
+                </StatusBadge>
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </Card>
     </div>
   );
 
@@ -575,9 +604,9 @@ export default function Dashboard() {
         </select>
       )}
       badge={
-        <span className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-medium rounded-full bg-success-soft text-success-fg">
-          <span className="w-1.5 h-1.5 rounded-full bg-success" />Completed · 18 Jul, 14:32
-        </span>
+        <StatusBadge status="ok">
+          Completed · 18 Jul, 14:32
+        </StatusBadge>
       }
       actions={(
         <button
@@ -590,56 +619,62 @@ export default function Dashboard() {
       )}
     >
       <div className="p-4 sm:p-6 lg:p-7 max-w-[1240px] mx-auto w-full pb-16" data-od-id="dashboard-page">
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground" data-od-id="page-title">Run dashboard</h1>
-            <p className="text-xs sm:text-sm text-muted mt-1 max-w-[660px]">
-              Everything the finished run produced — 286 canonical intents, six L1 clusters with their L2 / L3 shape, and the agent builds generated from them. Filter or sort any column.
-            </p>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap shrink-0">
-            <span className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-medium rounded-full bg-surface-inset border border-border text-foreground">
-              <span className="w-1.5 h-1.5 rounded-full bg-muted" />Client · Skyline Broadband
-            </span>
-            <span className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-medium rounded-full bg-surface-inset border border-border text-foreground">
-              <span className="w-1.5 h-1.5 rounded-full bg-muted" />42 min · ₹1,284
-            </span>
-          </div>
-        </div>
+        <PageHeader
+          title="Run dashboard"
+          description="Everything the finished run produced — 286 canonical intents, six L1 clusters with their L2 / L3 shape, and the agent builds generated from them. Filter or sort any column."
+          dataOdId="page-title"
+          actions={
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-medium rounded-full bg-surface-inset border border-border text-foreground">
+                <span className="w-1.5 h-1.5 rounded-full bg-muted" />Client · Skyline Broadband
+              </span>
+              <span className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-medium rounded-full bg-surface-inset border border-border text-foreground">
+                <span className="w-1.5 h-1.5 rounded-full bg-muted" />42 min · ₹1,284
+              </span>
+            </div>
+          }
+        />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6" data-od-id="dash-kpis">
-          <div className="p-4 bg-surface border border-border rounded-xl shadow-xs flex flex-col gap-1">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">Records processed</div>
-            <div className="text-2xl font-bold tracking-tight text-foreground">18,442</div>
-            <div className="text-xs text-muted">3 sources · 24.7k events</div>
-          </div>
-          <div className="p-4 bg-surface border border-border rounded-xl shadow-xs flex flex-col gap-1">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">Canonical intents</div>
-            <div className="text-2xl font-bold tracking-tight text-foreground">286</div>
-            <div className="text-xs text-muted">3,214 raw → deduped</div>
-          </div>
-          <div className="p-4 bg-surface border border-border rounded-xl shadow-xs flex flex-col gap-1">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">L1 clusters</div>
-            <div className="text-2xl font-bold tracking-tight text-foreground">6</div>
-            <div className="text-xs text-muted">19 L2 · 57 L3 nodes</div>
-          </div>
-          <div className="p-4 bg-surface border border-border rounded-xl shadow-xs flex flex-col gap-1">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">Agent builds</div>
-            <div className="text-2xl font-bold tracking-tight text-foreground">9</div>
-            <div className="text-xs text-muted">4 runtimes · 7 deployed</div>
-          </div>
+          <KpiCard
+            label="Records processed"
+            value="18,442"
+            description="3 sources · 24.7k events"
+          />
+          <KpiCard
+            label="Canonical intents"
+            value="286"
+            description="3,214 raw → deduped"
+          />
+          <KpiCard
+            label="L1 clusters"
+            value="6"
+            description="19 L2 · 57 L3 nodes"
+          />
+          <KpiCard
+            label="Agent builds"
+            value="9"
+            description="4 runtimes · 7 deployed"
+          />
         </div>
 
         <div className="mb-4" data-od-id="dash-tabs">
-          <Tabs
-            tabs={[
-              { id: 'intents', label: <>Intents <span className="ml-1 px-1.5 py-0.5 rounded-full bg-surface-inset text-[11px] font-mono text-muted">286</span></> },
-              { id: 'clusters', label: <>Clusters <span className="ml-1 px-1.5 py-0.5 rounded-full bg-surface-inset text-[11px] font-mono text-muted">6 L1</span></> },
-              { id: 'agents', label: <>Agents <span className="ml-1 px-1.5 py-0.5 rounded-full bg-surface-inset text-[11px] font-mono text-muted">9</span></> },
-            ]}
-            panels={{ intents: intentsPanel, clusters: clustersPanel, agents: agentsPanel }}
-            defaultTab="intents"
-          />
+          <Tabs defaultValue="intents" className="w-full">
+            <TabsList variant="line" className="border-b border-border w-full justify-start rounded-none h-10 p-0 gap-4">
+              <TabsTrigger value="intents" className="h-10 px-3 border-b-2 border-transparent data-[state=active]:border-foreground rounded-none font-medium text-xs sm:text-sm">
+                Intents <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-surface-inset text-[11px] font-mono text-muted">286</span>
+              </TabsTrigger>
+              <TabsTrigger value="clusters" className="h-10 px-3 border-b-2 border-transparent data-[state=active]:border-foreground rounded-none font-medium text-xs sm:text-sm">
+                Clusters <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-surface-inset text-[11px] font-mono text-muted">6 L1</span>
+              </TabsTrigger>
+              <TabsTrigger value="agents" className="h-10 px-3 border-b-2 border-transparent data-[state=active]:border-foreground rounded-none font-medium text-xs sm:text-sm">
+                Agents <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-surface-inset text-[11px] font-mono text-muted">9</span>
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="intents" className="mt-4">{intentsPanel}</TabsContent>
+            <TabsContent value="clusters" className="mt-4">{clustersPanel}</TabsContent>
+            <TabsContent value="agents" className="mt-4">{agentsPanel}</TabsContent>
+          </Tabs>
         </div>
       </div>
     </AppShell>

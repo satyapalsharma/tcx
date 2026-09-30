@@ -6,9 +6,12 @@ import { Icon } from '../components/Icon';
 import { ProcessMapSvg } from '../components/ProcessMapSvg';
 import { UmlSequenceSvg } from '../components/UmlSequenceSvg';
 import { CloseButton, Dialog, Drawer, OpenButton, useOverlay } from '../components/Overlay';
-import { ChipGroup, Switch } from '../components/ui';
+import { ChipGroup } from '../components/ui';
 import { useToast } from '../components/Toast';
 import { useReveal } from '../hooks/useReveal';
+import { PageHeader, StatusBadge } from '@/components/common';
+import { Card } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 
 const MAPS = [
   { id: 'mi-billing', name: 'Billing Dispute Resolution', badge: 'bg-warn-soft text-warn-fg', status: 'In review', hint: 'v3 · from Invoice Disputes' },
@@ -78,44 +81,42 @@ export default function Design() {
     <AppShell
       crumb="Design"
       badge={
-        <span className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-semibold rounded-full bg-warn-soft text-warn-fg mr-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-warn animate-pulse" />
+        <StatusBadge status="warn" pulse className="mr-2">
           RUN-4821 · Analysis 68%
-        </span>
+        </StatusBadge>
       }
     >
       <div className="p-4 sm:p-6 lg:p-7 max-w-[1240px] mx-auto w-full pb-16" data-od-id="design-page">
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground" data-od-id="page-title">Design</h1>
-            <p className="text-xs sm:text-sm text-muted mt-1 max-w-[660px]">
-              Verify and edit process maps generated from approved Analysis clusters, then review the UML sequence headers before handing off to Develop.
-            </p>
-          </div>
-          <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
-            <OpenButton
-              className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-surface hover:bg-surface-hover border border-border text-foreground text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
-              target="dlg-export"
-              data-od-id="export-btn"
-            >
-              <Icon name="download" className="w-4 h-4 text-muted" />Export
-            </OpenButton>
-            <OpenButton
-              className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-surface hover:bg-surface-hover border border-border text-foreground text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
-              target="dlg-changes"
-              data-od-id="request-changes-btn"
-            >
-              <Icon name="mail" className="w-4 h-4 text-muted" />Request changes
-            </OpenButton>
-            <OpenButton
-              className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
-              target="dlg-approve"
-              data-od-id="approve-btn"
-            >
-              <Icon name="check" className="w-4 h-4" />Approve &amp; hand off
-            </OpenButton>
-          </div>
-        </div>
+        <PageHeader
+          title="Design"
+          description="Verify and edit process maps generated from approved Analysis clusters, then review the UML sequence headers before handing off to Develop."
+          dataOdId="page-title"
+          actions={
+            <>
+              <OpenButton
+                className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-surface hover:bg-surface-hover border border-border text-foreground text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
+                target="dlg-export"
+                data-od-id="export-btn"
+              >
+                <Icon name="download" className="w-4 h-4 text-muted" />Export
+              </OpenButton>
+              <OpenButton
+                className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-surface hover:bg-surface-hover border border-border text-foreground text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
+                target="dlg-changes"
+                data-od-id="request-changes-btn"
+              >
+                <Icon name="mail" className="w-4 h-4 text-muted" />Request changes
+              </OpenButton>
+              <OpenButton
+                className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer"
+                target="dlg-approve"
+                data-od-id="approve-btn"
+              >
+                <Icon name="check" className="w-4 h-4" />Approve &amp; hand off
+              </OpenButton>
+            </>
+          }
+        />
 
         {/* Upstream Strip */}
         <div className="p-3.5 sm:px-4 bg-surface border border-border rounded-xl shadow-xs mb-4 flex items-center gap-3 flex-wrap" data-od-id="upstream-strip">
@@ -506,7 +507,7 @@ export default function Design() {
               <div className="text-xs font-semibold text-foreground">Include metrics &amp; call evidence</div>
               <div className="text-[11px] text-muted">Volume, handle time and confidence columns where available.</div>
             </div>
-            <Switch checked={includeMetrics} onChange={setIncludeMetrics} label="Include metrics" />
+            <Switch checked={includeMetrics} onCheckedChange={setIncludeMetrics} aria-label="Include metrics" />
           </div>
           <div>
             <label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="export-name">File name</label>

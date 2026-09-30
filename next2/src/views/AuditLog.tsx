@@ -4,6 +4,8 @@ import { useCallback, useMemo, useState } from 'react';
 import { AppShell } from '../components/AppShell';
 import { Icon } from '../components/Icon';
 import { useToast } from '../components/Toast';
+import { PageHeader, StatusBadge, EmptyState } from '@/components/common';
+import { Card } from '@/components/ui/card';
 
 type AuditEvent = {
   id: string;
@@ -133,11 +135,11 @@ export default function AuditLog() {
     }, 700);
   };
 
-  const getSevClass = (sev?: 'ok' | 'warn' | 'act') => {
-    if (sev === 'ok') return 'bg-success-soft text-success-fg';
-    if (sev === 'warn') return 'bg-warn-soft text-warn-fg';
-    if (sev === 'act') return 'bg-accent-soft text-accent-strong';
-    return 'bg-surface-inset text-muted';
+  const getSevStatus = (sev?: 'ok' | 'warn' | 'act') => {
+    if (sev === 'ok') return 'ok';
+    if (sev === 'warn') return 'warn';
+    if (sev === 'act') return 'accent';
+    return 'neutral';
   };
 
   return (
@@ -154,23 +156,23 @@ export default function AuditLog() {
       }
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6" data-no-reveal data-od-id="audit-page">
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-4 border-b border-border">
-          <div className="flex-1">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground" data-od-id="page-title">Audit log</h1>
-            <p className="text-xs sm:text-sm text-muted mt-1 max-w-2xl leading-relaxed">
-              Every mutation across Analysis, Design, Develop, connectors and admin — who, what and when. Retention: 365 days. Exports are signed URLs valid 15 minutes.
-            </p>
-          </div>
-          <button
-            type="button"
-            className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md text-xs sm:text-sm font-medium border border-border bg-surface hover:bg-surface-hover transition-colors text-foreground shadow-xs cursor-pointer"
-            onClick={() => toast('Retention applies workspace-wide — contact admin to change', 'info')}
-          >
-            <Icon name="gear" />Retention policy
-          </button>
-        </div>
+        <PageHeader
+          title="Audit log"
+          description="Every mutation across Analysis, Design, Develop, connectors and admin — who, what and when. Retention: 365 days. Exports are signed URLs valid 15 minutes."
+          dataOdId="page-title"
+          className="pb-4 border-b border-border mb-0"
+          actions={
+            <button
+              type="button"
+              className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md text-xs sm:text-sm font-medium border border-border bg-surface hover:bg-surface-hover transition-colors text-foreground shadow-xs cursor-pointer"
+              onClick={() => toast('Retention applies workspace-wide — contact admin to change', 'info')}
+            >
+              <Icon name="gear" />Retention policy
+            </button>
+          }
+        />
 
-        <div className="bg-surface border border-border rounded-xl p-3 sm:p-4 shadow-xs" data-od-id="audit-filters">
+        <Card className="bg-surface border border-border rounded-xl p-3 sm:p-4 shadow-xs" data-od-id="audit-filters">
           <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
             <input
               className="h-9 px-3 flex-1 min-w-[200px] max-w-xs rounded-md border border-border bg-surface text-xs sm:text-sm text-foreground placeholder:text-muted/60 focus:outline-none focus:ring-1 focus:ring-accent"
@@ -253,9 +255,9 @@ export default function AuditLog() {
             <span className="flex-1" />
             <span className="text-xs text-muted font-medium"><span>{visibleCount}</span> events</span>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden divide-y divide-border/60" data-od-id="audit-events">
+        <Card className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden p-0 gap-0 divide-y divide-border/60" data-od-id="audit-events">
           {visibleRows.map((row) => (
             'type' in row ? (
               <div key={row.id} className="bg-surface-inset/60 text-muted px-4 sm:px-5 py-2 text-xs font-semibold tracking-wide uppercase" data-date={row.date}>
@@ -264,8 +266,10 @@ export default function AuditLog() {
             ) : (
               <div key={row.id} className="flex flex-col sm:flex-row sm:items-start gap-2.5 sm:gap-4 p-3.5 sm:px-5 sm:py-4 hover:bg-surface-hover/30 transition-colors" data-date={row.date}>
                 <div className="font-mono text-xs tabular-nums text-muted shrink-0 sm:w-28 pt-0.5">{row.when}</div>
-                <div className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 ${getSevClass(row.sev)}`}>
-                  <Icon name={row.icon} />
+                <div className="shrink-0">
+                  <StatusBadge status={getSevStatus(row.sev)} dot={false} className="w-7 h-7 p-0 justify-center rounded-md">
+                    <Icon name={row.icon} className="w-3.5 h-3.5" />
+                  </StatusBadge>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div
@@ -278,20 +282,23 @@ export default function AuditLog() {
             )
           ))}
           {visibleCount === 0 && (
-            <div className="flex flex-col items-center justify-center py-14 text-center text-xs text-muted p-4" data-od-id="audit-empty">
-              <Icon name="search" large className="w-4.5 h-4.5 mb-2 text-muted" />
-              <div className="font-semibold text-foreground text-sm">No events match these filters</div>
-              <div className="text-muted mt-0.5">Try a different actor, scope, date range, or search term.</div>
-              <button
-                type="button"
-                className="inline-flex items-center justify-center h-8 px-3 rounded-md text-xs font-medium border border-border bg-surface hover:bg-surface-hover text-foreground transition-colors cursor-pointer mt-3"
-                onClick={resetFilters}
-              >
-                Reset filters
-              </button>
-            </div>
+            <EmptyState
+              icon="search"
+              title="No events match these filters"
+              description="Try a different actor, scope, date range, or search term."
+              dataOdId="audit-empty"
+              action={
+                <button
+                  type="button"
+                  className="inline-flex items-center justify-center h-8 px-3 rounded-md text-xs font-medium border border-border bg-surface hover:bg-surface-hover text-foreground transition-colors cursor-pointer mt-3"
+                  onClick={resetFilters}
+                >
+                  Reset filters
+                </button>
+              }
+            />
           )}
-        </div>
+        </Card>
 
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
           <span className="text-xs text-muted font-medium">{showingHint}</span>

@@ -5,9 +5,14 @@ import { Link, useNavigate } from '../lib/navigation';
 import { AppShell } from '../components/AppShell';
 import { Icon } from '../components/Icon';
 import { CloseButton, Dialog, OpenButton, useOverlay } from '../components/Overlay';
-import { ChipGroup, Switch, useTextFilter } from '../components/ui';
+import { ChipGroup, useTextFilter } from '../components/ui';
 import { useToast } from '../components/Toast';
 import { useReveal } from '../hooks/useReveal';
+import { KpiCard, PageHeader, StatusBadge, EmptyState, SearchToolbar } from '@/components/common';
+import { Card } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Switch } from '@/components/ui/switch';
 
 type StageNode = { kind: 'live' | 'done' | 'empty' | 'dash'; label: string };
 
@@ -99,23 +104,19 @@ function StageFlow({ stages }: { stages: StageNode[] }) {
         const node = (
           <span
             key={`node-${i}`}
-            className={`inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-medium rounded-full border whitespace-nowrap transition-colors ${
-              isDone
-                ? 'border-transparent bg-success-soft text-success-fg'
-                : isLive
-                ? 'border-foreground text-foreground bg-surface font-semibold'
-                : 'border-border bg-surface text-muted'
+            className={`inline-flex items-center gap-1 h-5 px-1.5 rounded-full text-[11px] font-medium whitespace-nowrap ${
+              isLive
+                ? 'bg-foreground text-surface font-semibold shadow-xs'
+                : isDone
+                ? 'bg-surface-inset border border-border text-foreground'
+                : isDash
+                ? 'bg-transparent text-muted'
+                : 'bg-surface-inset text-muted'
             }`}
           >
-            <span
-              className={`w-3.5 h-3.5 rounded-full grid place-items-center shrink-0 ${
-                isDone ? 'bg-success text-white' : ''
-              }`}
-            >
-              {isLive && <span className="w-1.5 h-1.5 rounded-full bg-warn animate-pulse" />}
-              {isDone && <Icon name="check" style={{ width: 9, height: 9 }} />}
-            </span>
-            {isDash ? '—' : s.label}
+            {isLive && <span className="w-1.5 h-1.5 rounded-full bg-warn animate-pulse" />}
+            {isDone && <Icon name="check" className="w-2.5 h-2.5 text-success" />}
+            {s.label}
           </span>
         );
         return i === 0 ? [node] : [
@@ -156,227 +157,194 @@ export default function Projects() {
     <AppShell
       crumb="Projects"
       badge={
-        <span className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-semibold rounded-full bg-warn-soft text-warn-fg mr-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-warn animate-pulse" />
+        <StatusBadge status="warn" pulse className="mr-2">
           RUN-4821 · clustering 68%
-        </span>
+        </StatusBadge>
       }
     >
       <div className="p-4 sm:p-6 lg:p-7 max-w-[1240px] mx-auto w-full pb-16" data-od-id="projects-page">
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground" data-od-id="page-title">Projects</h1>
-            <p className="text-xs sm:text-sm text-muted mt-1 max-w-[660px]">
-              Each project is one CX transformation. Teams pick up the pipeline at the stage they own — Analysis, Design, or Develop — and build on approved work from the last stage.
-            </p>
-          </div>
-          <OpenButton
-            className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer shrink-0"
-            target="dlg-new-project"
-            data-od-id="new-project-btn"
-          >
-            <Icon name="plus" className="w-4 h-4" />
-            New project
-          </OpenButton>
-        </div>
+        <PageHeader
+          title="Projects"
+          description="Each project is one CX transformation. Teams pick up the pipeline at the stage they own — Analysis, Design, or Develop — and build on approved work from the last stage."
+          dataOdId="page-title"
+          actions={
+            <OpenButton
+              className="inline-flex items-center justify-center gap-2 h-9 px-3.5 bg-accent-strong hover:bg-accent-hover active:bg-accent-active text-white text-xs sm:text-sm font-medium rounded-md shadow-xs transition-colors cursor-pointer shrink-0"
+              target="dlg-new-project"
+              data-od-id="new-project-btn"
+            >
+              <Icon name="plus" className="w-4 h-4" />
+              New project
+            </OpenButton>
+          }
+        />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6" data-od-id="kpi-row">
-          <div className="p-4 bg-surface border border-border rounded-xl shadow-xs flex flex-col gap-1" data-od-id="kpi-projects">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">Active projects</div>
-            <div className="text-2xl font-bold tracking-tight text-foreground">3</div>
-            <div className="text-xs text-muted">2 running pipelines</div>
-          </div>
-          <div className="p-4 bg-surface border border-border rounded-xl shadow-xs flex flex-col gap-1" data-od-id="kpi-records">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">Records processed</div>
-            <div className="text-2xl font-bold tracking-tight text-foreground">24.7k</div>
-            <div className="text-xs text-muted">calls · emails · CRM notes</div>
-          </div>
-          <div className="p-4 bg-surface border border-border rounded-xl shadow-xs flex flex-col gap-1" data-od-id="kpi-intents">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">Canonical intents</div>
-            <div className="text-2xl font-bold tracking-tight text-foreground">286</div>
-            <div className="text-xs text-muted">across 6 L1 clusters</div>
-          </div>
-          <div className="p-4 bg-surface border border-border rounded-xl shadow-xs flex flex-col gap-1" data-od-id="kpi-builds">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">Agent builds</div>
-            <div className="text-2xl font-bold tracking-tight text-foreground">9</div>
-            <div className="text-xs text-muted">ADK · Bedrock · LangGraph</div>
-          </div>
+          <KpiCard
+            label="Active projects"
+            value="3"
+            description="2 running pipelines"
+            dataOdId="kpi-projects"
+          />
+          <KpiCard
+            label="Records processed"
+            value="24.7k"
+            description="calls · emails · CRM notes"
+            dataOdId="kpi-records"
+          />
+          <KpiCard
+            label="Canonical intents"
+            value="286"
+            description="across 6 L1 clusters"
+            dataOdId="kpi-intents"
+          />
+          <KpiCard
+            label="Agent builds"
+            value="9"
+            description="ADK · Bedrock · LangGraph"
+            dataOdId="kpi-builds"
+          />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6" data-od-id="umbrella-strip">
-          <Link
-            className="p-4.5 bg-surface border border-border rounded-xl shadow-xs hover:border-[oklch(85%_0.008_250)] hover:bg-surface-hover/50 transition-all flex flex-col gap-2.5 text-inherit group"
-            to="/analysis"
-            data-od-id="umb-analysis"
-          >
-            <div className="flex items-center gap-2.5">
-              <Icon name="chart" className="w-5 h-5 text-foreground" />
-              <strong className="text-sm font-semibold text-foreground">Analysis</strong>
-              <span className="ml-auto inline-flex items-center gap-1.5 h-5.5 px-2 text-xs font-medium rounded-full bg-success-soft text-success-fg">
-                <span className="w-1.5 h-1.5 rounded-full bg-success" />
-                4 clusters approved
+          <Card className="p-4.5 bg-surface border border-border rounded-xl shadow-xs hover:border-[oklch(85%_0.008_250)] hover:bg-surface-hover/50 transition-all flex flex-col gap-2.5 group">
+            <Link to="/analysis" data-od-id="umb-analysis" className="flex flex-col gap-2.5 h-full">
+              <div className="flex items-center gap-2.5">
+                <Icon name="chart" className="w-5 h-5 text-foreground" />
+                <strong className="text-sm font-semibold text-foreground">Analysis</strong>
+                <StatusBadge status="ok" className="ml-auto">
+                  4 clusters approved
+                </StatusBadge>
+              </div>
+              <p className="text-xs text-muted leading-relaxed">
+                Upload interactions → extract intents, resolutions and pain points → shape L1 / L2 / L3 clusters. Owned by Business Analysts.
+              </p>
+              <span className="flex items-center gap-1.5 text-xs text-muted font-medium group-hover:text-accent-strong transition-colors mt-auto">
+                Open workspace<Icon name="arrowr" className="w-3.5 h-3.5" />
               </span>
-            </div>
-            <p className="text-xs text-muted leading-relaxed">
-              Upload interactions → extract intents, resolutions and pain points → shape L1 / L2 / L3 clusters. Owned by Business Analysts.
-            </p>
-            <span className="flex items-center gap-1.5 text-xs text-muted font-medium group-hover:text-accent-strong transition-colors mt-auto">
-              Open workspace<Icon name="arrowr" className="w-3.5 h-3.5" />
-            </span>
-          </Link>
+            </Link>
+          </Card>
 
-          <Link
-            className="p-4.5 bg-surface border border-border rounded-xl shadow-xs hover:border-[oklch(85%_0.008_250)] hover:bg-surface-hover/50 transition-all flex flex-col gap-2.5 text-inherit group"
-            to="/design"
-            data-od-id="umb-design"
-          >
-            <div className="flex items-center gap-2.5">
-              <Icon name="flow" className="w-5 h-5 text-foreground" />
-              <strong className="text-sm font-semibold text-foreground">Design</strong>
-              <span className="ml-auto inline-flex items-center gap-1.5 h-5.5 px-2 text-xs font-medium rounded-full bg-accent-soft text-accent-strong">
-                <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-                2 maps in review
+          <Card className="p-4.5 bg-surface border border-border rounded-xl shadow-xs hover:border-[oklch(85%_0.008_250)] hover:bg-surface-hover/50 transition-all flex flex-col gap-2.5 group">
+            <Link to="/design" data-od-id="umb-design" className="flex flex-col gap-2.5 h-full">
+              <div className="flex items-center gap-2.5">
+                <Icon name="flow" className="w-5 h-5 text-foreground" />
+                <strong className="text-sm font-semibold text-foreground">Design</strong>
+                <StatusBadge status="accent" className="ml-auto">
+                  2 maps in review
+                </StatusBadge>
+              </div>
+              <p className="text-xs text-muted leading-relaxed">
+                Verify and edit process maps generated from approved clusters, then trace information flow in UML sequence diagrams. Owned by CX Designers.
+              </p>
+              <span className="flex items-center gap-1.5 text-xs text-muted font-medium group-hover:text-accent-strong transition-colors mt-auto">
+                Open workspace<Icon name="arrowr" className="w-3.5 h-3.5" />
               </span>
-            </div>
-            <p className="text-xs text-muted leading-relaxed">
-              Verify and edit process maps generated from approved clusters, then trace information flow in UML sequence diagrams. Owned by CX Designers.
-            </p>
-            <span className="flex items-center gap-1.5 text-xs text-muted font-medium group-hover:text-accent-strong transition-colors mt-auto">
-              Open workspace<Icon name="arrowr" className="w-3.5 h-3.5" />
-            </span>
-          </Link>
+            </Link>
+          </Card>
 
-          <Link
-            className="p-4.5 bg-surface border border-border rounded-xl shadow-xs hover:border-[oklch(85%_0.008_250)] hover:bg-surface-hover/50 transition-all flex flex-col gap-2.5 text-inherit group"
-            to="/develop"
-            data-od-id="umb-develop"
-          >
-            <div className="flex items-center gap-2.5">
-              <Icon name="code" className="w-5 h-5 text-foreground" />
-              <strong className="text-sm font-semibold text-foreground">Develop</strong>
-              <span className="ml-auto inline-flex items-center gap-1.5 h-5.5 px-2 text-xs font-medium rounded-full bg-surface-inset border border-border text-foreground">
-                <span className="w-1.5 h-1.5 rounded-full bg-muted" />
-                Next handoff
+          <Card className="p-4.5 bg-surface border border-border rounded-xl shadow-xs hover:border-[oklch(85%_0.008_250)] hover:bg-surface-hover/50 transition-all flex flex-col gap-2.5 group">
+            <Link to="/develop" data-od-id="umb-develop" className="flex flex-col gap-2.5 h-full">
+              <div className="flex items-center gap-2.5">
+                <Icon name="code" className="w-5 h-5 text-foreground" />
+                <strong className="text-sm font-semibold text-foreground">Develop</strong>
+                <StatusBadge status="neutral" dot={false} className="ml-auto">
+                  <span className="w-1.5 h-1.5 rounded-full bg-muted mr-1.5" />
+                  Next handoff
+                </StatusBadge>
+              </div>
+              <p className="text-xs text-muted leading-relaxed">
+                Generate production agent code — Google ADK, CX Agent Studio, Amazon Bedrock, LangGraph — from approved maps. Owned by Developers.
+              </p>
+              <span className="flex items-center gap-1.5 text-xs text-muted font-medium group-hover:text-accent-strong transition-colors mt-auto">
+                Open workspace<Icon name="arrowr" className="w-3.5 h-3.5" />
               </span>
-            </div>
-            <p className="text-xs text-muted leading-relaxed">
-              Generate production agent code — Google ADK, CX Agent Studio, Amazon Bedrock, LangGraph — from approved maps. Owned by Developers.
-            </p>
-            <span className="flex items-center gap-1.5 text-xs text-muted font-medium group-hover:text-accent-strong transition-colors mt-auto">
-              Open workspace<Icon name="arrowr" className="w-3.5 h-3.5" />
-            </span>
-          </Link>
+            </Link>
+          </Card>
         </div>
 
-        <div className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden" data-od-id="project-list">
+        <Card className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden p-0 gap-0" data-od-id="project-list">
           <div className="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <h3 className="text-sm font-semibold text-foreground">All projects</h3>
-            <div className="flex items-center gap-2.5">
-              <div className="relative">
-                <Icon name="search" className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted pointer-events-none" />
-                <input
-                  className="h-8 pl-8 pr-3 w-full sm:w-[210px] bg-surface-inset border border-border rounded-md text-xs text-foreground placeholder:text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
-                  placeholder="Search projects"
-                  aria-label="Search projects"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                />
-              </div>
-              <span className="text-xs text-muted whitespace-nowrap">
-                <span id="proj-count" className="font-semibold text-foreground">{count}</span> of {PROJECTS.length}
-              </span>
-            </div>
+            <SearchToolbar
+              query={query}
+              onQueryChange={setQuery}
+              placeholder="Search projects"
+              count={count}
+              totalCount={PROJECTS.length}
+            />
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm border-collapse min-w-[680px]" id="proj-table">
-              <thead className="bg-surface border-b border-border">
-                <tr className="text-[11px] font-semibold uppercase tracking-wider text-muted">
-                  <th className="px-4 py-2.5">Project</th>
-                  <th className="px-4 py-2.5">Pipeline stage</th>
-                  <th className="px-4 py-2.5 text-right">Records</th>
-                  <th className="px-4 py-2.5 text-right">Intents</th>
-                  <th className="px-4 py-2.5">Owner</th>
-                  <th className="px-4 py-2.5">Last activity</th>
-                  <th className="px-4 py-2.5">Status</th>
-                  <th className="px-3 py-2.5 w-9" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {filtered.map((p) => {
-                  const isWarn = p.statusClass.includes('badge-warn');
-                  const isOk = p.statusClass.includes('badge-ok');
-                  const isAcc = p.statusClass.includes('badge-acc');
-                  return (
-                    <tr
-                      key={p.id}
-                      className="hover:bg-surface-hover/70 transition-colors cursor-pointer group"
-                      data-od-id={p.id}
-                      onClick={() => navigate(p.href)}
-                    >
-                      <td className="px-4 py-3">
-                        <div className="font-semibold text-xs sm:text-sm text-foreground">{p.name}</div>
-                        <div className="text-xs text-muted mt-0.5">{p.hint}</div>
-                      </td>
-                      <td className="px-4 py-3"><StageFlow stages={p.stages} /></td>
-                      <td className={`px-4 py-3 text-right font-mono text-xs ${p.recordsMuted ? 'text-muted' : 'text-foreground'}`}>
-                        {p.records}
-                      </td>
-                      <td className={`px-4 py-3 text-right font-mono text-xs ${p.intentsMuted ? 'text-muted' : 'text-foreground'}`}>
-                        {p.intents}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <span className="w-6 h-6 rounded-full bg-foreground text-surface grid place-items-center text-[10px] font-bold shrink-0">
+          <Table id="proj-table" className="min-w-[680px]">
+            <TableHeader className="bg-surface border-b border-border">
+              <TableRow className="text-[11px] font-semibold uppercase tracking-wider text-muted hover:bg-transparent">
+                <TableHead className="px-4 py-2.5 text-muted">Project</TableHead>
+                <TableHead className="px-4 py-2.5 text-muted">Pipeline stage</TableHead>
+                <TableHead className="px-4 py-2.5 text-right text-muted">Records</TableHead>
+                <TableHead className="px-4 py-2.5 text-right text-muted">Intents</TableHead>
+                <TableHead className="px-4 py-2.5 text-muted">Owner</TableHead>
+                <TableHead className="px-4 py-2.5 text-muted">Last activity</TableHead>
+                <TableHead className="px-4 py-2.5 text-muted">Status</TableHead>
+                <TableHead className="px-3 py-2.5 w-9" />
+              </TableRow>
+            </TableHeader>
+            <TableBody className="divide-y divide-border">
+              {filtered.map((p) => {
+                const isWarn = p.statusClass.includes('badge-warn');
+                const isOk = p.statusClass.includes('badge-ok');
+                const isAcc = p.statusClass.includes('badge-acc');
+                const statusType = isWarn ? 'warn' : isOk ? 'ok' : isAcc ? 'accent' : 'neutral';
+                return (
+                  <TableRow
+                    key={p.id}
+                    className="hover:bg-surface-hover/70 transition-colors cursor-pointer group"
+                    data-od-id={p.id}
+                    onClick={() => navigate(p.href)}
+                  >
+                    <TableCell className="px-4 py-3">
+                      <div className="font-semibold text-xs sm:text-sm text-foreground">{p.name}</div>
+                      <div className="text-xs text-muted mt-0.5">{p.hint}</div>
+                    </TableCell>
+                    <TableCell className="px-4 py-3"><StageFlow stages={p.stages} /></TableCell>
+                    <TableCell className={`px-4 py-3 text-right font-mono text-xs ${p.recordsMuted ? 'text-muted' : 'text-foreground'}`}>
+                      {p.records}
+                    </TableCell>
+                    <TableCell className={`px-4 py-3 text-right font-mono text-xs ${p.intentsMuted ? 'text-muted' : 'text-foreground'}`}>
+                      {p.intents}
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="w-6 h-6 text-[10px] font-bold bg-foreground text-surface">
+                          <AvatarFallback className="bg-foreground text-surface font-bold text-[10px]">
                             {p.ownerInitials}
-                          </span>
-                          <span className="text-xs text-foreground font-medium">{p.owner}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-xs text-muted whitespace-nowrap">{p.activity}</td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex items-center gap-1.5 h-5.5 px-2 text-xs font-medium rounded-full whitespace-nowrap ${
-                            isWarn
-                              ? 'bg-warn-soft text-warn-fg'
-                              : isOk
-                              ? 'bg-success-soft text-success-fg'
-                              : isAcc
-                              ? 'bg-accent-soft text-accent-strong'
-                              : 'bg-surface-inset text-foreground'
-                          }`}
-                        >
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full ${
-                              p.statusClass.includes('badge-run')
-                                ? 'bg-warn animate-pulse'
-                                : isOk
-                                ? 'bg-success'
-                                : isAcc
-                                ? 'bg-accent'
-                                : 'bg-muted'
-                            }`}
-                          />
-                          {p.statusText}
-                        </span>
-                      </td>
-                      <td className="px-3 py-3 text-right">
-                        <Icon name="chevr" className="w-4 h-4 text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-xs text-foreground font-medium">{p.owner}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-xs text-muted whitespace-nowrap">{p.activity}</TableCell>
+                    <TableCell className="px-4 py-3">
+                      <StatusBadge status={statusType} pulse={p.statusClass.includes('badge-run')}>
+                        {p.statusText}
+                      </StatusBadge>
+                    </TableCell>
+                    <TableCell className="px-3 py-3 text-right">
+                      <Icon name="chevr" className="w-4 h-4 text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
 
           {filtered.length === 0 && (
-            <div className="p-12 text-center text-muted text-xs sm:text-sm flex flex-col items-center justify-center gap-2" id="proj-empty" data-od-id="proj-empty">
-              <Icon name="filter" className="w-6 h-6 text-muted mb-1" />
-              <span>No projects match this search.</span>
-            </div>
+            <EmptyState
+              icon="filter"
+              title="No projects match this search."
+              dataOdId="proj-empty"
+            />
           )}
-        </div>
+        </Card>
       </div>
 
       <Dialog id="dlg-new-project" dataOdId="new-project-dialog">
@@ -455,7 +423,7 @@ export default function Projects() {
               <div className="text-[11px] text-muted leading-tight mt-0.5">Auto-runs intent extraction → clustering → process map → UML with no manual review gates.</div>
             </div>
             <span data-od-id="np-express">
-              <Switch checked={express} onChange={setExpress} label="Express mode" />
+              <Switch checked={express} onCheckedChange={setExpress} aria-label="Express mode" />
             </span>
           </div>
         </div>
