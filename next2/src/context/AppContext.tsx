@@ -147,6 +147,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [isNewWsOpen, setIsNewWsOpen] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
 
+  // Hydrate selected org/workspace from localStorage
+  useEffect(() => {
+    try {
+      const savedOrg = localStorage.getItem('tx-org');
+      const savedWs = localStorage.getItem('tx-ws');
+      if (savedOrg && INITIAL_ORGS.some((o) => o.id === savedOrg)) setCurrentOrgId(savedOrg);
+      if (savedWs) setCurrentWorkspaceId(savedWs);
+    } catch { /* noop */ }
+  }, []);
+
   // Sync current workspace when org changes
   const workspacesForCurrentOrg = workspaces.filter((w) => w.orgId === currentOrgId);
   const currentOrg = organizations.find((o) => o.id === currentOrgId) ?? organizations[0];
@@ -154,9 +164,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const switchOrg = (orgId: string) => {
     setCurrentOrgId(orgId);
+    try { localStorage.setItem('tx-org', orgId); } catch { /* noop */ }
     const orgWorkspaces = workspaces.filter((w) => w.orgId === orgId);
     if (orgWorkspaces.length > 0) {
       setCurrentWorkspaceId(orgWorkspaces[0].id);
+      try { localStorage.setItem('tx-ws', orgWorkspaces[0].id); } catch { /* noop */ }
     }
   };
 
@@ -191,6 +203,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const switchWorkspace = (wsId: string) => {
     setCurrentWorkspaceId(wsId);
+    try { localStorage.setItem('tx-ws', wsId); } catch { /* noop */ }
   };
 
   const createWorkspace = (name: string, description = 'Workspace for pipeline runs'): Workspace => {
