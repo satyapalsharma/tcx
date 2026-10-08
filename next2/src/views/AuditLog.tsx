@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { AppShell } from '../components/AppShell';
 import { Icon } from '../components/Icon';
 import { useToast } from '../components/Toast';
-import { PageHeader, StatusBadge, EmptyState } from '@/components/common';
+import { PageHeader, StatusBadge, EmptyState, SelectField } from '@/components/common';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -184,32 +184,34 @@ export default function AuditLog() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
             />
-            <select
-              className="h-9 px-2.5 w-36 sm:w-40 rounded-md border border-border bg-surface text-xs sm:text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+            <SelectField
+              className="h-9 w-36 sm:w-40"
               aria-label="Filter by actor"
               value={actor}
-              onChange={(e) => setActor(e.target.value)}
-            >
-              <option value="all">All actors</option>
-              <option value="Riya Menon">Riya Menon</option>
-              <option value="Devika Sharma">Devika Sharma</option>
-              <option value="Arjun Shah">Arjun Shah</option>
-              <option value="Priya Nair">Priya Nair</option>
-              <option value="system">System / runs</option>
-            </select>
-            <select
-              className="h-9 px-2.5 w-36 sm:w-40 rounded-md border border-border bg-surface text-xs sm:text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              onValueChange={setActor}
+              options={[
+                { value: 'all', label: 'All actors' },
+                { value: 'Riya Menon', label: 'Riya Menon' },
+                { value: 'Devika Sharma', label: 'Devika Sharma' },
+                { value: 'Arjun Shah', label: 'Arjun Shah' },
+                { value: 'Priya Nair', label: 'Priya Nair' },
+                { value: 'system', label: 'System / runs' },
+              ]}
+            />
+            <SelectField
+              className="h-9 w-36 sm:w-40"
               aria-label="Filter by scope"
               value={scope}
-              onChange={(e) => setScope(e.target.value)}
-            >
-              <option value="all">All scopes</option>
-              <option value="Analysis">Analysis</option>
-              <option value="Design">Design</option>
-              <option value="Develop">Develop</option>
-              <option value="Connectors">Connectors</option>
-              <option value="Admin">Admin</option>
-            </select>
+              onValueChange={setScope}
+              options={[
+                { value: 'all', label: 'All scopes' },
+                { value: 'Analysis', label: 'Analysis' },
+                { value: 'Design', label: 'Design' },
+                { value: 'Develop', label: 'Develop' },
+                { value: 'Connectors', label: 'Connectors' },
+                { value: 'Admin', label: 'Admin' },
+              ]}
+            />
             <ToggleGroup
               type="single"
               value={rangeMode}

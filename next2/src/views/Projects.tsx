@@ -8,7 +8,7 @@ import { CloseButton, Dialog, OpenButton, useOverlay } from '../components/Overl
 import { ChipGroup, useTextFilter } from '../components/ui';
 import { useToast } from '../components/Toast';
 import { useReveal } from '../hooks/useReveal';
-import { KpiCard, PageHeader, StatusBadge, EmptyState, SearchToolbar } from '@/components/common';
+import { KpiCard, PageHeader, StatusBadge, EmptyState, SearchToolbar, SelectField } from '@/components/common';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -16,6 +16,7 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useApp } from '@/context/AppContext';
 
 type StageNode = { kind: 'live' | 'done' | 'empty' | 'dash'; label: string };
 
@@ -95,8 +96,6 @@ const PROJECTS: Project[] = [
   },
 ];
 
-const CLIENTS = ['Skyline Broadband', 'Northwind Retail', 'Helios Health'];
-
 function StageFlow({ stages }: { stages: StageNode[] }) {
   return (
     <div className="flex items-center origin-left scale-90 sm:scale-95">
@@ -136,24 +135,18 @@ export default function Projects() {
   const navigate = useNavigate();
   const toast = useToast();
   const { close } = useOverlay();
+  const { currentWorkspace, workspacesForCurrentOrg } = useApp();
   const { query, setQuery, filtered, count } = useTextFilter(PROJECTS, (p) => `${p.name} ${p.hint} ${p.owner}`);
   const [startMode, setStartMode] = useState('full');
   const [express, setExpress] = useState(false);
   const [projName, setProjName] = useState('');
-  const [client, setClient] = useState(CLIENTS[0]);
-
-  const handleClientChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    if (e.target.value === '__new__') {
-      navigate('/settings#clients');
-      return;
-    }
-    setClient(e.target.value);
-  };
+  const [workspaceId, setWorkspaceId] = useState(currentWorkspace.id);
+  const [source, setSource] = useState('Genesys Cloud — call recordings');
 
   const create = () => {
     const name = projName.trim() || 'Untitled project';
     close();
-    toast(`"${name}" created · client ${client}${express ? ' · express mode on' : ''}`, 'plus');
+    toast(`"${name}" created in ${currentWorkspace.name}${express ? ' · express mode on' : ''}`, 'plus');
   };
 
   return (
@@ -416,20 +409,17 @@ export default function Projects() {
             />
           </div>
           <div>
-            <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="np-client">
-              Client <span className="text-muted font-normal">· required for cost tagging</span>
+            <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="np-workspace">
+              Workspace <span className="text-muted font-normal">· project scope</span>
             </Label>
             <div className="flex items-center gap-2">
-              <select
-                className="w-full h-9 px-3 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
-                id="np-client"
-                data-od-id="np-client"
-                value={client}
-                onChange={handleClientChange}
-              >
-                {CLIENTS.map((c) => <option key={c}>{c}</option>)}
-                <option value="__new__">+ Add new client…</option>
-              </select>
+              <SelectField
+                id="np-workspace"
+                value={workspaceId}
+                onValueChange={setWorkspaceId}
+                options={workspacesForCurrentOrg.map((w) => ({ value: w.id, label: w.name }))}
+                className="w-full h-9 bg-surface"
+              />
               <Button
                 variant="outline"
                 size="sm"
@@ -437,15 +427,15 @@ export default function Projects() {
                 asChild
               >
                 <Link
-                  to="/settings"
-                  title="Manage clients"
+                  to="/settings#workspaces"
+                  title="Manage workspaces"
                 >
                   <Icon name="gear" className="w-3.5 h-3.5 text-muted" />
                   Manage
                 </Link>
               </Button>
             </div>
-            <p className="text-xs text-muted mt-1 leading-relaxed">Every job run under this project is tagged to this client so cost reporting stays accurate.</p>
+            <p className="text-xs text-muted mt-1 leading-relaxed">Every job run under this project is scoped to this workspace.</p>
           </div>
           <div>
             <span className="block text-xs font-semibold text-foreground tracking-wide mb-1.5">Where does this team start?</span>
@@ -464,16 +454,19 @@ export default function Projects() {
           </div>
           <div>
             <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="np-source">First data source</Label>
-            <select
-              className="w-full h-9 px-3 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+            <SelectField
               id="np-source"
-            >
-              <option>Genesys Cloud — call recordings</option>
-              <option>Zendesk — conversations export</option>
-              <option>Amazon S3 — transcripts bucket</option>
-              <option>Google Cloud Storage — bucket prefix</option>
-              <option>CSV / manual upload</option>
-            </select>
+              value={source}
+              onValueChange={setSource}
+              options={[
+                'Genesys Cloud — call recordings',
+                'Zendesk — conversations export',
+                'Amazon S3 — transcripts bucket',
+                'Google Cloud Storage — bucket prefix',
+                'CSV / manual upload',
+              ]}
+              className="w-full h-9 bg-surface"
+            />
           </div>
           <div className="flex items-center justify-between p-3 border border-border rounded-lg bg-surface-inset">
             <div>

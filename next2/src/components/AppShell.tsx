@@ -48,30 +48,30 @@ import { CreateOrgModal } from './modals/CreateOrgModal';
 import { CreateWorkspaceModal } from './modals/CreateWorkspaceModal';
 import { InviteMemberModal } from './modals/InviteMemberModal';
 
-type NavItem = { to: string; icon: Parameters<typeof Icon>[0]['name']; label: string; tail?: string };
+type NavItem = { to: string; icon: Parameters<typeof Icon>[0]['name']; label: string };
 
 const NAV_GROUPS: { section: string; items: NavItem[] }[] = [
   {
     section: 'Workspace',
     items: [
       { to: '/dashboard', icon: 'chart', label: 'Dashboard' },
-      { to: '/jobs', icon: 'clock', label: 'Jobs & Runs', tail: '2 running' },
+      { to: '/jobs', icon: 'clock', label: 'Jobs' },
       { to: '/projects', icon: 'grid', label: 'Projects' },
     ],
   },
   {
-    section: 'Modular Studio',
+    section: 'Studio',
     items: [
-      { to: '/analysis', icon: 'search', label: 'Intent Discovery', tail: '286' },
-      { to: '/design', icon: 'flow', label: 'Process Designer', tail: 'v3' },
-      { to: '/develop', icon: 'code', label: 'Agent Builder', tail: 'ADK' },
+      { to: '/analysis', icon: 'search', label: 'Intent Discovery' },
+      { to: '/design', icon: 'flow', label: 'Process Designer' },
+      { to: '/develop', icon: 'code', label: 'Agent Builder' },
     ],
   },
   {
     section: 'Organization',
     items: [
-      { to: '/rbac', icon: 'users', label: 'Team & Members' },
-      { to: '/connectors', icon: 'plug', label: 'Integrations', tail: '5' },
+      { to: '/rbac', icon: 'users', label: 'Members' },
+      { to: '/connectors', icon: 'plug', label: 'Integrations' },
       { to: '/settings', icon: 'gear', label: 'Settings' },
       { to: '/audit-log', icon: 'scroll', label: 'Audit Log' },
     ],
@@ -103,116 +103,107 @@ export function AppShell({
     openNewRun,
     setIsNewOrgOpen,
     setIsNewWsOpen,
+    jobsForCurrentWorkspace,
   } = useApp();
+  const runningCount = jobsForCurrentWorkspace.filter((j) => j.status === 'run').length;
 
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="flex min-h-screen w-full bg-background text-foreground" data-od-id="app-shell">
         <Sidebar data-od-id="sidebar" className="border-r border-border bg-surface">
           {/* Organization & Workspace Switcher Header */}
-          <SidebarHeader className="border-b border-border p-3 space-y-2">
-            {/* Org Switcher */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  className="w-full flex items-center gap-2 p-1.5 rounded-lg border border-border bg-surface hover:bg-surface-hover transition-colors text-left cursor-pointer"
-                  data-od-id="org-switcher"
-                >
-                  <div className="w-7 h-7 rounded-md bg-foreground text-surface font-bold text-xs flex items-center justify-center shrink-0">
-                    {currentOrg.name.slice(0, 2).toUpperCase()}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="font-semibold text-xs text-foreground truncate">{currentOrg.name}</div>
-                    <div className="text-[10px] text-muted flex items-center gap-1.5">
-                      <span>{currentOrg.plan}</span>
-                      <span>·</span>
-                      <span>{currentOrg.memberCount} members</span>
-                    </div>
-                  </div>
-                  <Icon name="chev" className="w-3.5 h-3.5 text-muted shrink-0" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-64">
-                <DropdownMenuLabel className="text-[11px] text-muted font-normal uppercase tracking-wider">
-                  Switch Organization
-                </DropdownMenuLabel>
-                <DropdownMenuGroup>
-                  {organizations.map((org) => (
-                    <DropdownMenuItem
-                      key={org.id}
-                      onClick={() => switchOrg(org.id)}
-                      className="flex items-center justify-between text-xs py-2 cursor-pointer"
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="w-5 h-5 rounded bg-surface-inset border border-border font-bold text-[10px] grid place-items-center shrink-0">
-                          {org.name.slice(0, 2).toUpperCase()}
+          <SidebarHeader className="border-b border-border p-3 gap-1.5">
+            <SidebarMenu>
+              <SidebarMenuItem>
+                {/* Org Switcher */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <SidebarMenuButton size="lg" className="border border-border cursor-pointer" data-od-id="org-switcher">
+                      <span className="w-8 h-8 rounded-md bg-foreground text-surface font-bold text-xs grid place-items-center shrink-0">
+                        {currentOrg.name.slice(0, 2).toUpperCase()}
+                      </span>
+                      <span className="min-w-0 flex-1 text-left leading-tight">
+                        <span className="block font-semibold text-xs text-foreground truncate">{currentOrg.name}</span>
+                        <span className="block text-[11px] text-muted truncate">
+                          {currentOrg.plan} · {currentOrg.memberCount} members
                         </span>
-                        <span className="font-medium truncate">{org.name}</span>
-                      </div>
-                      {org.id === currentOrg.id && <Icon name="check" className="w-3.5 h-3.5 text-accent-strong" />}
+                      </span>
+                      <Icon name="chev" className="w-3.5 h-3.5 text-muted shrink-0" />
+                    </SidebarMenuButton>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-64">
+                    <DropdownMenuLabel className="text-[11px] text-muted font-normal">Organizations</DropdownMenuLabel>
+                    <DropdownMenuGroup>
+                      {organizations.map((org) => (
+                        <DropdownMenuItem
+                          key={org.id}
+                          onClick={() => switchOrg(org.id)}
+                          className="flex items-center justify-between text-xs py-2 cursor-pointer"
+                        >
+                          <span className="flex items-center gap-2 min-w-0">
+                            <span className="w-5 h-5 rounded bg-surface-inset border border-border font-bold text-[10px] grid place-items-center shrink-0">
+                              {org.name.slice(0, 2).toUpperCase()}
+                            </span>
+                            <span className="font-medium truncate">{org.name}</span>
+                          </span>
+                          {org.id === currentOrg.id && <Icon name="check" className="w-3.5 h-3.5 text-accent-strong" />}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => setIsNewOrgOpen(true)} className="text-xs py-1.5 cursor-pointer gap-2">
+                      <Icon name="plus" className="w-3.5 h-3.5" />
+                      New organization
                     </DropdownMenuItem>
-                  ))}
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setIsNewOrgOpen(true)} className="text-xs py-1.5 cursor-pointer gap-2">
-                  <Icon name="plus" className="w-3.5 h-3.5" />
-                  <span>Create Organization</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className="text-xs py-1.5 cursor-pointer gap-2">
-                  <Link to="/settings">
-                    <Icon name="gear" className="w-3.5 h-3.5" />
-                    <span>Organization Settings</span>
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Workspace Switcher */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  className="w-full flex items-center justify-between px-2 py-1 text-xs text-muted hover:text-foreground rounded transition-colors cursor-pointer"
-                  data-od-id="workspace-switcher"
-                >
-                  <div className="flex items-center gap-1.5 min-w-0 truncate">
-                    <Icon name="folder" className="w-3.5 h-3.5 text-muted shrink-0" />
-                    <span className="font-medium text-foreground truncate">{currentWorkspace.name}</span>
-                  </div>
-                  <Icon name="chev" className="w-3 h-3 text-muted shrink-0" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-60">
-                <DropdownMenuLabel className="text-[11px] text-muted font-normal uppercase tracking-wider">
-                  Workspaces in {currentOrg.name}
-                </DropdownMenuLabel>
-                <DropdownMenuGroup>
-                  {workspacesForCurrentOrg.map((ws) => (
-                    <DropdownMenuItem
-                      key={ws.id}
-                      onClick={() => switchWorkspace(ws.id)}
-                      className="flex items-center justify-between text-xs py-1.5 cursor-pointer"
-                    >
-                      <div className="min-w-0">
-                        <div className="font-medium truncate">{ws.name}</div>
-                        <div className="text-[10px] text-muted">{ws.jobCount} jobs</div>
-                      </div>
-                      {ws.id === currentWorkspace.id && (
-                        <Icon name="check" className="w-3.5 h-3.5 text-accent-strong shrink-0" />
-                      )}
+                    <DropdownMenuItem asChild className="text-xs py-1.5 cursor-pointer gap-2">
+                      <Link to="/settings">
+                        <Icon name="gear" className="w-3.5 h-3.5" />
+                        Organization settings
+                      </Link>
                     </DropdownMenuItem>
-                  ))}
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setIsNewWsOpen(true)} className="text-xs py-1.5 cursor-pointer gap-2">
-                  <Icon name="plus" className="w-3.5 h-3.5" />
-                  <span>Create Workspace</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </SidebarMenuItem>
 
-            {/* Primary Action Button */}
+              <SidebarMenuItem>
+                {/* Workspace Switcher */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <SidebarMenuButton size="sm" className="text-xs cursor-pointer" data-od-id="workspace-switcher">
+                      <Icon name="folder" className="w-3.5 h-3.5 text-muted shrink-0" />
+                      <span className="font-medium text-foreground truncate flex-1">{currentWorkspace.name}</span>
+                      <Icon name="chev" className="w-3 h-3 text-muted shrink-0" />
+                    </SidebarMenuButton>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-60">
+                    <DropdownMenuLabel className="text-[11px] text-muted font-normal">Workspaces</DropdownMenuLabel>
+                    <DropdownMenuGroup>
+                      {workspacesForCurrentOrg.map((ws) => (
+                        <DropdownMenuItem
+                          key={ws.id}
+                          onClick={() => switchWorkspace(ws.id)}
+                          className="flex items-center justify-between text-xs py-1.5 cursor-pointer"
+                        >
+                          <span className="min-w-0">
+                            <span className="block font-medium truncate">{ws.name}</span>
+                            <span className="block text-[10px] text-muted">{ws.jobCount} jobs</span>
+                          </span>
+                          {ws.id === currentWorkspace.id && (
+                            <Icon name="check" className="w-3.5 h-3.5 text-accent-strong shrink-0" />
+                          )}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => setIsNewWsOpen(true)} className="text-xs py-1.5 cursor-pointer gap-2">
+                      <Icon name="plus" className="w-3.5 h-3.5" />
+                      New workspace
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </SidebarMenuItem>
+            </SidebarMenu>
+
             <Button
               variant="accent"
               size="sm"
@@ -221,7 +212,7 @@ export function AppShell({
               data-od-id="side-quick-run"
             >
               <Icon name="plus" className="w-3.5 h-3.5" />
-              New Task or Pipeline
+              New task
             </Button>
           </SidebarHeader>
 
@@ -262,7 +253,7 @@ export function AppShell({
                                 className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-surface' : 'text-muted'}`}
                               />
                               <span className="truncate">{item.label}</span>
-                              {item.tail && (
+                              {item.to === '/jobs' && runningCount > 0 && (
                                 <SidebarMenuBadge
                                   className={`ml-auto text-[10.5px] font-medium px-1.5 py-0.2 rounded ${
                                     isActive
@@ -270,7 +261,7 @@ export function AppShell({
                                       : 'text-muted bg-surface-inset'
                                   }`}
                                 >
-                                  {item.tail}
+                                  {runningCount} running
                                 </SidebarMenuBadge>
                               )}
                             </Link>
@@ -347,14 +338,14 @@ export function AppShell({
 
             <div className="flex items-center gap-2">
               <Button
-                variant="outline"
-                size="sm"
+                variant="accent"
+                size="icon-sm"
                 onClick={() => openNewRun()}
-                className="hidden sm:inline-flex h-8 px-2.5 text-xs font-medium gap-1.5 cursor-pointer"
+                className="md:hidden cursor-pointer"
+                aria-label="New task"
                 data-od-id="top-quick-run"
               >
-                <Icon name="plus" className="w-3.5 h-3.5 text-muted" />
-                Quick Run
+                <Icon name="plus" className="w-4 h-4" />
               </Button>
               {actions}
               <div className="hidden sm:flex items-center gap-2">{badge}</div>

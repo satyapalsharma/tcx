@@ -6,11 +6,12 @@ import { AppShell } from '../components/AppShell';
 import { Icon } from '../components/Icon';
 import { useToast } from '../components/Toast';
 import { useReveal } from '../hooks/useReveal';
-import { KpiCard, PageHeader, StatusBadge, EmptyState, SearchToolbar } from '@/components/common';
+import { KpiCard, PageHeader, StatusBadge, EmptyState, SearchToolbar, SelectField } from '@/components/common';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { useApp } from '@/context/AppContext';
 
 type IntentRow = {
   intent: string;
@@ -134,6 +135,8 @@ function DistributionSvg() {
 export default function Dashboard() {
   useReveal();
   const toast = useToast();
+  const { currentWorkspace } = useApp();
+  const [selectedRun, setSelectedRun] = useState('run-4821');
   const [search, setSearch] = useState('');
   const [l1, setL1] = useState('');
   const [conf, setConf] = useState('');
@@ -189,39 +192,39 @@ export default function Dashboard() {
             count={filtered.length}
             countLabel="shown"
           >
-            <select
-              className="h-8 px-2.5 bg-surface-inset border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+            <SelectField
               id="d-l1"
               aria-label="Filter by L1 cluster"
               value={l1}
-              onChange={(e) => setL1(e.target.value)}
-            >
-              <option value="">All L1 clusters</option>
-              {L1_OPTIONS.map((o) => <option key={o}>{o}</option>)}
-            </select>
-            <select
-              className="h-8 px-2.5 bg-surface-inset border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+              onValueChange={setL1}
+              options={[{ value: '', label: 'All L1 clusters' }, ...L1_OPTIONS.map((o) => ({ value: o, label: o }))]}
+              className="h-8 w-[150px] bg-surface-inset"
+            />
+            <SelectField
               id="d-conf"
               aria-label="Filter by confidence"
               value={conf}
-              onChange={(e) => setConf(e.target.value)}
-            >
-              <option value="">All confidence</option>
-              <option value="high">High (≥ 0.9)</option>
-              <option value="mid">Medium (0.7–0.9)</option>
-              <option value="low">Low (&lt; 0.7)</option>
-            </select>
-            <select
-              className="h-8 px-2.5 bg-surface-inset border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+              onValueChange={setConf}
+              options={[
+                { value: '', label: 'All confidence' },
+                { value: 'high', label: 'High (≥ 0.9)' },
+                { value: 'mid', label: 'Medium (0.7–0.9)' },
+                { value: 'low', label: 'Low (< 0.7)' },
+              ]}
+              className="h-8 w-[140px] bg-surface-inset"
+            />
+            <SelectField
               id="d-esc"
               aria-label="Filter by escalation"
               value={esc}
-              onChange={(e) => setEsc(e.target.value)}
-            >
-              <option value="">Any escalation</option>
-              <option value="40">Escalation ≥ 40%</option>
-              <option value="20">Escalation ≥ 20%</option>
-            </select>
+              onValueChange={setEsc}
+              options={[
+                { value: '', label: 'Any escalation' },
+                { value: '40', label: 'Escalation ≥ 40%' },
+                { value: '20', label: 'Escalation ≥ 20%' },
+              ]}
+              className="h-8 w-[140px] bg-surface-inset"
+            />
           </SearchToolbar>
         </div>
 
@@ -645,15 +648,17 @@ export default function Dashboard() {
     <AppShell
       crumb="Dashboard"
       middleCrumb={(
-        <select
+        <SelectField
           aria-label="Switch completed job"
-          className="h-8 max-w-[280px] px-2.5 bg-surface-inset border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-accent transition-colors"
-          defaultValue="run-4821"
-        >
-          <option value="run-4821">RUN-4821 · Week-26 clustering refresh</option>
-          <option value="run-4792">RUN-4792 · Network Ops Copilot</option>
-          <option value="run-4770">RUN-4770 · Northwind first pass</option>
-        </select>
+          className="h-8 max-w-[280px] bg-surface-inset"
+          value={selectedRun}
+          onValueChange={setSelectedRun}
+          options={[
+            { value: 'run-4821', label: 'RUN-4821 · Week-26 clustering refresh' },
+            { value: 'run-4792', label: 'RUN-4792 · Network Ops Copilot' },
+            { value: 'run-4770', label: 'RUN-4770 · Northwind first pass' },
+          ]}
+        />
       )}
       badge={
         <StatusBadge status="ok">
@@ -680,7 +685,7 @@ export default function Dashboard() {
           actions={
             <div className="flex items-center gap-2 flex-wrap">
               <span className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-medium rounded-full bg-surface-inset border border-border text-foreground">
-                <span className="w-1.5 h-1.5 rounded-full bg-muted" />Client · Skyline Broadband
+                <span className="w-1.5 h-1.5 rounded-full bg-muted" />{currentWorkspace.name}
               </span>
               <span className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-medium rounded-full bg-surface-inset border border-border text-foreground">
                 <span className="w-1.5 h-1.5 rounded-full bg-muted" />42 min · ₹1,284
@@ -715,13 +720,13 @@ export default function Dashboard() {
         <div className="mb-4" data-od-id="dash-tabs">
           <Tabs defaultValue="intents" className="w-full">
             <TabsList variant="line" className="border-b border-border w-full justify-start rounded-none h-10 p-0 gap-4">
-              <TabsTrigger value="intents" className="h-10 px-3 border-b-2 border-transparent data-[state=active]:border-foreground rounded-none font-medium text-xs sm:text-sm">
+              <TabsTrigger value="intents" className="h-10 px-3 font-medium text-xs sm:text-sm">
                 Intents <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-surface-inset text-[11px] font-mono text-muted">286</span>
               </TabsTrigger>
-              <TabsTrigger value="clusters" className="h-10 px-3 border-b-2 border-transparent data-[state=active]:border-foreground rounded-none font-medium text-xs sm:text-sm">
+              <TabsTrigger value="clusters" className="h-10 px-3 font-medium text-xs sm:text-sm">
                 Clusters <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-surface-inset text-[11px] font-mono text-muted">6 L1</span>
               </TabsTrigger>
-              <TabsTrigger value="agents" className="h-10 px-3 border-b-2 border-transparent data-[state=active]:border-foreground rounded-none font-medium text-xs sm:text-sm">
+              <TabsTrigger value="agents" className="h-10 px-3 font-medium text-xs sm:text-sm">
                 Agents <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-surface-inset text-[11px] font-mono text-muted">9</span>
               </TabsTrigger>
             </TabsList>

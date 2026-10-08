@@ -9,14 +9,14 @@ import { Card } from '@/components/ui/card';
 const SCREENS = [
   { to: '/login', pri: true, od: 'scr-login', icon: 'lock' as const, name: 'Login', desc: 'Sign in · SSO + SAML stubs · demo gate' },
   { to: '/projects', od: 'scr-projects', icon: 'grid' as const, name: 'Projects home', desc: 'Workspace projects · pipeline status' },
-  { to: '/jobs', od: 'scr-jobs', icon: 'clock' as const, name: 'Jobs & Runs', desc: 'Modular 1-click launcher & execution traces' },
-  { to: '/dashboard', od: 'scr-dashboard', icon: 'chart' as const, name: 'Workspace Dashboard', desc: 'Intents · L1→L2→L3 clusters · agent builds' },
+  { to: '/jobs', od: 'scr-jobs', icon: 'clock' as const, name: 'Jobs', desc: 'Start a task · track runs in this workspace' },
+  { to: '/dashboard', od: 'scr-dashboard', icon: 'chart' as const, name: 'Dashboard', desc: 'Intents · L1→L2→L3 clusters · agent builds' },
   { to: '/analysis', od: 'scr-analysis', icon: 'search' as const, name: 'Intent Discovery', desc: 'Extract intents or cluster existing taxonomy' },
-  { to: '/design', od: 'scr-design', icon: 'flow' as const, name: 'Process Flow Designer', desc: 'Process map + UML · review & approve workflow' },
+  { to: '/design', od: 'scr-design', icon: 'flow' as const, name: 'Process Designer', desc: 'Process map + UML · review & approve workflow' },
   { to: '/develop', od: 'scr-develop', icon: 'code' as const, name: 'Agent Builder', desc: 'ADK / Bedrock / LangGraph code generation' },
   { to: '/connectors', od: 'scr-connectors', icon: 'plug' as const, name: 'Integrations', desc: 'Genesys · Zendesk · S3 · Salesforce sync' },
-  { to: '/rbac', od: 'scr-rbac', icon: 'users' as const, name: 'Team & Members', desc: 'Invite members · Admin / Builder / Viewer roles' },
-  { to: '/settings', od: 'scr-settings', icon: 'gear' as const, name: 'Organization & Workspaces', desc: 'Switch/create orgs · manage workspaces & billing' },
+  { to: '/rbac', od: 'scr-rbac', icon: 'users' as const, name: 'Members', desc: 'Invite members · Admin / Builder / Viewer roles' },
+  { to: '/settings', od: 'scr-settings', icon: 'gear' as const, name: 'Settings', desc: 'Organization, workspaces, data & security' },
   { to: '/audit-log', od: 'scr-audit', icon: 'scroll' as const, name: 'Audit Log', desc: 'Filterable timeline · actor + scope filters · export' },
 ];
 
@@ -43,7 +43,7 @@ export default function Launcher() {
             <div className="text-[11px] uppercase tracking-wider font-semibold text-muted mt-0.5">Prototype v1 · EXL</div>
           </div>
           <Badge variant="outline" className="ml-auto inline-flex items-center gap-1.5 h-5.5 px-2 text-xs font-medium rounded-full bg-surface-inset border-border text-foreground">
-            <span className="w-1.5 h-1.5 rounded-full bg-muted" />12 screens
+            <span className="w-1.5 h-1.5 rounded-full bg-muted" />{SCREENS.length} screens
           </Badge>
         </div>
 

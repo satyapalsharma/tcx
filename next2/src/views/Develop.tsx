@@ -4,13 +4,12 @@ import { useCallback, useRef, useState } from 'react';
 import { Link } from '../lib/navigation';
 import { AppShell } from '../components/AppShell';
 import { Icon } from '../components/Icon';
-import { CloseButton, Dialog, OpenButton, useOverlay } from '../components/Overlay';
+import { CloseButton, Dialog, useOverlay } from '../components/Overlay';
 import { Tabs } from '../components/ui';
-import { Switch } from '@/components/ui/switch';
 import { useToast } from '../components/Toast';
 import { useReveal } from '../hooks/useReveal';
 import { useApp } from '@/context/AppContext';
-import { PageHeader, StatusBadge } from '@/components/common';
+import { PageHeader, StatusBadge, SelectField } from '@/components/common';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -120,8 +119,8 @@ export default function Develop() {
   const [genPct, setGenPct] = useState(2);
   const [genStage, setGenStage] = useState(0);
   const [showRow143, setShowRow143] = useState(false);
-  const [includeTests, setIncludeTests] = useState(true);
-  const [applyGuardrails, setApplyGuardrails] = useState(true);
+  const [genModel, setGenModel] = useState('gemini-2.0-flash');
+  const [genRegion, setGenRegion] = useState('asia-south1 (Mumbai)');
 
   const [deployed, setDeployed] = useState(false);
   const [deploying, setDeploying] = useState(false);
@@ -311,8 +310,19 @@ export default function Develop() {
           <div className="space-y-4 min-w-0">
             {/* Builds Card */}
             <div className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden" data-od-id="builds-card">
-              <div className="p-4 border-b border-border">
+              <div className="p-4 border-b border-border flex items-center justify-between gap-3">
                 <h3 className="text-sm font-semibold text-foreground">2 · Generate &amp; track builds</h3>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 text-xs h-8 cursor-pointer"
+                  onClick={startGeneration}
+                  disabled={genLive}
+                >
+                  <Icon name="bolt" className="w-3.5 h-3.5 text-muted" />
+                  Regenerate build
+                </Button>
               </div>
 
               {genLive && (
@@ -756,12 +766,18 @@ export default function Develop() {
               </summary>
               <div className="p-3.5 border-t border-border space-y-3">
                 <div>
-                  <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1">Model</Label>
-                  <select className="w-full h-8 px-2.5 bg-surface-inset border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-accent" defaultValue="gemini-2.0-flash">
-                    <option>gemini-2.0-flash</option>
-                    <option>gemini-2.5-pro</option>
-                    <option>claude-sonnet via Bedrock</option>
-                  </select>
+                  <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1" htmlFor="adv-gen-model">Model</Label>
+                  <SelectField
+                    id="adv-gen-model"
+                    value={genModel}
+                    onValueChange={setGenModel}
+                    options={[
+                      'gemini-2.0-flash',
+                      'gemini-2.5-pro',
+                      'claude-sonnet via Bedrock',
+                    ]}
+                    className="w-full h-8 bg-surface-inset"
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
@@ -774,11 +790,17 @@ export default function Develop() {
                   </div>
                 </div>
                 <div>
-                  <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1">Deploy region</Label>
-                  <select className="w-full h-8 px-2.5 bg-surface-inset border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-accent">
-                    <option>asia-south1 (Mumbai)</option>
-                    <option>us-central1</option>
-                  </select>
+                  <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1" htmlFor="adv-gen-region">Deploy region</Label>
+                  <SelectField
+                    id="adv-gen-region"
+                    value={genRegion}
+                    onValueChange={setGenRegion}
+                    options={[
+                      'asia-south1 (Mumbai)',
+                      'us-central1',
+                    ]}
+                    className="w-full h-8 bg-surface-inset"
+                  />
                 </div>
                 <div>
                   <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1">Eval harness</Label>
@@ -792,52 +814,6 @@ export default function Develop() {
           </div>
         </div>
       </div>
-
-      {/* Generate Dialog */}
-      <Dialog id="dlg-gen" dataOdId="gen-dialog">
-        <div className="p-5 border-b border-border">
-          <h2 className="text-base font-semibold text-foreground tracking-tight">Generate agent build</h2>
-          <p className="text-xs text-muted mt-1">From approved snapshot v3 · target: <span className="font-mono text-foreground font-semibold">{target}</span></p>
-        </div>
-        <div className="p-5 space-y-4">
-          <div className="flex items-center justify-between p-3 border border-border rounded-lg bg-surface-inset">
-            <div>
-              <div className="text-xs font-semibold text-foreground">Include unit tests</div>
-              <div className="text-[11px] text-muted">4 scenarios incl. supervisor-token edge case.</div>
-            </div>
-            <Switch checked={includeTests} onCheckedChange={setIncludeTests} aria-label="Include unit tests" />
-          </div>
-          <div className="flex items-center justify-between p-3 border border-border rounded-lg bg-surface-inset">
-            <div>
-              <div className="text-xs font-semibold text-foreground">Apply guardrails policy</div>
-              <div className="text-[11px] text-muted">₹2,500 credit cap · escalate after 2 declines.</div>
-            </div>
-            <Switch checked={applyGuardrails} onCheckedChange={setApplyGuardrails} aria-label="Apply guardrails policy" />
-          </div>
-          <div>
-            <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="gen-env">Environment</Label>
-            <select className="w-full h-9 px-3 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent" id="gen-env">
-              <option>staging (default)</option>
-              <option>production</option>
-            </select>
-          </div>
-        </div>
-        <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-end gap-2.5 rounded-b-xl">
-          <CloseButton variant="outline" size="sm" className="h-8.5 px-3.5 text-xs">
-            Cancel
-          </CloseButton>
-          <Button
-            type="button"
-            variant="accent"
-            size="sm"
-            className="h-8.5 px-3.5 text-xs gap-1.5"
-            data-od-id="gen-start-btn"
-            onClick={startGeneration}
-          >
-            <Icon name="bolt" className="w-3.5 h-3.5" />Start generation
-          </Button>
-        </div>
-      </Dialog>
 
       {/* Attach Improvement Pointer Dialog */}
       <Dialog id="dlg-gap" dataOdId="gap-dialog">

@@ -1,150 +1,92 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useApp } from '@/context/AppContext';
+import { useApp, type MemberRole } from '@/context/AppContext';
 import { useToast } from '@/components/Toast';
 import { Icon } from '@/components/Icon';
+import { SelectField } from '@/components/common';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card } from '@/components/ui/card';
 
-export function InviteMemberModal({ onInvite }: { onInvite?: (member: any) => void }) {
-  const { isInviteOpen, setIsInviteOpen, currentOrg, currentWorkspace } = useApp();
+const ROLES = [
+  { value: 'Admin', label: 'Admin · manages org, members & billing' },
+  { value: 'Builder', label: 'Builder · runs tasks, edits flows, builds agents' },
+  { value: 'Viewer', label: 'Viewer · read-only' },
+];
+
+export function InviteMemberModal() {
+  const { isInviteOpen, setIsInviteOpen, currentOrg, currentWorkspace, addMember } = useApp();
   const toast = useToast();
   const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
-  const [role, setRole] = useState('Builder');
-  const [wsScope, setWsScope] = useState('all');
+  const [role, setRole] = useState<MemberRole>('Builder');
+  const [scope, setScope] = useState('all');
 
-  if (!isInviteOpen) return null;
+  const close = () => {
+    setIsInviteOpen(false);
+    setEmail('');
+    setRole('Builder');
+    setScope('all');
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) return;
-
-    const trimmedEmail = email.trim();
-    const initials = (name.trim() || trimmedEmail.split('@')[0])
-      .split(' ')
-      .map((w) => w[0])
-      .join('')
-      .slice(0, 2)
-      .toUpperCase();
-
-    const newMember = {
-      id: `mem-${Date.now()}`,
-      odId: `mem-${Date.now()}`,
-      name: name.trim() || trimmedEmail.split('@')[0],
-      email: trimmedEmail,
-      role,
-      lastActive: 'just now',
-      statusLabel: 'Invite pending',
-      statusBadge: 'warn',
-      initials,
-      workspace: wsScope === 'all' ? 'All workspaces' : currentWorkspace.name,
-    };
-
-    if (onInvite) onInvite(newMember);
-    toast(`Invitation sent to ${trimmedEmail}`, 'mail');
-    setEmail('');
-    setName('');
-    setRole('Builder');
-    setIsInviteOpen(false);
+    const trimmed = email.trim();
+    if (!trimmed) return;
+    addMember({ email: trimmed, role, allWorkspaces: scope === 'all' });
+    toast(`Invitation sent to ${trimmed}`, 'mail');
+    close();
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-background/80 backdrop-blur-sm animate-in fade-in-0">
-      <Card className="w-full max-w-md bg-surface border border-border rounded-xl shadow-xl overflow-hidden">
-        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-border bg-surface-inset/20">
-          <div>
-            <h2 className="text-base font-bold text-foreground">Invite Team Member</h2>
-            <p className="text-xs text-muted mt-0.5">
-              To <span className="font-semibold text-foreground">{currentOrg.name}</span>
-            </p>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={() => setIsInviteOpen(false)}
-            aria-label="Close"
-            className="text-muted hover:text-foreground"
-          >
-            <Icon name="x" className="w-4 h-4" />
-          </Button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-4 sm:p-5 space-y-4">
-          <div>
-            <Label htmlFor="inv-email" className="text-xs font-semibold text-foreground mb-1.5 block">
-              Work Email
-            </Label>
+    <Dialog open={isInviteOpen} onOpenChange={(o) => !o && close()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Invite to {currentOrg.name}</DialogTitle>
+          <DialogDescription>They&apos;ll get an email to join. You can change their role later.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="inv-email" className="text-xs">Work email</Label>
             <Input
               id="inv-email"
               type="email"
               placeholder="colleague@company.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="bg-surface h-9 text-xs sm:text-sm"
+              className="h-9 text-sm"
               required
               autoFocus
             />
           </div>
-
-          <div>
-            <Label htmlFor="inv-name" className="text-xs font-semibold text-foreground mb-1.5 block">
-              Full Name (Optional)
-            </Label>
-            <Input
-              id="inv-name"
-              placeholder="e.g. Rahul Verma"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="bg-surface h-9 text-xs sm:text-sm"
+          <div className="space-y-1.5">
+            <Label htmlFor="inv-role" className="text-xs">Role</Label>
+            <SelectField id="inv-role" value={role} onValueChange={(v) => setRole(v as MemberRole)} options={ROLES} size="default" className="w-full h-9" />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="inv-scope" className="text-xs">Workspace access</Label>
+            <SelectField
+              id="inv-scope"
+              value={scope}
+              onValueChange={setScope}
+              options={[
+                { value: 'all', label: 'All workspaces' },
+                { value: 'current', label: `Only ${currentWorkspace.name}` },
+              ]}
+              size="default"
+              className="w-full h-9"
             />
           </div>
-
-          <div>
-            <Label htmlFor="inv-role" className="text-xs font-semibold text-foreground mb-1.5 block">
-              Organization Role
-            </Label>
-            <select
-              id="inv-role"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="w-full h-9 px-3 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-            >
-              <option value="Admin">Admin (Full workspace, billing &amp; member management)</option>
-              <option value="Builder">Builder / Editor (Can run pipelines, edit flows &amp; build agents)</option>
-              <option value="Viewer">Viewer (Read-only access to maps, clusters &amp; logs)</option>
-            </select>
-          </div>
-
-          <div>
-            <Label htmlFor="inv-scope" className="text-xs font-semibold text-foreground mb-1.5 block">
-              Workspace Access
-            </Label>
-            <select
-              id="inv-scope"
-              value={wsScope}
-              onChange={(e) => setWsScope(e.target.value)}
-              className="w-full h-9 px-3 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-            >
-              <option value="all">All workspaces in {currentOrg.name}</option>
-              <option value="current">Current workspace only ({currentWorkspace.name})</option>
-            </select>
-          </div>
-
-          <div className="flex items-center justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" size="sm" onClick={() => setIsInviteOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="accent" size="sm" className="gap-1.5 font-medium">
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={close}>Cancel</Button>
+            <Button type="submit" variant="accent" className="gap-1.5">
               <Icon name="mail" className="w-3.5 h-3.5" />
-              Send Invitation
+              Send invite
             </Button>
-          </div>
+          </DialogFooter>
         </form>
-      </Card>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

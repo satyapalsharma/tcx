@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '../components/Toast';
 import { useReveal } from '../hooks/useReveal';
 import { useApp } from '@/context/AppContext';
-import { KpiCard, PageHeader, StatusBadge, EmptyState } from '@/components/common';
+import { KpiCard, PageHeader, StatusBadge, EmptyState, SelectField } from '@/components/common';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -94,11 +94,14 @@ export default function Analysis() {
   const [clusterView, setClusterView] = useState('tree');
   const [intentSearch, setIntentSearch] = useState('');
   const [confFilter, setConfFilter] = useState('all');
+  const [advModel, setAdvModel] = useState('tx-intent-v3.2 (recommended)');
   const [uploadSrc, setUploadSrc] = useState('local');
+  const [upS3Bucket, setUpS3Bucket] = useState('s3://skyline-cx-exports (ap-south-1)');
+  const [upGcsBucket, setUpGcsBucket] = useState('gs://skyline-cx-archive (asia-south1)');
+  const [clLevel, setClLevel] = useState('L1 · top-level cluster');
   const [nuance, setNuance] = useState('synth');
   const [piiEmbed, setPiiEmbed] = useState(true);
   const [piiIngest, setPiiIngest] = useState(true);
-  const [express, setExpress] = useState(false);
   const [dropOver, setDropOver] = useState(false);
   const [dropText, setDropText] = useState<string | null>(null);
   const [s3Result, setS3Result] = useState('Not scanned yet.');
@@ -380,16 +383,18 @@ export default function Analysis() {
                       onChange={(e) => setIntentSearch(e.target.value)}
                     />
                   </div>
-                  <select
-                    className="h-8 px-2.5 bg-surface-inset border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+                  <SelectField
                     value={confFilter}
-                    onChange={(e) => setConfFilter(e.target.value)}
-                  >
-                    <option value="all">All confidence</option>
-                    <option value="high">High (≥ 0.9)</option>
-                    <option value="mid">Medium</option>
-                    <option value="low">Low (&lt; 0.7)</option>
-                  </select>
+                    onValueChange={setConfFilter}
+                    options={[
+                      { value: 'all', label: 'All confidence' },
+                      { value: 'high', label: 'High (≥ 0.9)' },
+                      { value: 'mid', label: 'Medium' },
+                      { value: 'low', label: 'Low (< 0.7)' },
+                    ]}
+                    aria-label="Filter by confidence"
+                    className="h-8 w-[140px] bg-surface-inset"
+                  />
                   <span className="text-xs text-muted whitespace-nowrap pl-1">
                     <span id="intent-count" className="font-semibold text-foreground">{filteredIntents.length}</span> shown · click row for transcripts
                   </span>
@@ -838,11 +843,17 @@ export default function Analysis() {
               <div className="p-3.5 border-t border-border space-y-3">
                 <div>
                   <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1" htmlFor="adv-model">Extraction model</Label>
-                  <select className="w-full h-8 px-2.5 bg-surface-inset border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-accent" id="adv-model">
-                    <option>tx-intent-v3.2 (recommended)</option>
-                    <option>tx-intent-v3.1 — pinned</option>
-                    <option>claude-sonnet — sandbox</option>
-                  </select>
+                  <SelectField
+                    id="adv-model"
+                    value={advModel}
+                    onValueChange={setAdvModel}
+                    options={[
+                      'tx-intent-v3.2 (recommended)',
+                      'tx-intent-v3.1 — pinned',
+                      'claude-sonnet — sandbox',
+                    ]}
+                    className="w-full h-8 bg-surface-inset"
+                  />
                 </div>
                 <div>
                   <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1" htmlFor="adv-conf">Min. clustering confidence</Label>
@@ -927,11 +938,17 @@ export default function Analysis() {
             <div className="space-y-3" data-swap-panel="upsrc-s3" data-od-id="upload-s3">
               <div>
                 <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1" htmlFor="up-s3-bucket">Bucket</Label>
-                <select className="w-full h-8 px-2.5 bg-surface border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-accent" id="up-s3-bucket">
-                  <option>s3://skyline-cx-exports (ap-south-1)</option>
-                  <option>s3://skyline-genesys-recordings (ap-south-1)</option>
-                  <option>s3://skyline-nuance-sops (us-east-1)</option>
-                </select>
+                <SelectField
+                  id="up-s3-bucket"
+                  value={upS3Bucket}
+                  onValueChange={setUpS3Bucket}
+                  options={[
+                    's3://skyline-cx-exports (ap-south-1)',
+                    's3://skyline-genesys-recordings (ap-south-1)',
+                    's3://skyline-nuance-sops (us-east-1)',
+                  ]}
+                  className="w-full h-8 bg-surface"
+                />
               </div>
               <div>
                 <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1" htmlFor="up-s3-prefix">Prefix</Label>
@@ -951,10 +968,16 @@ export default function Analysis() {
             <div className="space-y-3" data-swap-panel="upsrc-gcs" data-od-id="upload-gcs">
               <div>
                 <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1" htmlFor="up-gcs-bucket">Bucket</Label>
-                <select className="w-full h-8 px-2.5 bg-surface border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-accent" id="up-gcs-bucket">
-                  <option>gs://skyline-cx-archive (asia-south1)</option>
-                  <option>gs://skyline-nuance-docs (asia-south1)</option>
-                </select>
+                <SelectField
+                  id="up-gcs-bucket"
+                  value={upGcsBucket}
+                  onValueChange={setUpGcsBucket}
+                  options={[
+                    'gs://skyline-cx-archive (asia-south1)',
+                    'gs://skyline-nuance-docs (asia-south1)',
+                  ]}
+                  className="w-full h-8 bg-surface"
+                />
               </div>
               <div>
                 <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1" htmlFor="up-gcs-prefix">Folder prefix</Label>
@@ -1013,50 +1036,6 @@ export default function Analysis() {
         </div>
       </Dialog>
 
-      {/* Run Pipeline Dialog */}
-      <Dialog id="dlg-run" dataOdId="run-dialog">
-        <div className="p-5 border-b border-border">
-          <h2 className="text-base font-semibold text-foreground tracking-tight">Run pipeline</h2>
-          <p className="text-xs text-muted mt-1">Long-running — you&apos;ll get live progress in this panel and in the top bar.</p>
-        </div>
-        <div className="p-5 space-y-4">
-          <div>
-            <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5">Scope</Label>
-            <div className="flex items-center gap-2" data-chips data-od-id="run-scope">
-              <Button type="button" size="sm" className="h-6.5 px-3 rounded-full text-xs font-semibold">New records only</Button>
-              <Button type="button" variant="outline" size="sm" className="h-6.5 px-3 rounded-full text-muted text-xs hover:text-foreground">Full re-cluster</Button>
-            </div>
-          </div>
-          <div className="flex items-center justify-between p-3 border border-border rounded-lg bg-surface-inset">
-            <div>
-              <div className="text-xs font-semibold text-foreground">Express mode</div>
-              <div className="text-[11px] text-muted">Runs intent extraction → clustering → process map → UML end-to-end with no manual review gates.</div>
-            </div>
-            <Switch checked={express} onCheckedChange={setExpress} aria-label="Express mode" />
-          </div>
-          <div>
-            <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="run-note">Run note (shows in audit log)</Label>
-            <Input className="w-full h-9 bg-surface text-xs sm:text-sm" id="run-note" placeholder="e.g. Week-27 refresh after retention campaign" />
-          </div>
-        </div>
-        <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-end gap-2.5 rounded-b-xl">
-          <CloseButton variant="outline" size="sm" className="h-8.5 px-3.5 text-xs">
-            Cancel
-          </CloseButton>
-          <Button
-            type="button"
-            variant="accent"
-            size="sm"
-            className="h-8.5 px-3.5 text-xs"
-            id="run-confirm"
-            data-od-id="run-confirm"
-            onClick={() => { close(); toast(express ? 'Express run queued — full pipeline completes without manual gates' : 'RUN-4822 queued behind RUN-4821', 'play'); }}
-          >
-            Start run
-          </Button>
-        </div>
-      </Dialog>
-
       {/* Cluster Rename/Merge Dialog */}
       <Dialog id="dlg-cluster" dataOdId="cluster-dialog">
         <div className="p-5 border-b border-border">
@@ -1072,22 +1051,34 @@ export default function Analysis() {
           </div>
           <div>
             <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="cl-level">Level</Label>
-            <select className="w-full h-9 px-3 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent" id="cl-level">
-              <option>L1 · top-level cluster</option>
-              <option>L2 · sub-cluster</option>
-              <option>L3 · leaf node</option>
-            </select>
+            <SelectField
+              id="cl-level"
+              value={clLevel}
+              onValueChange={setClLevel}
+              options={[
+                'L1 · top-level cluster',
+                'L2 · sub-cluster',
+                'L3 · leaf node',
+              ]}
+              className="w-full h-9 bg-surface"
+            />
           </div>
           <div>
             <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="cl-merge">Merge into (optional)</Label>
-            <select className="w-full h-9 px-3 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent" id="cl-merge" value={clMerge} onChange={(e) => setClMerge(e.target.value)}>
-              <option value="">— Don&apos;t merge —</option>
-              <option>Connectivity & Outages</option>
-              <option>New Installation & Provisioning</option>
-              <option>Plan Changes & Upgrades</option>
-              <option>Cancellation & Port-out</option>
-              <option>Account & Identity</option>
-            </select>
+            <SelectField
+              id="cl-merge"
+              value={clMerge}
+              onValueChange={setClMerge}
+              options={[
+                { value: '', label: "— Don't merge —" },
+                { value: 'Connectivity & Outages', label: 'Connectivity & Outages' },
+                { value: 'New Installation & Provisioning', label: 'New Installation & Provisioning' },
+                { value: 'Plan Changes & Upgrades', label: 'Plan Changes & Upgrades' },
+                { value: 'Cancellation & Port-out', label: 'Cancellation & Port-out' },
+                { value: 'Account & Identity', label: 'Account & Identity' },
+              ]}
+              className="w-full h-9 bg-surface"
+            />
             <span className="text-[11px] text-muted mt-1 block">All L3 nodes and their volume move to the target cluster.</span>
           </div>
         </div>

@@ -2,19 +2,16 @@
 
 import { useMemo, useState } from 'react';
 import { AppShell } from '../components/AppShell';
-import { Icon } from '../components/Icon';
+import { Icon, type IconName } from '../components/Icon';
 import { CloseButton, Dialog, Drawer, useOverlay } from '../components/Overlay';
 import { useToast } from '../components/Toast';
 import { useReveal } from '../hooks/useReveal';
-import { useApp } from '@/context/AppContext';
-import { JOBS, JOB_STEPS, type Job, type StepStatus } from '../data/jobs';
-import { KpiCard, PageHeader, StatusBadge, EmptyState, SearchToolbar } from '@/components/common';
+import { useApp, type ModularTaskType, type WorkspaceJob } from '@/context/AppContext';
+import { JOB_STEPS, type StepStatus } from '../data/jobs';
+import { KpiCard, PageHeader, StatusBadge, EmptyState, SearchToolbar, SelectField } from '@/components/common';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { cn } from 'cn';
 
@@ -25,15 +22,25 @@ const STEP_ICONS: Record<StepStatus, Parameters<typeof Icon>[0]['name']> = {
   failed: 'x',
 };
 
+const QUICK_LAUNCH: { type: ModularTaskType; label: string; hint: string; icon: IconName }[] = [
+  { type: 'extract_intents', label: 'Extract intents', hint: 'From transcripts', icon: 'search' },
+  { type: 'cluster_intents', label: 'Cluster intents', hint: 'L1 / L2 taxonomy', icon: 'chart' },
+  { type: 'design_flow', label: 'Design flow', hint: 'Process map', icon: 'flow' },
+  { type: 'generate_agent', label: 'Generate agent', hint: 'ADK / Bedrock', icon: 'code' },
+  { type: 'full_pipeline', label: 'Full pipeline', hint: 'End to end', icon: 'bolt' },
+];
+
+const parseCost = (c: string) => Number(c.replace(/[^\d.]/g, '')) || 0;
+
+type Job = WorkspaceJob;
+
 export default function Jobs() {
   useReveal();
   const toast = useToast();
   const { open, close } = useOverlay();
-  const { openNewRun, currentWorkspace } = useApp();
-  const [jobs, setJobs] = useState(JOBS);
+  const { openNewRun, currentWorkspace, jobsForCurrentWorkspace: jobs, updateJob, removeJob } = useApp();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
-  const [client, setClient] = useState('');
   const [pipe, setPipe] = useState('');
   const [selected, setSelected] = useState<Job | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Job | null>(null);
@@ -41,13 +48,25 @@ export default function Jobs() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return jobs.filter((j) => {
-      const text = `${j.id} ${j.subtitle} ${j.client} ${j.pipeline}`.toLowerCase();
+      const text = `${j.id} ${j.subtitle} ${j.pipeline}`.toLowerCase();
       return (!q || text.includes(q))
         && (!status || j.status === status)
-        && (!client || j.client === client)
         && (!pipe || j.pipe === pipe);
     });
-  }, [jobs, search, status, client, pipe]);
+  }, [jobs, search, status, pipe]);
+
+  const stats = useMemo(() => {
+    const finished = jobs.filter((j) => j.status === 'done' || j.status === 'failed');
+    const done = jobs.filter((j) => j.status === 'done').length;
+    return {
+      running: jobs.filter((j) => j.status === 'run').length,
+      queued: jobs.filter((j) => j.status === 'queued').length,
+      done,
+      failed: jobs.filter((j) => j.status === 'failed').length,
+      successRate: finished.length ? Math.round((done / finished.length) * 100) : 0,
+      spend: jobs.reduce((s, j) => s + parseCost(j.cost), 0),
+    };
+  }, [jobs]);
 
   const openJob = (job: Job) => {
     setSelected(job);
@@ -62,7 +81,7 @@ export default function Jobs() {
 
   const confirmDelete = () => {
     if (!deleteTarget) return;
-    setJobs((prev) => prev.filter((j) => j.id !== deleteTarget.id));
+    removeJob(deleteTarget.id);
     toast(`${deleteTarget.id} deleted`, 'trash');
     setDeleteTarget(null);
     close();
@@ -71,150 +90,66 @@ export default function Jobs() {
   const resetFilters = () => {
     setSearch('');
     setStatus('');
-    setClient('');
     setPipe('');
   };
 
   return (
     <AppShell
-      crumb="Jobs & Runs"
+      crumb="Jobs"
       badge={
-        <StatusBadge status="warn" pulse className="mr-2">
-          2 running
-        </StatusBadge>
+        stats.running > 0 ? (
+          <StatusBadge status="warn" pulse className="mr-2">
+            {stats.running} running
+          </StatusBadge>
+        ) : undefined
       }
     >
       <div className="p-4 sm:p-6 lg:p-7 max-w-[1240px] mx-auto w-full pb-16" data-od-id="jobs-page">
         <PageHeader
-          title="Jobs & Execution Runs"
-          description={`Workspace: ${currentWorkspace.name} · Live status, execution traces, and modular task runs.`}
+          title="Jobs"
+          description={`Every task run in ${currentWorkspace.name}. Open a job for its steps and logs.`}
           dataOdId="page-title"
           actions={
-            <>
-              <Button
-                type="button"
-                variant="outline"
-                className="gap-2 h-9 px-3.5 text-xs sm:text-sm font-medium cursor-pointer"
-                onClick={() => toast('Job history exported as jobs-30d.csv', 'download')}
-              >
-                <Icon name="download" className="w-4 h-4 text-muted" />Export CSV
-              </Button>
-              <Button
-                type="button"
-                variant="accent"
-                className="gap-2 h-9 px-3.5 text-xs sm:text-sm font-medium cursor-pointer"
-                onClick={() => openNewRun()}
-                data-od-id="new-job-btn"
-              >
-                <Icon name="plus" className="w-4 h-4" />New Task or Pipeline
-              </Button>
-            </>
+            <Button
+              type="button"
+              variant="outline"
+              className="gap-2 h-9 px-3.5 text-xs sm:text-sm font-medium cursor-pointer"
+              onClick={() => toast('Job history exported as jobs.csv', 'download')}
+            >
+              <Icon name="download" className="w-4 h-4 text-muted" />Export CSV
+            </Button>
           }
         />
 
-        {/* Modular Fast-Launch Bar */}
-        <div className="mb-6 p-4 rounded-xl border border-border bg-surface shadow-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-muted">Modular Quick Launch</span>
-              <p className="text-xs text-muted">Launch a single isolated stage or run the full end-to-end pipeline with one click:</p>
-            </div>
-            <span className="text-[11px] font-medium text-accent">Occam's Razor: 1-Click Launch</span>
+        <section className="mb-6" aria-labelledby="quick-launch-h">
+          <h2 id="quick-launch-h" className="text-xs font-semibold text-muted mb-2">Start a task</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2" data-od-id="new-job-btn">
+            {QUICK_LAUNCH.map((q) => (
+              <Button
+                key={q.type}
+                type="button"
+                variant="outline"
+                onClick={() => openNewRun(q.type)}
+                className={cn(
+                  'h-auto justify-start gap-2.5 p-3 text-left cursor-pointer',
+                  q.type === 'full_pipeline' && 'col-span-2 sm:col-span-1 border-accent/40'
+                )}
+              >
+                <Icon name={q.icon} className={cn('w-4 h-4 shrink-0', q.type === 'full_pipeline' ? 'text-accent-strong' : 'text-muted')} />
+                <span className="min-w-0">
+                  <span className="block text-xs font-semibold text-foreground truncate">{q.label}</span>
+                  <span className="block text-[11px] text-muted font-normal truncate">{q.hint}</span>
+                </span>
+              </Button>
+            ))}
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-            <button
-              type="button"
-              onClick={() => openNewRun('extract_intents')}
-              className="flex items-center gap-2 p-2.5 rounded-lg border border-border bg-surface-inset hover:border-accent/50 hover:bg-surface-hover text-left transition-all group cursor-pointer"
-            >
-              <div className="w-7 h-7 rounded-md bg-accent/10 text-accent grid place-items-center shrink-0">
-                <Icon name="search" className="w-3.5 h-3.5" />
-              </div>
-              <div className="min-w-0">
-                <div className="text-xs font-semibold text-foreground group-hover:text-accent truncate">Extract Intents</div>
-                <div className="text-[10px] text-muted truncate">From logs/audio</div>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => openNewRun('cluster_intents')}
-              className="flex items-center gap-2 p-2.5 rounded-lg border border-border bg-surface-inset hover:border-accent/50 hover:bg-surface-hover text-left transition-all group cursor-pointer"
-            >
-              <div className="w-7 h-7 rounded-md bg-accent/10 text-accent grid place-items-center shrink-0">
-                <Icon name="chart" className="w-3.5 h-3.5" />
-              </div>
-              <div className="min-w-0">
-                <div className="text-xs font-semibold text-foreground group-hover:text-accent truncate">Cluster Intents</div>
-                <div className="text-[10px] text-muted truncate">L1/L2 taxonomy</div>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => openNewRun('design_flow')}
-              className="flex items-center gap-2 p-2.5 rounded-lg border border-border bg-surface-inset hover:border-accent/50 hover:bg-surface-hover text-left transition-all group cursor-pointer"
-            >
-              <div className="w-7 h-7 rounded-md bg-accent/10 text-accent grid place-items-center shrink-0">
-                <Icon name="flow" className="w-3.5 h-3.5" />
-              </div>
-              <div className="min-w-0">
-                <div className="text-xs font-semibold text-foreground group-hover:text-accent truncate">Design Flow</div>
-                <div className="text-[10px] text-muted truncate">Process maps &amp; rules</div>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => openNewRun('generate_agent')}
-              className="flex items-center gap-2 p-2.5 rounded-lg border border-border bg-surface-inset hover:border-accent/50 hover:bg-surface-hover text-left transition-all group cursor-pointer"
-            >
-              <div className="w-7 h-7 rounded-md bg-accent/10 text-accent grid place-items-center shrink-0">
-                <Icon name="code" className="w-3.5 h-3.5" />
-              </div>
-              <div className="min-w-0">
-                <div className="text-xs font-semibold text-foreground group-hover:text-accent truncate">Build Agent</div>
-                <div className="text-[10px] text-muted truncate">ADK / Bedrock code</div>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => openNewRun('full_pipeline')}
-              className="col-span-2 sm:col-span-1 flex items-center gap-2 p-2.5 rounded-lg border border-accent/40 bg-accent/5 hover:bg-accent/10 text-left transition-all group cursor-pointer"
-            >
-              <div className="w-7 h-7 rounded-md bg-accent text-accent-fg grid place-items-center shrink-0">
-                <Icon name="bolt" className="w-3.5 h-3.5" />
-              </div>
-              <div className="min-w-0">
-                <div className="text-xs font-bold text-accent truncate">Full Pipeline</div>
-                <div className="text-[10px] text-muted truncate">End-to-End run</div>
-              </div>
-            </button>
-          </div>
-        </div>
+        </section>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-6" data-od-id="job-kpis">
-          <KpiCard
-            label="Running now"
-            value="2"
-            description="1 queued behind RUN-4821"
-          />
-          <KpiCard
-            label="Completed · 30d"
-            value="1,204"
-            description="98.1% success rate"
-          />
-          <KpiCard
-            label="Failed · 30d"
-            value="23"
-            description="mostly Bedrock auth scope"
-          />
-          <KpiCard
-            label="Spend · 30d"
-            value="₹10.7L"
-            description="across 4 clients"
-          />
+          <KpiCard label="Running" value={String(stats.running)} description={`${stats.queued} queued`} />
+          <KpiCard label="Completed" value={String(stats.done)} description={`${stats.successRate}% success rate`} />
+          <KpiCard label="Failed" value={String(stats.failed)} description={stats.failed ? 'Open a job to see why' : 'All clear'} />
+          <KpiCard label="Spend" value={`₹${stats.spend.toLocaleString('en-IN')}`} description={`across ${jobs.length} jobs`} />
         </div>
 
         <Card className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden p-0 gap-0">
@@ -223,63 +158,47 @@ export default function Jobs() {
             <SearchToolbar
               query={search}
               onQueryChange={setSearch}
-              placeholder="Search job or project"
+              placeholder="Search jobs"
               count={filtered.length}
               countLabel="shown"
             >
-              <select
-                className="h-8 px-2.5 bg-surface-inset border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+              <SelectField
                 id="j-status"
                 aria-label="Filter by status"
                 value={status}
-                onChange={(e) => setStatus(e.target.value)}
-              >
-                <option value="">All statuses</option>
-                <option value="run">Running</option>
-                <option value="queued">Queued</option>
-                <option value="done">Completed</option>
-                <option value="failed">Failed</option>
-              </select>
-              <select
-                className="h-8 px-2.5 bg-surface-inset border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
-                id="j-client"
-                aria-label="Filter by client"
-                value={client}
-                onChange={(e) => setClient(e.target.value)}
-              >
-                <option value="">All clients</option>
-                <option>Skyline Broadband</option>
-                <option>Northwind Retail</option>
-                <option>Helios Health</option>
-              </select>
-              <select
-                className="h-8 px-2.5 bg-surface-inset border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+                onValueChange={setStatus}
+                className="h-8 w-[130px]"
+                options={[
+                  { value: '', label: 'All statuses' },
+                  { value: 'run', label: 'Running' },
+                  { value: 'queued', label: 'Queued' },
+                  { value: 'done', label: 'Completed' },
+                  { value: 'failed', label: 'Failed' },
+                ]}
+              />
+              <SelectField
                 id="j-pipe"
-                aria-label="Filter by pipeline"
+                aria-label="Filter by stage"
                 value={pipe}
-                onChange={(e) => setPipe(e.target.value)}
-              >
-                <option value="">All pipelines</option>
-                <option>Analysis</option>
-                <option>Design</option>
-                <option>Develop</option>
-              </select>
+                onValueChange={setPipe}
+                className="h-8 w-[130px]"
+                options={[{ value: '', label: 'All stages' }, 'Analysis', 'Design', 'Develop']}
+              />
             </SearchToolbar>
           </div>
 
           {/* Desktop Table View */}
           <div className="hidden sm:block overflow-x-auto">
-            <Table id="jobs-table" className="min-w-[760px]">
+            <Table id="jobs-table" className="min-w-[720px]">
               <TableHeader className="bg-surface border-b border-border">
                 <TableRow className="text-[11px] font-semibold uppercase tracking-wider text-muted hover:bg-transparent">
                   <TableHead className="px-4 py-2.5 text-muted">Job</TableHead>
-                  <TableHead className="px-4 py-2.5 text-muted">Client</TableHead>
-                  <TableHead className="px-4 py-2.5 text-muted">Pipeline</TableHead>
+                  <TableHead className="px-4 py-2.5 text-muted">Task</TableHead>
                   <TableHead className="px-4 py-2.5 text-muted">Status</TableHead>
                   <TableHead className="px-4 py-2.5 min-w-[130px] text-muted">Progress</TableHead>
                   <TableHead className="px-4 py-2.5 text-muted">Started</TableHead>
                   <TableHead className="px-4 py-2.5 text-right text-muted">Cost</TableHead>
-                  <TableHead className="px-3 py-2.5 w-24 text-right" />
+                  <TableHead className="px-3 py-2.5 w-24 text-right"><span className="sr-only">Actions</span></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody id="jobs-body" className="divide-y divide-border">
@@ -295,7 +214,6 @@ export default function Jobs() {
                       key={j.id}
                       className="hover:bg-surface-hover/70 transition-colors cursor-pointer group"
                       data-status={j.status}
-                      data-client={j.client}
                       data-pipe={j.pipe}
                       data-od-id={`job-${j.id.split('-')[1]}`}
                       onClick={(e) => {
@@ -307,7 +225,6 @@ export default function Jobs() {
                         <div className="font-mono text-xs sm:text-sm font-semibold text-foreground">{j.id}</div>
                         <div className="text-[11.5px] text-muted mt-0.5">{j.subtitle}</div>
                       </TableCell>
-                      <TableCell className="px-4 py-3 text-xs sm:text-sm text-foreground">{j.client}</TableCell>
                       <TableCell className="px-4 py-3 text-xs sm:text-sm text-foreground">{j.pipeline}</TableCell>
                       <TableCell className="px-4 py-3">
                         <StatusBadge status={statusType} pulse={j.badgeClass.includes('badge-run')}>
@@ -398,8 +315,7 @@ export default function Jobs() {
                   </div>
 
                   <div className="flex items-center justify-between text-xs text-muted">
-                    <span className="text-foreground font-medium">{j.client}</span>
-                    <span>{j.pipeline}</span>
+                    <span className="text-foreground font-medium">{j.pipeline}</span>
                   </div>
 
                   {j.progress > 0 && j.status === 'run' && (
@@ -448,7 +364,18 @@ export default function Jobs() {
             })}
           </div>
 
-          {filtered.length === 0 && (
+          {jobs.length === 0 ? (
+            <EmptyState
+              icon="play"
+              title={`No jobs in ${currentWorkspace.name} yet.`}
+              dataOdId="jobs-empty"
+              action={
+                <Button type="button" variant="accent" size="sm" className="mt-2 text-xs cursor-pointer" onClick={() => openNewRun()}>
+                  Run your first task
+                </Button>
+              }
+            />
+          ) : filtered.length === 0 && (
             <EmptyState
               icon="filter"
               title="No jobs match these filters."
@@ -470,7 +397,7 @@ export default function Jobs() {
 
           <div className="p-3.5 border-t border-border bg-surface-inset/30 flex justify-end">
             <span className="text-xs text-muted">
-              Showing <span id="j-shown" className="font-semibold text-foreground">{filtered.length}</span> of 1,229 jobs · older pages load on scroll
+              Showing <span id="j-shown" className="font-semibold text-foreground">{filtered.length}</span> of {jobs.length} jobs
             </span>
           </div>
         </Card>
@@ -512,7 +439,6 @@ export default function Jobs() {
               </div>
 
               <div className="space-y-2 py-3 border-y border-border text-xs">
-                <div className="flex justify-between items-center"><span className="text-muted">Client</span><span className="font-medium text-foreground" id="jd-client">{selected.client}</span></div>
                 <div className="flex justify-between items-center"><span className="text-muted">Pipeline</span><span className="font-medium text-foreground" id="jd-pipe">{selected.pipeline}</span></div>
                 <div className="flex justify-between items-center"><span className="text-muted">Started</span><span className="font-medium text-foreground" id="jd-started">{selected.started}</span></div>
                 <div className="flex justify-between items-center"><span className="text-muted">Records processed</span><span className="font-mono text-foreground">18,442</span></div>
@@ -568,7 +494,7 @@ export default function Jobs() {
                     className="text-xs font-medium cursor-pointer"
                     id="jd-action-btn"
                     onClick={() => {
-                      setJobs((prev) => prev.map((j) => (j.id === selected.id ? { ...j, status: 'failed', statusLabel: 'Cancelled', badgeClass: 'badge-err' } : j)));
+                      updateJob(selected.id, { status: 'failed', statusLabel: 'Cancelled', badgeClass: 'badge badge-err', progressFill: '' });
                       toast(`${selected.id} cancelled`, 'x');
                       close();
                     }}
@@ -599,7 +525,7 @@ export default function Jobs() {
       <Dialog id="dlg-confirm" dataOdId="confirm-dialog">
         <div className="p-5 border-b border-border">
           <h2 className="text-base font-semibold text-foreground tracking-tight">Delete job record?</h2>
-          <p className="text-xs text-muted mt-1">This removes the job from the ledger. Cost tracking remains recorded under the client.</p>
+          <p className="text-xs text-muted mt-1">This removes the job from the ledger. Spend already incurred stays on the organization invoice.</p>
         </div>
         <div className="p-5 text-xs text-foreground">
           Are you sure you want to delete <strong className="font-mono">{deleteTarget?.id}</strong> ({deleteTarget?.subtitle})? This cannot be undone.

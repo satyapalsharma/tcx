@@ -6,87 +6,13 @@ import { Icon } from '../components/Icon';
 import { CloseButton, Dialog, useOverlay } from '../components/Overlay';
 import { useToast } from '../components/Toast';
 import { useReveal } from '../hooks/useReveal';
-import { useApp } from '@/context/AppContext';
-import { PageHeader, StatusBadge, EmptyState, SearchToolbar } from '@/components/common';
+import { useApp, type Member, type MemberRole } from '@/context/AppContext';
+import { PageHeader, StatusBadge, EmptyState, SearchToolbar, SelectField } from '@/components/common';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-
-type Member = {
-  id: string;
-  name: string;
-  email: string;
-  role: 'Admin' | 'Builder' | 'Viewer';
-  workspaces: string;
-  lastActive: string;
-  status: 'active' | 'invited' | 'service';
-  initials: string;
-};
-
-const INITIAL_MEMBERS: Member[] = [
-  {
-    id: 'priya',
-    name: 'Priya Nair',
-    email: 'priya@skyline-broadband.com',
-    role: 'Admin',
-    workspaces: 'All Workspaces',
-    lastActive: 'Just now',
-    status: 'active',
-    initials: 'PN',
-  },
-  {
-    id: 'riya',
-    name: 'Riya Menon',
-    email: 'riya.m@skyline-broadband.com',
-    role: 'Builder',
-    workspaces: 'Customer Operations',
-    lastActive: '12 min ago',
-    status: 'active',
-    initials: 'RM',
-  },
-  {
-    id: 'devika',
-    name: 'Devika Sharma',
-    email: 'devika.s@skyline-broadband.com',
-    role: 'Builder',
-    workspaces: 'Billing & Payments',
-    lastActive: '1 hr ago',
-    status: 'active',
-    initials: 'DS',
-  },
-  {
-    id: 'arjun',
-    name: 'Arjun Shah',
-    email: 'arjun.sh@skyline-broadband.com',
-    role: 'Builder',
-    workspaces: 'Network Support Staging',
-    lastActive: '24 min ago',
-    status: 'active',
-    initials: 'AS',
-  },
-  {
-    id: 'karan',
-    name: 'Karan Mehta',
-    email: 'k.mehta@partner.skylinebb.com',
-    role: 'Viewer',
-    workspaces: 'Customer Operations',
-    lastActive: '2 days ago',
-    status: 'invited',
-    initials: 'KM',
-  },
-  {
-    id: 'svc-deploy',
-    name: 'svc-transform-bot',
-    email: 'ci-runner@skyline-broadband.internal',
-    role: 'Builder',
-    workspaces: 'All Workspaces',
-    lastActive: 'via CI (5m ago)',
-    status: 'service',
-    initials: 'SB',
-  },
-];
 
 const ROLES_INFO = [
   {
@@ -113,9 +39,8 @@ export default function Rbac() {
   useReveal();
   const toast = useToast();
   const { open, close } = useOverlay();
-  const { currentOrg, setIsInviteOpen } = useApp();
+  const { currentOrg, setIsInviteOpen, membersForCurrentOrg: members, updateMemberRole, removeMember } = useApp();
 
-  const [members, setMembers] = useState<Member[]>(INITIAL_MEMBERS);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<Member | null>(null);
@@ -128,11 +53,9 @@ export default function Rbac() {
     return matchesSearch && matchesRole;
   });
 
-  const handleRoleChange = (memberId: string, newRole: 'Admin' | 'Builder' | 'Viewer') => {
-    setMembers((prev) =>
-      prev.map((m) => (m.id === memberId ? { ...m, role: newRole } : m))
-    );
-    toast(`Updated role to ${newRole}`, 'check');
+  const handleRoleChange = (memberId: string, newRole: MemberRole) => {
+    updateMemberRole(memberId, newRole);
+    toast(`Role changed to ${newRole}`, 'check');
   };
 
   const askDelete = (member: Member) => {
@@ -142,18 +65,18 @@ export default function Rbac() {
 
   const confirmDelete = () => {
     if (!deleteTarget) return;
-    setMembers((prev) => prev.filter((m) => m.id !== deleteTarget.id));
+    removeMember(deleteTarget.id);
     toast(`Removed ${deleteTarget.name} from organization`, 'trash');
     setDeleteTarget(null);
     close();
   };
 
   return (
-    <AppShell crumb="Team & Members">
+    <AppShell crumb="Members">
       <div className="p-4 sm:p-6 lg:p-7 max-w-[1240px] mx-auto w-full pb-16 space-y-6" data-od-id="rbac-page">
         <PageHeader
-          title="Team & Access Control"
-          description={`Organization: ${currentOrg.name} · Manage collaborators, access permissions, and workspace scoping.`}
+          title="Members"
+          description={`People in ${currentOrg.name} and what they can do.`}
           dataOdId="page-title"
           actions={
             <Button
@@ -163,12 +86,12 @@ export default function Rbac() {
               onClick={() => setIsInviteOpen(true)}
               data-od-id="invite-member-btn"
             >
-              <Icon name="plus" className="w-4 h-4" />Invite team member
+              <Icon name="plus" className="w-4 h-4" />Invite member
             </Button>
           }
         />
 
-        {/* Roles Overview Cards (Occam's Razor: 3 clear SaaS roles instead of 60-checkbox matrix) */}
+        {/* Three roles, explained once */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {ROLES_INFO.map((r) => (
             <Card key={r.role} className="p-4 bg-surface border border-border rounded-xl shadow-xs space-y-2">
@@ -202,29 +125,25 @@ export default function Rbac() {
               count={filteredMembers.length}
               countLabel="shown"
             >
-              <select
-                className="h-8 px-2.5 bg-surface-inset border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+              <SelectField
                 value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
+                onValueChange={setRoleFilter}
                 aria-label="Filter by role"
-              >
-                <option value="">All roles</option>
-                <option value="Admin">Admin</option>
-                <option value="Builder">Builder</option>
-                <option value="Viewer">Viewer</option>
-              </select>
+                className="h-8 w-[120px]"
+                options={[{ value: '', label: 'All roles' }, 'Admin', 'Builder', 'Viewer']}
+              />
             </SearchToolbar>
           </div>
 
           <div className="overflow-x-auto">
-            <Table className="min-w-[700px]">
+            <Table className="md:min-w-[700px]">
               <TableHeader className="bg-surface-inset/50 border-b border-border">
                 <TableRow className="text-[11px] font-semibold uppercase tracking-wider text-muted hover:bg-transparent">
                   <TableHead className="px-4 py-3 text-muted">Member</TableHead>
                   <TableHead className="px-4 py-3 text-muted">Role</TableHead>
-                  <TableHead className="px-4 py-3 text-muted">Workspace Scope</TableHead>
-                  <TableHead className="px-4 py-3 text-muted">Status</TableHead>
-                  <TableHead className="px-4 py-3 text-muted">Last Active</TableHead>
+                  <TableHead className="hidden md:table-cell px-4 py-3 text-muted">Workspace Scope</TableHead>
+                  <TableHead className="hidden sm:table-cell px-4 py-3 text-muted">Status</TableHead>
+                  <TableHead className="hidden md:table-cell px-4 py-3 text-muted">Last Active</TableHead>
                   <TableHead className="px-4 py-3 text-right text-muted">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -238,7 +157,7 @@ export default function Rbac() {
                             {m.initials}
                           </AvatarFallback>
                         </Avatar>
-                        <div>
+                        <div className="min-w-0">
                           <div className="font-semibold text-xs text-foreground flex items-center gap-1.5">
                             {m.name}
                             {m.status === 'service' && (
@@ -247,32 +166,30 @@ export default function Rbac() {
                               </Badge>
                             )}
                           </div>
-                          <div className="text-[11px] text-muted">{m.email}</div>
+                          <div className="text-[11px] text-muted truncate max-w-[140px] sm:max-w-none">{m.email}</div>
                         </div>
                       </div>
                     </TableCell>
 
                     <TableCell className="px-4 py-3">
-                      <select
+                      <SelectField
                         value={m.role}
-                        onChange={(e) => handleRoleChange(m.id, e.target.value as 'Admin' | 'Builder' | 'Viewer')}
-                        className="h-7 px-2 bg-surface-inset border border-border rounded-md text-xs font-medium text-foreground focus:outline-none focus:border-accent"
-                        aria-label={`Change role for ${m.name}`}
-                      >
-                        <option value="Admin">Admin</option>
-                        <option value="Builder">Builder</option>
-                        <option value="Viewer">Viewer</option>
-                      </select>
+                        onValueChange={(v) => handleRoleChange(m.id, v as MemberRole)}
+                        aria-label={`Role for ${m.name}`}
+                        disabled={m.status === 'service'}
+                        className="h-7 w-[104px]"
+                        options={['Admin', 'Builder', 'Viewer']}
+                      />
                     </TableCell>
 
-                    <TableCell className="px-4 py-3 text-xs text-foreground">
+                    <TableCell className="hidden md:table-cell px-4 py-3 text-xs text-foreground">
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-surface-inset border border-border text-[11px]">
                         <Icon name="grid" className="w-3 h-3 text-muted" />
                         {m.workspaces}
                       </span>
                     </TableCell>
 
-                    <TableCell className="px-4 py-3">
+                    <TableCell className="hidden sm:table-cell px-4 py-3">
                       {m.status === 'active' ? (
                         <StatusBadge status="ok">Active</StatusBadge>
                       ) : m.status === 'invited' ? (
@@ -282,7 +199,7 @@ export default function Rbac() {
                       )}
                     </TableCell>
 
-                    <TableCell className="px-4 py-3 text-xs text-muted font-mono">
+                    <TableCell className="hidden md:table-cell px-4 py-3 text-xs text-muted font-mono">
                       {m.lastActive}
                     </TableCell>
 
@@ -294,7 +211,7 @@ export default function Rbac() {
                             variant="ghost"
                             size="icon-xs"
                             className="text-muted hover:text-foreground cursor-pointer"
-                            title="Resend Invitation"
+                            aria-label={`Resend invite to ${m.name}`}
                             onClick={() => toast(`Invitation resent to ${m.email}`, 'mail')}
                           >
                             <Icon name="sync" className="w-3.5 h-3.5" />
@@ -305,8 +222,8 @@ export default function Rbac() {
                             variant="ghost"
                             size="icon-xs"
                             className="text-muted hover:text-foreground cursor-pointer"
-                            title="Reset Password / Keys"
-                            onClick={() => toast(`Password reset sent to ${m.email}`, 'key')}
+                            aria-label={m.status === 'service' ? `Rotate token for ${m.name}` : `Send password reset to ${m.name}`}
+                            onClick={() => toast(m.status === 'service' ? 'Token rotated — old token valid for 24 h' : `Password reset sent to ${m.email}`, 'key')}
                           >
                             <Icon name="key" className="w-3.5 h-3.5" />
                           </Button>
@@ -317,7 +234,7 @@ export default function Rbac() {
                           variant="ghost"
                           size="icon-xs"
                           className="text-muted hover:text-danger-fg hover:bg-danger-soft cursor-pointer"
-                          title="Remove Member"
+                          aria-label={`Remove ${m.name}`}
                           onClick={() => askDelete(m)}
                         >
                           <Icon name="trash" className="w-3.5 h-3.5" />
