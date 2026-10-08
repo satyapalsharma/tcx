@@ -10,32 +10,37 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-const ROLES = [
-  { value: 'Admin', label: 'Admin · manages org, members & billing' },
-  { value: 'Builder', label: 'Builder · runs tasks, edits flows, builds agents' },
-  { value: 'Viewer', label: 'Viewer · read-only' },
+const ROLES: { value: MemberRole; label: string }[] = [
+  { value: 'Admin', label: 'Admin · Full org, members & billing' },
+  { value: 'Business Analyst', label: 'Business Analyst · Intent discovery, taxonomy & clustering' },
+  { value: 'CX Designer', label: 'CX Designer · Process flow maps & UML diagrams' },
+  { value: 'Developer', label: 'Developer · Agent code generation, runtime & deploy' },
+  { value: 'Viewer', label: 'Viewer · Read-only access across all stages' },
 ];
 
 export function InviteMemberModal() {
-  const { isInviteOpen, setIsInviteOpen, currentOrg, currentWorkspace, addMember } = useApp();
+  const { isInviteOpen, setIsInviteOpen, currentOrg, membersForCurrentOrg, addMember } = useApp();
   const toast = useToast();
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState<MemberRole>('Builder');
-  const [scope, setScope] = useState('all');
+  const [role, setRole] = useState<MemberRole>('Business Analyst');
 
   const close = () => {
     setIsInviteOpen(false);
     setEmail('');
-    setRole('Builder');
-    setScope('all');
+    setRole('Business Analyst');
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = email.trim();
     if (!trimmed) return;
-    addMember({ email: trimmed, role, allWorkspaces: scope === 'all' });
-    toast(`Invitation sent to ${trimmed}`, 'mail');
+    const duplicate = membersForCurrentOrg.some((member) => member.email.trim().toLowerCase() === trimmed.toLowerCase());
+    if (duplicate) {
+      toast(`${trimmed} already belongs to this organization`, 'warn');
+      return;
+    }
+    addMember({ email: trimmed, role, allWorkspaces: true });
+    toast(`Invitation for ${trimmed} added to this demo`, 'check');
     close();
   };
 
@@ -44,7 +49,7 @@ export function InviteMemberModal() {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Invite to {currentOrg.name}</DialogTitle>
-          <DialogDescription>They&apos;ll get an email to join. You can change their role later.</DialogDescription>
+          <DialogDescription>Add a person to this organization. You can change their role later.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
@@ -64,25 +69,11 @@ export function InviteMemberModal() {
             <Label htmlFor="inv-role" className="text-xs">Role</Label>
             <SelectField id="inv-role" value={role} onValueChange={(v) => setRole(v as MemberRole)} options={ROLES} size="default" className="w-full h-9" />
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="inv-scope" className="text-xs">Workspace access</Label>
-            <SelectField
-              id="inv-scope"
-              value={scope}
-              onValueChange={setScope}
-              options={[
-                { value: 'all', label: 'All workspaces' },
-                { value: 'current', label: `Only ${currentWorkspace.name}` },
-              ]}
-              size="default"
-              className="w-full h-9"
-            />
-          </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={close}>Cancel</Button>
             <Button type="submit" variant="accent" className="gap-1.5">
               <Icon name="mail" className="w-3.5 h-3.5" />
-              Send invite
+              Add member
             </Button>
           </DialogFooter>
         </form>

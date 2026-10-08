@@ -1,4 +1,5 @@
 import type { SVGProps } from 'react';
+import { cn } from 'cn';
 import {
   LayoutGrid,
   BarChart2,
@@ -129,12 +130,10 @@ export function Icon({ name, large, className = '', ...rest }: Props) {
   if (!LucideComp) return null;
   return (
     <LucideComp
-      className={`shrink-0 ${
-        large ? 'w-[18px] h-[18px]' : 'w-4 h-4'
-      } ${className}`.trim()}
+      className={cn('tx-icon shrink-0', large ? 'size-[18px]' : 'size-4', className)}
       strokeWidth={1.8}
       aria-hidden="true"
-      {...(rest as any)}
+      {...rest}
     />
   );
 }

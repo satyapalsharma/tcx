@@ -1,327 +1,82 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { AppShell } from '../components/AppShell';
 import { Icon } from '../components/Icon';
-import { useToast } from '../components/Toast';
-import { PageHeader, StatusBadge, EmptyState, SelectField } from '@/components/common';
+import { useReveal } from '../hooks/useReveal';
+import { PageHeader } from '@/components/common';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { useApp } from '@/context/AppContext';
 
-type AuditEvent = {
-  id: string;
-  when: string;
-  date: string;
-  icon: Parameters<typeof Icon>[0]['name'];
-  sev?: 'ok' | 'warn' | 'act';
-  html: string;
-  detail: string;
-  actor: string;
-};
+const SAMPLE_ORG_ID = 'org-skyline';
 
-type AuditRow = AuditEvent | { id: string; type: 'sep'; date: string; label: string };
-
-const INITIAL: AuditRow[] = [
-  { id: '1', when: '2 min ago', date: '2026-08-16', icon: 'play', sev: 'act', actor: 'Arjun Shah', html: '<span class="actor">Arjun Shah</span> started <strong>GEN-0143</strong> on <span class="mono" style="font-size:12px">Google ADK</span> from <span class="mono" style="font-size:12px">map v3</span>', detail: 'Develop · build queued behind RUN-4821 · 4 tests incl. supervisor-token edge case' },
-  { id: '2', when: '48 min ago', date: '2026-08-16', icon: 'check', sev: 'ok', actor: 'Devika Sharma', html: '<span class="actor">Devika Sharma</span> approved <strong>process map v3</strong> and handed off to Develop', detail: 'Design · Billing Dispute Resolution · UML v3 included in snapshot' },
-  { id: '3', when: '1 h ago', date: '2026-08-16', icon: 'mail', actor: 'Devika Sharma', html: '<span class="actor">Devika Sharma</span> requested changes on <strong>Port-out Retention</strong>', detail: 'Design · escalation should trigger after two declined offers, not one' },
-  { id: '4', when: '12:41 today', date: '2026-08-16', icon: 'sync', actor: 'System', html: '<span class="actor">System</span> completed <strong>RUN-4819</strong> — intent extraction on wk26 wave', detail: 'Analysis · 18,442 records · 3,214 raw intents, deduped to 286' },
-  { id: '5', when: '11:55 today', date: '2026-08-16', icon: 'warn', sev: 'warn', actor: 'System', html: '<span class="actor">System</span> flagged <strong>Salesforce connector</strong> for re-auth', detail: 'Connectors · OAuth refresh token rejected · sync paused since 3 days ago' },
-  { id: 'sep1', type: 'sep', date: '2026-08-15', label: 'Yesterday · 15 Aug' },
-  { id: '6', when: '18:22', date: '2026-08-15', icon: 'check', sev: 'ok', actor: 'Riya Menon', html: '<span class="actor">Riya Menon</span> approved <strong>4 L1 clusters</strong> and sent to Design', detail: 'Analysis · Billing 38.2% · Connectivity 24.1% · Install 13.8% · Cancel 8.4%' },
-  { id: '7', when: '16:03', date: '2026-08-15', icon: 'upload', actor: 'Riya Menon', html: '<span class="actor">Riya Menon</span> uploaded <strong>genesys_Aug_w26.jsonl</strong> to staging', detail: 'Analysis · 4,120 call transcripts · PII redaction on' },
-  { id: '8', when: '14:19', date: '2026-08-15', icon: 'bolt', sev: 'act', actor: 'Arjun Shah', html: '<span class="actor">Arjun Shah</span> deployed <strong>ADK-0142</strong> to staging', detail: 'Develop · from map v2 · Cloud Run revision adk-0142 · 4/4 tests' },
-  { id: 'sep2', type: 'sep', date: '2026-08-13', label: '13 Aug' },
-  { id: '9', when: '17:44', date: '2026-08-13', icon: 'users', actor: 'Priya Nair', html: '<span class="actor">Priya Nair</span> changed <strong>Karan Mehta</strong> role: Viewer → limited Design-view', detail: 'Admin · applies on next sign-in · umbrella chips unchanged' },
-  { id: '10', when: '15:30', date: '2026-08-13', icon: 'warn', sev: 'warn', actor: 'System', html: '<span class="actor">System</span> aborted <strong>RUN-4812</strong> after 40 min — embedding quota exhausted', detail: 'Analysis · 12% raw intents extracted before abort · rerun queued wk27' },
-  { id: '11', when: '11:12', date: '2026-08-13', icon: 'check', sev: 'ok', actor: 'Devika Sharma', html: '<span class="actor">Devika Sharma</span> approved <strong>New Installation Booking</strong> map v2', detail: 'Design · handed off to Develop as snapshot v2' },
-  { id: '12', when: '09:05', date: '2026-08-13', icon: 'key', actor: 'Priya Nair', html: '<span class="actor">Priya Nair</span> rotated <strong>svc-transform-bot</strong> deploy token', detail: 'Admin · old token valid 24 h overlap · audit logged with vault ref vault:tdx-9182' },
+const SAMPLE_EVENTS = [
+  { id: '1', when: 'Today · 10:42', actor: 'Arjun Shah', action: 'Started an agent build', detail: 'Google ADK · process map v3', icon: 'play' as const },
+  { id: '2', when: 'Today · 10:05', actor: 'Devika Sharma', action: 'Updated a process map', detail: 'Billing Dispute Resolution · version 3', icon: 'flow' as const },
+  { id: '3', when: 'Today · 09:18', actor: 'System', action: 'Completed an intent analysis job', detail: 'Customer Operations · sample activity', icon: 'check' as const },
+  { id: '4', when: 'Yesterday · 16:30', actor: 'Riya Menon', action: 'Created a cluster set', detail: 'Customer Operations · 4 sample clusters', icon: 'chart' as const },
+  { id: '5', when: 'Yesterday · 14:12', actor: 'Priya Nair', action: 'Invited a workspace member', detail: 'Customer Operations', icon: 'users' as const },
+  { id: '6', when: '12 Aug · 11:20', actor: 'Arjun Shah', action: 'Generated an agent draft', detail: 'Amazon Bedrock · process map v2', icon: 'code' as const },
 ];
-
-const OLDER: AuditRow[] = [
-  { id: 'sep3', type: 'sep', date: '2026-08-12', label: '12 Aug' },
-  { id: '13', when: '16:47', date: '2026-08-12', icon: 'sync', actor: 'System', html: '<span class="actor">System</span> completed <strong>RUN-4811</strong> — cluster re-run on Billing L2', detail: 'Analysis · silhouette 0.41 to 0.46 after merging duplicate payment nodes' },
-  { id: '14', when: '14:02', date: '2026-08-12', icon: 'flow', actor: 'Devika Sharma', html: '<span class="actor">Devika Sharma</span> edited <strong>Port-out Retention</strong> map v1', detail: 'Design · added declined-offer loop node before escalation branch' },
-  { id: '15', when: '10:18', date: '2026-08-12', icon: 'bolt', sev: 'act', actor: 'Arjun Shah', html: '<span class="actor">Arjun Shah</span> generated <strong>GEN-0139</strong> draft for Amazon Bedrock', detail: 'Develop · from map v1 · superseded by ADK target on 13 Aug' },
-];
-
-function isEvent(row: AuditRow): row is AuditEvent {
-  return !('type' in row);
-}
 
 export default function AuditLog() {
-  const toast = useToast();
-  const [rows, setRows] = useState(INITIAL);
-  const [q, setQ] = useState('');
-  const [actor, setActor] = useState('all');
-  const [scope, setScope] = useState('all');
-  const [rangeMode, setRangeMode] = useState('week');
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const inRange = useCallback((ds: string) => {
-    if (!ds) return true;
-    if (rangeMode === '24h') return ds >= '2026-08-15';
-    if (rangeMode === 'custom') {
-      if (fromDate && ds < fromDate) return false;
-      if (toDate && ds > toDate) return false;
-    }
-    return true;
-  }, [rangeMode, fromDate, toDate]);
-
-  const eventVisible = useCallback((ev: AuditEvent) => {
-    const txt = `${ev.actor} ${ev.html} ${ev.detail}`.toLowerCase();
-    const actorMatch = actor === 'all' || (actor === 'system' ? txt.includes('system') : txt.includes(actor.toLowerCase()));
-    const scopeMatch = scope === 'all' || ev.detail.includes(scope);
-    const qMatch = !q.trim() || txt.includes(q.trim().toLowerCase());
-    return actorMatch && scopeMatch && qMatch && inRange(ev.date);
-  }, [actor, scope, q, inRange]);
-
-  const { visibleCount, visibleRows, loadedEvents } = useMemo(() => {
-    const events = rows.filter(isEvent);
-    const visibleEvents = new Set(events.filter(eventVisible).map((e) => e.id));
-    const out: AuditRow[] = [];
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
-      if ('type' in row) {
-        let show = false;
-        for (let j = i + 1; j < rows.length; j++) {
-          if ('type' in rows[j]) break;
-          if (visibleEvents.has((rows[j] as AuditEvent).id)) { show = true; break; }
-        }
-        if (show) out.push(row);
-      } else if (visibleEvents.has(row.id)) {
-        out.push(row);
-      }
-    }
-    return { visibleCount: visibleEvents.size, visibleRows: out, loadedEvents: events.length };
-  }, [rows, eventVisible]);
-
-  const showingHint = visibleCount === loadedEvents
-    ? `Showing ${loadedEvents} of 481 events in the selected window`
-    : `${visibleCount} of ${loadedEvents} loaded events match · 481 in full window`;
-
-  const resetFilters = () => {
-    setQ('');
-    setActor('all');
-    setScope('all');
-    setRangeMode('week');
-    setFromDate('');
-    setToDate('');
-  };
-
-  const exportCsv = () => {
-    const out: string[][] = [];
-    rows.forEach((row) => {
-      if ('type' in row || !eventVisible(row)) return;
-      out.push([row.date, row.when, row.html.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim(), row.detail]);
-    });
-    const csv = 'date,time,event,detail\n' + out.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-    a.download = 'audit-skyline-aug.csv';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    toast(`Exported ${out.length} events as CSV`, 'download');
-  };
-
-  const loadOlder = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setRows((prev) => [...prev, ...OLDER]);
-      setLoading(false);
-      toast('3 older events loaded — 12 Aug', 'chevr');
-    }, 700);
-  };
-
-  const getSevStatus = (sev?: 'ok' | 'warn' | 'act') => {
-    if (sev === 'ok') return 'ok';
-    if (sev === 'warn') return 'warn';
-    if (sev === 'act') return 'accent';
-    return 'neutral';
-  };
+  useReveal();
+  const { currentOrg } = useApp();
+  const [search, setSearch] = useState('');
+  const hasSampleHistory = currentOrg.id === SAMPLE_ORG_ID;
+  const events = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return SAMPLE_EVENTS;
+    return SAMPLE_EVENTS.filter((event) => `${event.when} ${event.actor} ${event.action} ${event.detail}`.toLowerCase().includes(query));
+  }, [search]);
 
   return (
-    <AppShell
-      crumb="Audit log"
-      actions={
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={exportCsv}
-        >
-          <Icon name="download" />Export CSV
-        </Button>
-      }
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6" data-no-reveal data-od-id="audit-page">
+    <AppShell crumb="Audit log">
+      <main className="p-5 sm:p-8 lg:p-10 max-w-[1120px] mx-auto w-full pb-16" data-od-id="audit-page">
         <PageHeader
           title="Audit log"
-          description="Every mutation across Analysis, Design, Develop, connectors and admin — who, what and when. Retention: 365 days. Exports are signed URLs valid 15 minutes."
+          description={`Activity history for ${currentOrg.name}.`}
           dataOdId="page-title"
-          className="pb-4 border-b border-border mb-0"
-          actions={
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => toast('Retention applies workspace-wide — contact admin to change', 'info')}
-            >
-              <Icon name="gear" />Retention policy
-            </Button>
-          }
         />
 
-        <Card className="bg-surface border border-border rounded-xl p-3 sm:p-4 shadow-xs" data-od-id="audit-filters">
-          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
-            <Input
-              className="h-9 min-w-[200px] max-w-xs"
-              placeholder="Search actor, target, detail…"
-              aria-label="Search events by actor, target or detail"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-            />
-            <SelectField
-              className="h-9 w-36 sm:w-40"
-              aria-label="Filter by actor"
-              value={actor}
-              onValueChange={setActor}
-              options={[
-                { value: 'all', label: 'All actors' },
-                { value: 'Riya Menon', label: 'Riya Menon' },
-                { value: 'Devika Sharma', label: 'Devika Sharma' },
-                { value: 'Arjun Shah', label: 'Arjun Shah' },
-                { value: 'Priya Nair', label: 'Priya Nair' },
-                { value: 'system', label: 'System / runs' },
-              ]}
-            />
-            <SelectField
-              className="h-9 w-36 sm:w-40"
-              aria-label="Filter by scope"
-              value={scope}
-              onValueChange={setScope}
-              options={[
-                { value: 'all', label: 'All scopes' },
-                { value: 'Analysis', label: 'Analysis' },
-                { value: 'Design', label: 'Design' },
-                { value: 'Develop', label: 'Develop' },
-                { value: 'Connectors', label: 'Connectors' },
-                { value: 'Admin', label: 'Admin' },
-              ]}
-            />
-            <ToggleGroup
-              type="single"
-              value={rangeMode}
-              onValueChange={(val) => val && setRangeMode(val)}
-              className="gap-1"
-              aria-label="Date range"
-            >
-              {[
-                { val: '24h', label: 'Last 24 h' },
-                { val: 'week', label: 'This week' },
-                { val: 'custom', label: 'Custom range' },
-              ].map((c) => (
-                <ToggleGroupItem
-                  key={c.val}
-                  value={c.val}
-                  variant="outline"
-                  size="sm"
-                  className="h-6.5 px-2.5 rounded-full text-xs font-medium border border-border data-[state=on]:bg-foreground data-[state=on]:text-surface data-[state=on]:border-foreground cursor-pointer"
-                >
-                  {c.label}
-                </ToggleGroupItem>
-              ))}
-            </ToggleGroup>
-            {rangeMode === 'custom' && (
-              <span className="flex items-center gap-1.5">
-                <Input
-                  type="date"
-                  className="h-8 px-2 w-auto"
-                  min="2026-08-01"
-                  max="2026-08-16"
-                  aria-label="From date"
-                  value={fromDate}
-                  onChange={(e) => setFromDate(e.target.value)}
-                />
-                <span className="text-xs text-muted" aria-hidden="true">→</span>
-                <Input
-                  type="date"
-                  className="h-8 px-2 w-auto"
-                  min="2026-08-01"
-                  max="2026-08-16"
-                  aria-label="To date"
-                  value={toDate}
-                  onChange={(e) => setToDate(e.target.value)}
-                />
-              </span>
-            )}
-            <span className="flex-1" />
-            <span className="text-xs text-muted font-medium"><span>{visibleCount}</span> events</span>
-          </div>
-        </Card>
-
-        <Card className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden p-0 gap-0 divide-y divide-border/60" data-od-id="audit-events">
-          {visibleRows.map((row) => (
-            'type' in row ? (
-              <div key={row.id} className="bg-surface-inset/60 text-muted px-4 sm:px-5 py-2 text-xs font-semibold tracking-wide uppercase" data-date={row.date}>
-                {row.label}
+        {hasSampleHistory ? (
+          <section className="mt-8" aria-labelledby="sample-history-heading">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-4">
+              <div>
+                <h2 id="sample-history-heading" className="text-base font-semibold text-foreground">Recent activity</h2>
+                <p className="mt-1 text-xs text-muted">Sample history · Skyline Communications</p>
               </div>
+              <label className="relative w-full sm:w-72">
+                <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+                <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search activity" aria-label="Search sample activity" className="pl-9" />
+              </label>
+            </div>
+            {events.length ? (
+              <Card className="bg-surface border border-border rounded-xl shadow-xs divide-y divide-border overflow-hidden">
+                {events.map((event) => (
+                  <article key={event.id} className="flex items-start gap-3.5 px-4 sm:px-5 py-4">
+                    <span className="w-8 h-8 mt-0.5 rounded-lg bg-surface-inset grid place-items-center shrink-0"><Icon name={event.icon} className="w-4 h-4 text-muted" /></span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-foreground"><span className="font-medium">{event.actor}</span> {event.action.toLowerCase()}</p>
+                      <p className="mt-1 text-xs text-muted">{event.detail}</p>
+                    </div>
+                    <time className="shrink-0 text-xs text-muted">{event.when}</time>
+                  </article>
+                ))}
+              </Card>
             ) : (
-              <div key={row.id} className="flex flex-col sm:flex-row sm:items-start gap-2.5 sm:gap-4 p-3.5 sm:px-5 sm:py-4 hover:bg-surface-hover/30 transition-colors" data-date={row.date}>
-                <div className="font-mono text-xs tabular-nums text-muted shrink-0 sm:w-28 pt-0.5">{row.when}</div>
-                <div className="shrink-0">
-                  <StatusBadge status={getSevStatus(row.sev)} dot={false} className="w-7 h-7 p-0 justify-center rounded-md">
-                    <Icon name={row.icon} className="w-3.5 h-3.5" />
-                  </StatusBadge>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div
-                    className="text-xs sm:text-[13px] text-foreground leading-snug [&_.actor]:font-semibold [&_.actor]:text-foreground [&_.mono]:font-mono"
-                    dangerouslySetInnerHTML={{ __html: row.html }}
-                  />
-                  <div className="text-xs text-muted mt-1 leading-relaxed">{row.detail}</div>
-                </div>
-              </div>
-            )
-          ))}
-          {visibleCount === 0 && (
-            <EmptyState
-              icon="search"
-              title="No events match these filters"
-              description="Try a different actor, scope, date range, or search term."
-              dataOdId="audit-empty"
-              action={
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-3"
-                  onClick={resetFilters}
-                >
-                  Reset filters
-                </Button>
-              }
-            />
-          )}
-        </Card>
-
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
-          <span className="text-xs text-muted font-medium">{showingHint}</span>
-          <Button
-            variant="outline"
-            size="sm"
-            id="load-older"
-            data-od-id="load-older"
-            disabled={loading}
-            onClick={loadOlder}
-          >
-            {loading ? <span className="w-3.5 h-3.5 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" aria-hidden="true" /> : <Icon name="chevr" />}
-            Load older events
-          </Button>
-        </div>
-      </div>
+              <Card className="p-8 bg-surface border border-border rounded-xl text-center text-sm text-muted">No sample activity matches “{search}”.</Card>
+            )}
+          </section>
+        ) : (
+          <Card className="mt-8 p-8 sm:p-10 bg-surface border border-border border-dashed rounded-xl shadow-xs text-center">
+            <span className="mx-auto w-10 h-10 rounded-full bg-surface-inset grid place-items-center"><Icon name="scroll" className="w-5 h-5 text-muted" /></span>
+            <h2 className="mt-4 text-sm font-semibold text-foreground">No activity history yet</h2>
+            <p className="mt-1 mx-auto max-w-lg text-sm text-muted">Activity sync has not been connected for {currentOrg.name}. Events will appear here when organization activity is available.</p>
+          </Card>
+        )}
+      </main>
     </AppShell>
   );
 }

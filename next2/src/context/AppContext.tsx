@@ -72,7 +72,7 @@ type AppContextType = {
   // Shared data (lifted so global modals can write into page lists)
   jobs: WorkspaceJob[];
   jobsForCurrentWorkspace: WorkspaceJob[];
-  addJob: (input: { name: string; type: ModularTaskType }) => WorkspaceJob;
+  addJob: (input: { name: string; type: ModularTaskType; input?: JobInput }) => WorkspaceJob;
   updateJob: (id: string, patch: Partial<WorkspaceJob>) => void;
   removeJob: (id: string) => void;
 
@@ -84,7 +84,7 @@ type AppContextType = {
   updateOrg: (patch: Partial<Pick<Organization, 'name' | 'slug'>>) => void;
 };
 
-export type MemberRole = 'Admin' | 'Builder' | 'Viewer';
+export type MemberRole = 'Admin' | 'Business Analyst' | 'CX Designer' | 'Developer' | 'Viewer';
 
 export type Member = {
   id: string;
@@ -98,20 +98,21 @@ export type Member = {
   initials: string;
 };
 
-export type WorkspaceJob = Job & { workspaceId: string };
+export type JobInput = { source: string; fileName?: string; runtime?: string };
+export type WorkspaceJob = Job & { workspaceId: string; taskType?: ModularTaskType; input?: JobInput };
 
 const TASK_META: Record<ModularTaskType, { prefix: string; pipe: Job['pipe']; pipeline: string }> = {
-  extract_intents: { prefix: 'RUN', pipe: 'Analysis', pipeline: 'Analysis · extract intents' },
-  cluster_intents: { prefix: 'CLU', pipe: 'Analysis', pipeline: 'Analysis · cluster taxonomy' },
-  design_flow: { prefix: 'MAP', pipe: 'Design', pipeline: 'Design · process flow' },
-  generate_agent: { prefix: 'ADK', pipe: 'Develop', pipeline: 'Develop · agent code' },
-  full_pipeline: { prefix: 'E2E', pipe: 'Analysis', pipeline: 'Full pipeline · end-to-end' },
+  extract_intents: { prefix: 'RUN', pipe: 'Analysis', pipeline: 'Intent analysis' },
+  cluster_intents: { prefix: 'CLU', pipe: 'Analysis', pipeline: 'Intent clustering' },
+  design_flow: { prefix: 'MAP', pipe: 'Design', pipeline: 'Flow design' },
+  generate_agent: { prefix: 'ADK', pipe: 'Develop', pipeline: 'Agent build' },
+  full_pipeline: { prefix: 'E2E', pipe: 'Analysis', pipeline: 'Full pipeline' },
 };
 
 // Seed jobs: billing-related runs live in the Billing workspace, the rest in Customer Operations.
 const INITIAL_JOBS: WorkspaceJob[] = JOBS.map((j) => ({
   ...j,
-  workspaceId: /billing|claims/i.test(j.subtitle) ? 'ws-billing' : 'ws-cust-ops',
+  workspaceId: /northwind/i.test(j.subtitle) ? 'ws-returns' : /billing|claims/i.test(j.subtitle) ? 'ws-billing' : 'ws-cust-ops',
 }));
 
 const initials = (s: string) =>
@@ -119,16 +120,16 @@ const initials = (s: string) =>
 
 const INITIAL_MEMBERS: Member[] = [
   { id: 'priya', orgId: 'org-skyline', name: 'Priya Nair', email: 'priya@skyline-broadband.com', role: 'Admin', workspaces: 'All workspaces', lastActive: 'Just now', status: 'active', initials: 'PN' },
-  { id: 'riya', orgId: 'org-skyline', name: 'Riya Menon', email: 'riya.m@skyline-broadband.com', role: 'Builder', workspaces: 'Customer Operations', lastActive: '12 min ago', status: 'active', initials: 'RM' },
-  { id: 'devika', orgId: 'org-skyline', name: 'Devika Sharma', email: 'devika.s@skyline-broadband.com', role: 'Builder', workspaces: 'Billing & Payments', lastActive: '1 hr ago', status: 'active', initials: 'DS' },
-  { id: 'arjun', orgId: 'org-skyline', name: 'Arjun Shah', email: 'arjun.sh@skyline-broadband.com', role: 'Builder', workspaces: 'Network Support Staging', lastActive: '24 min ago', status: 'active', initials: 'AS' },
+  { id: 'riya', orgId: 'org-skyline', name: 'Riya Menon', email: 'riya.m@skyline-broadband.com', role: 'Business Analyst', workspaces: 'Customer Operations', lastActive: '12 min ago', status: 'active', initials: 'RM' },
+  { id: 'devika', orgId: 'org-skyline', name: 'Devika Sharma', email: 'devika.s@skyline-broadband.com', role: 'CX Designer', workspaces: 'Billing & Payments', lastActive: '1 hr ago', status: 'active', initials: 'DS' },
+  { id: 'arjun', orgId: 'org-skyline', name: 'Arjun Shah', email: 'arjun.sh@skyline-broadband.com', role: 'Developer', workspaces: 'Network Support Staging', lastActive: '24 min ago', status: 'active', initials: 'AS' },
   { id: 'karan', orgId: 'org-skyline', name: 'Karan Mehta', email: 'k.mehta@partner.skylinebb.com', role: 'Viewer', workspaces: 'Customer Operations', lastActive: '2 days ago', status: 'invited', initials: 'KM' },
-  { id: 'svc', orgId: 'org-skyline', name: 'svc-transform-bot', email: 'ci-runner@skyline-broadband.internal', role: 'Builder', workspaces: 'All workspaces', lastActive: 'via CI', status: 'service', initials: 'SB' },
+  { id: 'svc', orgId: 'org-skyline', name: 'svc-transform-bot', email: 'ci-runner@skyline-broadband.internal', role: 'Developer', workspaces: 'All workspaces', lastActive: 'via CI', status: 'service', initials: 'SB' },
   { id: 'rohan', orgId: 'org-northwind', name: 'Rohan Gupta', email: 'rohan@northwind.in', role: 'Admin', workspaces: 'All workspaces', lastActive: '5 min ago', status: 'active', initials: 'RG' },
-  { id: 'anita', orgId: 'org-northwind', name: 'Anita Rao', email: 'anita@northwind.in', role: 'Builder', workspaces: 'Returns & Exchanges', lastActive: '3 hr ago', status: 'active', initials: 'AR' },
+  { id: 'anita', orgId: 'org-northwind', name: 'Anita Rao', email: 'anita@northwind.in', role: 'Business Analyst', workspaces: 'Returns & Exchanges', lastActive: '3 hr ago', status: 'active', initials: 'AR' },
   { id: 'vik', orgId: 'org-northwind', name: 'Vikram Joshi', email: 'vikram@northwind.in', role: 'Viewer', workspaces: 'Omnichannel Chat', lastActive: 'Yesterday', status: 'active', initials: 'VJ' },
   { id: 'sam', orgId: 'org-acme', name: 'Sam Carter', email: 'sam@acme.io', role: 'Admin', workspaces: 'All workspaces', lastActive: '1 hr ago', status: 'active', initials: 'SC' },
-  { id: 'lee', orgId: 'org-acme', name: 'Lee Wong', email: 'lee@acme.io', role: 'Builder', workspaces: 'Core Automation', lastActive: '2 days ago', status: 'active', initials: 'LW' },
+  { id: 'lee', orgId: 'org-acme', name: 'Lee Wong', email: 'lee@acme.io', role: 'Developer', workspaces: 'Core Automation', lastActive: '2 days ago', status: 'active', initials: 'LW' },
 ];
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -147,15 +148,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [isNewWsOpen, setIsNewWsOpen] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
 
-  // Hydrate selected org/workspace from localStorage
-  useEffect(() => {
-    try {
-      const savedOrg = localStorage.getItem('tx-org');
-      const savedWs = localStorage.getItem('tx-ws');
-      if (savedOrg && INITIAL_ORGS.some((o) => o.id === savedOrg)) setCurrentOrgId(savedOrg);
-      if (savedWs) setCurrentWorkspaceId(savedWs);
-    } catch { /* noop */ }
-  }, []);
+  const [hydrated, setHydrated] = useState(false);
 
   // Sync current workspace when org changes
   const workspacesForCurrentOrg = workspaces.filter((w) => w.orgId === currentOrgId);
@@ -163,6 +156,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const currentWorkspace = workspacesForCurrentOrg.find((w) => w.id === currentWorkspaceId) ?? workspacesForCurrentOrg[0] ?? workspaces[0];
 
   const switchOrg = (orgId: string) => {
+    if (!organizations.some((org) => org.id === orgId)) return;
     setCurrentOrgId(orgId);
     try { localStorage.setItem('tx-org', orgId); } catch { /* noop */ }
     const orgWorkspaces = workspaces.filter((w) => w.orgId === orgId);
@@ -175,7 +169,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const createOrg = (name: string): Organization => {
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     const newOrg: Organization = {
-      id: `org-${Date.now()}`,
+      id: `org-${crypto.randomUUID()}`,
       name,
       slug: slug || 'new-org',
       plan: 'Starter',
@@ -183,17 +177,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       memberCount: 1,
     };
     const defaultWs: Workspace = {
-      id: `ws-${Date.now()}`,
-      name: 'Default Workspace',
+      id: `ws-${crypto.randomUUID()}`,
+      name: 'General',
       orgId: newOrg.id,
-      description: 'Main production workspace',
+      description: 'Your first workspace',
       isDefault: true,
       jobCount: 0,
     };
     setOrganizations((prev) => [...prev, newOrg]);
     setWorkspaces((prev) => [...prev, defaultWs]);
     setMembers((prev) => [
-      { id: `mem-${Date.now()}`, orgId: newOrg.id, name: 'Priya Nair', email: 'priya@skyline-broadband.com', role: 'Admin', workspaces: 'All workspaces', lastActive: 'Just now', status: 'active', initials: 'PN' },
+      { id: `mem-${crypto.randomUUID()}`, orgId: newOrg.id, name: 'Priya Nair', email: 'priya@skyline-broadband.com', role: 'Admin', workspaces: 'All workspaces', lastActive: 'Just now', status: 'active', initials: 'PN' },
       ...prev,
     ]);
     setCurrentOrgId(newOrg.id);
@@ -202,13 +196,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const switchWorkspace = (wsId: string) => {
+    if (!workspacesForCurrentOrg.some((ws) => ws.id === wsId)) return;
     setCurrentWorkspaceId(wsId);
     try { localStorage.setItem('tx-ws', wsId); } catch { /* noop */ }
   };
 
-  const createWorkspace = (name: string, description = 'Workspace for pipeline runs'): Workspace => {
+  const createWorkspace = (name: string, description = 'Jobs and results for your team'): Workspace => {
     const newWs: Workspace = {
-      id: `ws-${Date.now()}`,
+      id: `ws-${crypto.randomUUID()}`,
       name,
       orgId: currentOrgId,
       description,
@@ -233,10 +228,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [jobs, setJobs] = useState<WorkspaceJob[]>(INITIAL_JOBS);
   const jobsForCurrentWorkspace = jobs.filter((j) => j.workspaceId === currentWorkspace.id);
 
-  const addJob = ({ name, type }: { name: string; type: ModularTaskType }): WorkspaceJob => {
+  const addJob = ({ name, type, input }: { name: string; type: ModularTaskType; input?: JobInput }): WorkspaceJob => {
     const meta = TASK_META[type];
     const job: WorkspaceJob = {
-      id: `${meta.prefix}-${Math.floor(4900 + Math.random() * 900)}`,
+      id: `${meta.prefix}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
       subtitle: name,
       client: currentOrg.name,
       pipeline: meta.pipeline,
@@ -251,6 +246,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       cost: '—',
       costMuted: true,
       workspaceId: currentWorkspace.id,
+      taskType: type,
+      input,
     };
     setJobs((prev) => [job, ...prev]);
     return job;
@@ -264,10 +261,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const membersForCurrentOrg = members.filter((m) => m.orgId === currentOrg.id);
 
   const addMember = ({ email, name, role, allWorkspaces }: { email: string; name?: string; role: MemberRole; allWorkspaces: boolean }) => {
+    if (membersForCurrentOrg.some((member) => member.email.toLowerCase() === email.trim().toLowerCase())) return;
     const display = name?.trim() || email.split('@')[0];
     setMembers((prev) => [
       {
-        id: `mem-${Date.now()}`,
+        id: `mem-${crypto.randomUUID()}`,
         orgId: currentOrg.id,
         name: display,
         email,
@@ -287,6 +285,50 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const updateOrg = (patch: Partial<Pick<Organization, 'name' | 'slug'>>) =>
     setOrganizations((prev) => prev.map((o) => (o.id === currentOrg.id ? { ...o, ...patch } : o)));
 
+  // Save the demo hierarchy together so new organizations and their jobs survive reloads.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('tx-app-v1');
+      if (raw) {
+        const saved = JSON.parse(raw);
+        const valid = Array.isArray(saved.organizations) && saved.organizations.length > 0 &&
+          saved.organizations.every((o: Organization) => typeof o.id === 'string' && typeof o.name === 'string') &&
+          Array.isArray(saved.workspaces) && saved.workspaces.length > 0 &&
+          saved.workspaces.every((w: Workspace) => typeof w.id === 'string' && typeof w.name === 'string' && saved.organizations.some((o: Organization) => o.id === w.orgId)) &&
+          saved.organizations.every((o: Organization) => saved.workspaces.some((w: Workspace) => w.orgId === o.id)) &&
+          Array.isArray(saved.jobs) && saved.jobs.every((j: WorkspaceJob) => typeof j.id === 'string' && typeof j.subtitle === 'string' && saved.workspaces.some((w: Workspace) => w.id === j.workspaceId)) &&
+          Array.isArray(saved.members) && saved.members.every((m: Member) => typeof m.id === 'string' && typeof m.email === 'string' && typeof m.name === 'string' && saved.organizations.some((o: Organization) => o.id === m.orgId));
+        if (valid) {
+          // Hydrate external browser storage once after SSR; this effect intentionally initializes client state.
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          setOrganizations(saved.organizations);
+          setWorkspaces(saved.workspaces);
+          setJobs(saved.jobs.map((job: WorkspaceJob) => job.id === 'RUN-4770' && job.workspaceId === 'ws-cust-ops' ? { ...job, workspaceId: 'ws-returns' } : job));
+          setMembers(saved.members);
+          const orgId = saved.organizations.some((o: Organization) => o.id === saved.currentOrgId) ? saved.currentOrgId : saved.organizations[0].id;
+          setCurrentOrgId(orgId);
+          const ws = saved.workspaces.find((w: Workspace) => w.orgId === orgId && w.id === saved.currentWorkspaceId) ?? saved.workspaces.find((w: Workspace) => w.orgId === orgId);
+          setCurrentWorkspaceId(ws.id);
+        }
+      } else {
+        const orgId = localStorage.getItem('tx-org');
+        const wsId = localStorage.getItem('tx-ws');
+        if (INITIAL_ORGS.some((o) => o.id === orgId)) {
+          setCurrentOrgId(orgId!);
+          setCurrentWorkspaceId(INITIAL_WORKSPACES.find((w) => w.orgId === orgId && w.id === wsId)?.id ?? INITIAL_WORKSPACES.find((w) => w.orgId === orgId)!.id);
+        }
+      }
+    } catch { /* Invalid or unavailable local storage falls back to the sample workspace. */ }
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      localStorage.setItem('tx-app-v1', JSON.stringify({ organizations, workspaces, jobs, members, currentOrgId, currentWorkspaceId }));
+    } catch { /* The app remains usable if browser storage is disabled or full. */ }
+  }, [hydrated, organizations, workspaces, jobs, members, currentOrgId, currentWorkspaceId]);
+
   // Member count shown in switchers is derived, never stale.
   const orgsWithCounts = organizations.map((o) => ({
     ...o,
@@ -298,6 +340,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     jobCount: jobs.filter((j) => j.workspaceId === w.id).length,
   }));
   const wsCount = (w: Workspace) => workspacesWithCounts.find((x) => x.id === w.id) ?? w;
+
+  if (!hydrated) {
+    return <div className="min-h-screen grid place-items-center text-sm text-muted" role="status">Loading workspace…</div>;
+  }
 
   return (
     <AppContext.Provider

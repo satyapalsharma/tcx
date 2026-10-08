@@ -1,580 +1,459 @@
 'use client';
 
 import { useState } from 'react';
-import { Link } from '../lib/navigation';
 import { AppShell } from '../components/AppShell';
 import { Icon } from '../components/Icon';
 import { ProcessMapSvg } from '../components/ProcessMapSvg';
 import { UmlSequenceSvg } from '../components/UmlSequenceSvg';
-import { CloseButton, Dialog, Drawer, OpenButton, useOverlay } from '../components/Overlay';
-import { ChipGroup } from '../components/ui';
 import { useToast } from '../components/Toast';
 import { useReveal } from '../hooks/useReveal';
 import { useApp } from '@/context/AppContext';
-import { PageHeader, StatusBadge } from '@/components/common';
+import { PageHeader, SelectField } from '@/components/common';
 import { Card } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-const MAPS = [
-  { id: 'mi-billing', name: 'Billing Dispute Resolution', badge: 'bg-warn-soft text-warn-fg', status: 'In review', hint: 'v3 · from Invoice Disputes' },
-  { id: 'mi-outage', name: 'Outage Triage & Status', badge: 'bg-surface-inset text-foreground', status: 'Needs review', hint: 'v1 · early draft' },
-  { id: 'mi-install', name: 'New Installation Booking', badge: 'bg-success-soft text-success-fg', status: 'Approved', hint: 'v2 · yesterday' },
-  { id: 'mi-portout', name: 'Port-out Retention', badge: 'bg-surface-inset text-muted', status: 'Not generated', hint: 'cluster approved' },
+export interface FlowNode {
+  id: string;
+  title: string;
+  type: 'start' | 'message' | 'tool' | 'decision' | 'handoff' | 'end';
+  subtitle: string;
+  tool?: string;
+  rule?: string;
+  retryLimit?: number;
+  subAgent?: string;
+}
+
+const INITIAL_NODES: FlowNode[] = [
+  {
+    id: 'n-start',
+    title: 'Call Connected & Identity Auth',
+    type: 'start',
+    subtitle: 'IVR match · MSISDN verified',
+    tool: 'auth.verify_caller_jwt',
+    rule: 'Pass session token if authenticated in IVR; else prompt OTP',
+  },
+  {
+    id: 'n-intent',
+    title: 'Verify Caller Intent',
+    type: 'message',
+    subtitle: 'Extract disputed invoice ID & billing cycle',
+    rule: 'LLM intent confidence must exceed 0.85',
+  },
+  {
+    id: 'n-fetch',
+    title: 'Fetch Customer Invoice',
+    type: 'tool',
+    subtitle: 'Query billing CRM for latest statements',
+    tool: 'crm.invoices.latest(msisdn)',
+    rule: 'Retrieve charges, itemized taxes, and active promo discounts',
+  },
+  {
+    id: 'n-decision',
+    title: 'Dispute Validity & Credit Check',
+    type: 'decision',
+    subtitle: 'Is overcharge valid & amount <= ₹2,500?',
+    rule: 'Branch A: Auto-apply credit if <= ₹2,500\nBranch B: Escalate if > ₹2,500 or repeated dispute',
+    retryLimit: 1,
+  },
+  {
+    id: 'n-credit',
+    title: 'Apply Automated Credit',
+    type: 'tool',
+    subtitle: 'Credit adjustment via Billing Gateway',
+    tool: 'billing.apply_credit(invoice_id, amount)',
+    rule: 'Generate instant credit memo and send WhatsApp receipt',
+  },
+  {
+    id: 'n-handoff',
+    title: 'Retention Sub-Agent Handoff',
+    type: 'handoff',
+    subtitle: 'Specialized retention queue negotiation',
+    subAgent: 'retention_negotiator_agent',
+    rule: 'Carry full conversation context and max discount tier matrix',
+  },
+  {
+    id: 'n-end',
+    title: 'Resolution Confirmed & End Call',
+    type: 'end',
+    subtitle: 'Update CRM disposition & close session',
+    tool: 'crm.tickets.resolve(ticket_id)',
+    rule: 'Send CSAT survey link via SMS within 2 minutes',
+  },
 ];
-
-const NODES: Record<string, { name: string; aht: string; res: string; tool: string; desc: string; phrases: string[] }> = {
-  'pn-start': { name: 'START · Call connected', aht: '—', res: '—', tool: 'ivr.entry(context)', desc: 'Entry point. Caller is routed from the Genesys IVR. If phone number matches a CRM record, account context comes in with the call.', phrases: ['—'] },
-  'pn-auth': { name: 'Authenticate caller', aht: '42s', res: '91% first-try', tool: 'crm.verify_identity(msisdn, factor)', desc: 'Verify identity with the registered number plus one secondary factor — email OTP or last billed amount. After two failed tries, hand off to a human with partial context.', phrases: ['i forgot my customer id', 'verify me another way', 'why do you need that'] },
-  'pn-fetch': { name: 'Fetch invoice', aht: '3s', res: '99.4% success', tool: 'crm.get_invoice(inv_98231)', desc: 'Pull the current invoice for the verified account. If the number is on multiple lines, ask which line the dispute is about.', phrases: ['my bill this month', 'the latest invoice', 'charges on my account'] },
-  'pn-valid': { name: 'Dispute valid?', aht: '—', res: '63% valid', tool: 'policy.dispute_rules', desc: 'Valid if the charge appeared after the cancellation effective date, or a promo credit is missing past 30 days. Borderline routes to Billing Specialist with a summary.', phrases: ['—'] },
-  'pn-credit': { name: 'Issue credit', aht: '4s', res: '₹212 avg credit', tool: 'billing.apply_credit(invoice_id, amount)', desc: 'Apply credit to the invoice and note it on the account. Anything above ₹2,500 requires a supervisor token before release.', phrases: ['—'] },
-  'pn-confirm': { name: 'Send confirmation', aht: '12s', res: '98%', tool: 'comms.send_receipt(sms, email, ref)', desc: 'Summarise the adjustment verbally, send SMS and email with the reference number, and set a 7-day follow-up task.', phrases: ['—'] },
-  'pn-end': { name: 'END · Case resolved', aht: '—', res: '—', tool: 'wrapup.tag(disposition)', desc: 'Close with a wrap-up code, trigger the CSAT prompt, and tag the disposition back into the intent ledger.', phrases: ['—'] },
-  'pn-explain': { name: 'Explain charges', aht: '1m 35s', res: '37% accept', tool: 'kb.get_terms(plan_id)', desc: 'Walk the caller through disputed lines in plain language. Offer a one-time goodwill adjustment when sentiment dips.', phrases: ["that doesn't make sense", 'i disagree', 'never agreed to this'] },
-  'pn-retain': { name: 'Escalate to retention', aht: 'handoff', res: '11% of calls', tool: 'queue.route(retention)', desc: 'Warm-transfer to the retention queue with full context and dispute summary. Only after the explanation is declined twice.', phrases: ['i want to cancel then', 'just close it'] },
-};
-
-const EX_HINT: Record<string, string> = {
-  PNG: 'PNG raster of the current canvas at 2× resolution — good for slides and tickets.',
-  SVG: 'SVG vector — editable in Figma or Illustrator, scales without loss.',
-  PDF: 'PDF — map plus UML on separate pages, ready for sign-off packs.',
-  JSON: 'JSON — structured map data: nodes, edges, bound tools, guardrails and metrics.',
-  CSV: 'CSV — flat step table (node, type, tool, volume, handle time) for spreadsheets.',
-};
 
 export default function Design() {
   useReveal();
   const toast = useToast();
-  const { open, close } = useOverlay();
-  const { openNewRun, currentWorkspace } = useApp();
-  const [tab, setTab] = useState('pmap');
-  const [activeMap, setActiveMap] = useState('mi-billing');
-  const [mapStatus, setMapStatus] = useState<'review' | 'approved' | 'changes'>('review');
-  const [activeNode, setActiveNode] = useState<string | null>(null);
-  const [nodeDesc, setNodeDesc] = useState('');
-  const [exportFmt, setExportFmt] = useState('PNG');
-  const [exportName, setExportName] = useState('billing-dispute-design-v3');
-  const [includeMetrics, setIncludeMetrics] = useState(true);
-  const [severity, setSeverity] = useState('minor');
-  const [exportScope, setExportScope] = useState('current');
+  const { currentWorkspace, openNewRun } = useApp();
 
-  const openNode = (id: string) => {
-    const d = NODES[id];
-    if (!d) return;
-    setActiveNode(id);
-    setNodeDesc(d.desc);
-    open('dw-node');
+  const [nodes, setNodes] = useState<FlowNode[]>(INITIAL_NODES);
+  const [selectedNodeId, setSelectedNodeId] = useState<string>('n-decision');
+  const [activeTab, setActiveTab] = useState<'canvas' | 'diagram' | 'uml'>('canvas');
+  const [isHandedOff, setIsHandedOff] = useState(false);
+
+  const selectedNode = nodes.find((n) => n.id === selectedNodeId) ?? nodes[0];
+
+  const updateSelectedNode = (patch: Partial<FlowNode>) => {
+    setNodes((prev) => prev.map((n) => (n.id === selectedNodeId ? { ...n, ...patch } : n)));
+    toast('Node updated', 'check');
   };
 
-  const pickMap = (id: string, name: string) => {
-    setActiveMap(id);
-    if (!name.startsWith('Billing')) {
-      toast(`'${name}' — sample geometry stays Billing for this demo`, 'info');
-    }
+  const moveNode = (index: number, direction: 'up' | 'down') => {
+    const target = direction === 'up' ? index - 1 : index + 1;
+    if (target < 0 || target >= nodes.length) return;
+    const copy = [...nodes];
+    const temp = copy[index];
+    copy[index] = copy[target];
+    copy[target] = temp;
+    setNodes(copy);
+    toast('Step reordered', 'flow');
   };
 
-  const node = activeNode ? NODES[activeNode] : null;
-  const statusBadge = mapStatus === 'approved'
-    ? { className: 'bg-success-soft text-success-fg', text: 'Approved · handed to Develop' }
-    : mapStatus === 'changes'
-      ? { className: 'bg-warn-soft text-warn-fg', text: 'Changes requested' }
-      : { className: 'bg-warn-soft text-warn-fg', text: 'In review' };
+  const addStep = (type: FlowNode['type']) => {
+    const newId = `node-${Date.now()}`;
+    const newNode: FlowNode = {
+      id: newId,
+      title: type === 'decision' ? 'New Decision Gate' : type === 'tool' ? 'New Tool Action' : 'New Interaction Step',
+      type,
+      subtitle: type === 'tool' ? 'Call external API' : 'Conversational branching logic',
+      tool: type === 'tool' ? 'crm.custom_api()' : undefined,
+      rule: 'Define evaluation criteria and rules',
+    };
+    setNodes((prev) => [...prev.slice(0, -1), newNode, prev[prev.length - 1]]);
+    setSelectedNodeId(newId);
+    toast('New node added to flow', 'plus');
+  };
+
+  const handleHandoff = () => {
+    setIsHandedOff(true);
+    toast('Flow & UML blueprint approved! Handed off to Developers in Agent Builder', 'check');
+  };
 
   return (
-    <AppShell
-      crumb="Design"
-      badge={
-        <StatusBadge status="warn" pulse className="mr-2">
-          RUN-4821 · Analysis 68%
-        </StatusBadge>
-      }
-    >
-      <div className="p-4 sm:p-6 lg:p-7 max-w-[1240px] mx-auto w-full pb-16" data-od-id="design-page">
+    <AppShell crumb="Process Designer">
+      <main className="p-4 sm:p-6 lg:p-8 max-w-[1240px] mx-auto w-full pb-20 space-y-6" data-od-id="design-page">
+        {/* Header with Actions */}
         <PageHeader
           title="Process Flow Designer"
-          description={`Workspace: ${currentWorkspace.name} · Verify and edit process maps generated from approved clusters, or design new conversational business flows.`}
+          description={`Workspace: ${currentWorkspace.name} · Visually design and edit conversational flows, decision gates, and UML sequence diagrams.`}
           dataOdId="page-title"
           actions={
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex flex-wrap items-center gap-2">
               <Button
                 type="button"
                 variant="outline"
-                className="gap-1.5 h-9 px-3.5 text-xs sm:text-sm font-medium cursor-pointer"
+                className="gap-1.5 h-9 text-xs sm:text-sm"
                 onClick={() => openNewRun('design_flow')}
               >
-                <Icon name="plus" className="w-4 h-4 text-muted" />Design New Flow
+                <Icon name="flow" className="w-3.5 h-3.5" />
+                New Flow Template
               </Button>
-              <OpenButton
-                variant="outline"
-                className="gap-2 h-9 px-3.5 text-xs sm:text-sm font-medium mr-1 cursor-pointer"
-                target="dlg-export"
-                data-od-id="export-btn"
-              >
-                <Icon name="download" className="w-4 h-4 text-muted" />Export
-              </OpenButton>
-              <OpenButton
-                variant="warn"
-                className="gap-2 h-9 px-3.5 text-xs sm:text-sm font-medium cursor-pointer"
-                target="dlg-changes"
-                data-od-id="request-changes-btn"
-              >
-                <Icon name="mail" className="w-4 h-4" />Request changes
-              </OpenButton>
-              <OpenButton
+              <Button
+                type="button"
                 variant="accent"
-                className="gap-2 h-9 px-3.5 text-xs sm:text-sm font-medium cursor-pointer"
-                target="dlg-approve"
-                data-od-id="approve-btn"
+                className="gap-1.5 h-9 text-xs sm:text-sm font-medium shadow-xs"
+                onClick={handleHandoff}
               >
-                <Icon name="check" className="w-4 h-4" />Approve &amp; hand off
-              </OpenButton>
+                <Icon name="check" className="w-3.5 h-3.5" />
+                {isHandedOff ? 'Handoff Approved (v3)' : 'Approve & Hand off to Develop'}
+              </Button>
             </div>
           }
         />
 
-        {/* Upstream Strip */}
-        <div className="p-3.5 sm:px-4 bg-surface border border-border rounded-xl shadow-xs mb-4 flex items-center gap-3 flex-wrap" data-od-id="upstream-strip">
-          <Icon name="lock" className="w-4 h-4 text-muted shrink-0" />
-          <div className="text-xs flex-1 min-w-[200px]">
-            <strong className="text-foreground">Inherited from Analysis · 4 approved clusters</strong>
-            <div className="text-muted mt-0.5">Last verified by Riya Menon · 2 days ago. If upstream clusters change, maps are queued for regen — your edits stay as overlays.</div>
-          </div>
-          <div className="flex items-center gap-2 origin-right scale-90 sm:scale-95">
-            <Link
-              to="/analysis"
-              title="View upstream clusters in Analysis"
-              className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-medium rounded-full bg-success-soft text-success-fg hover:opacity-80 transition-opacity cursor-pointer"
-            >
-              <span className="w-3.5 h-3.5 rounded-full bg-success text-white grid place-items-center">
-                <Icon name="check" style={{ width: 9, height: 9 }} />
-              </span>
-              Analysis
-            </Link>
-            <span className="w-3.5 h-px bg-border shrink-0" />
-            <span className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-semibold rounded-full border border-foreground text-foreground bg-surface">
-              <span className="w-1.5 h-1.5 rounded-full bg-warn animate-pulse" />
-              Design
+        {/* Upstream Provenance Banner */}
+        <Card className="bg-surface-inset/60 border border-border p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-3">
+            <span className="w-8 h-8 rounded-lg bg-surface border border-border grid place-items-center shrink-0">
+              <Icon name="flow" className="w-4 h-4 text-accent-strong" />
             </span>
-            <span className="w-3.5 h-px bg-border shrink-0" />
-            <Link
-              to="/develop"
-              title="View agent codegen in Develop"
-              className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-medium rounded-full border border-border text-muted bg-surface hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
-            >
-              Develop
-            </Link>
+            <div>
+              <div className="font-semibold text-foreground flex items-center gap-2">
+                <span>Derived from Analysis: L1 Cluster &ldquo;Billing Dispute Resolution&rdquo;</span>
+                <Badge variant="outline" className="border-emerald-500/30 text-emerald-600 bg-emerald-500/10 text-[10px] py-0 px-1.5">
+                  Verified Snapshot v3
+                </Badge>
+              </div>
+              <p className="text-muted mt-0.5">Approved by Riya Menon (Business Analyst) · 2,847 calls synthesized into this conversational blueprint.</p>
+            </div>
           </div>
-        </div>
+          <Badge variant="outline" className="border-border text-muted font-mono text-[11px] self-start sm:self-auto">
+            5 tools · 2 sub-agents
+          </Badge>
+        </Card>
 
-        {/* 2-Column Work Area */}
-        <div className="grid grid-cols-1 md:grid-cols-[268px_minmax(0,1fr)] gap-4 items-start" data-tab-scope>
-          <div className="space-y-3 min-w-0">
-            <Tabs value={tab} onValueChange={(v) => setTab(v as 'pmap' | 'uml')} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 p-0.5 h-8 bg-surface-inset border border-border rounded-lg" data-tabs>
-                <TabsTrigger
-                  value="pmap"
-                  data-tab="pmap"
-                  data-od-id="tab-pmap"
-                  className="h-7 text-xs font-medium rounded-md data-[state=active]:bg-surface data-[state=active]:text-foreground data-[state=active]:shadow-xs data-[state=active]:font-semibold"
-                >
-                  Process maps <span className="ml-1 px-1.5 py-0.2 rounded-full bg-surface-inset text-[10px] font-mono text-muted">4</span>
+        {/* Main View Tabs: Visual Canvas Editor vs Diagram vs UML Sequence */}
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border mb-4">
+            <div className="overflow-x-auto w-full sm:w-auto">
+              <TabsList variant="line" className="w-max justify-start gap-4 h-10 bg-transparent p-0 whitespace-nowrap">
+                <TabsTrigger value="canvas" className="text-xs sm:text-sm font-medium">
+                  <Icon name="flow" className="w-3.5 h-3.5 mr-1.5" />
+                  Flow Canvas
                 </TabsTrigger>
-                <TabsTrigger
-                  value="uml"
-                  data-tab="uml"
-                  data-od-id="tab-uml"
-                  className="h-7 text-xs font-medium rounded-md data-[state=active]:bg-surface data-[state=active]:text-foreground data-[state=active]:shadow-xs data-[state=active]:font-semibold"
-                >
-                  UML diagrams <span className="ml-1 px-1.5 py-0.2 rounded-full bg-surface-inset text-[10px] font-mono text-muted">2</span>
+                <TabsTrigger value="diagram" className="text-xs sm:text-sm font-medium">
+                  <Icon name="chart" className="w-3.5 h-3.5 mr-1.5" />
+                  Process Map
+                </TabsTrigger>
+                <TabsTrigger value="uml" className="text-xs sm:text-sm font-medium">
+                  <Icon name="code" className="w-3.5 h-3.5 mr-1.5" />
+                  UML Sequence
                 </TabsTrigger>
               </TabsList>
-            </Tabs>
+            </div>
 
-            <div className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden divide-y divide-border" data-od-id="map-rail">
-              {MAPS.map((m) => {
-                const isSelected = activeMap === m.id;
-                return (
-                  <div
-                    key={m.id}
-                    className={`p-3 transition-colors cursor-pointer select-none ${
-                      isSelected ? 'bg-surface-inset/80 border-l-2 border-foreground' : 'hover:bg-surface-hover/70'
-                    }`}
-                    data-od-id={m.id}
-                    onClick={() => pickMap(m.id, m.name)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => { if (e.key === 'Enter') pickMap(m.id, m.name); }}
-                  >
-                    <strong className="text-xs font-semibold text-foreground block">{m.name}</strong>
-                    <div className="flex items-center gap-1.5 mt-1.5">
-                      <span className={`inline-flex items-center gap-1.5 h-4.5 px-2 text-[11px] font-medium rounded-full ${m.badge}`}>
-                        <span className="w-1.5 h-1.5 rounded-full bg-current" />{m.status}
-                      </span>
-                      <span className="text-[11px] text-muted truncate">{m.hint}</span>
-                    </div>
-                  </div>
-                );
-              })}
-              <div className="p-2.5">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="w-full h-8 gap-1.5 cursor-pointer"
-                  data-od-id="new-map-btn"
-                  onClick={() => toast('Choose an approved cluster in Analysis first', 'info')}
-                >
-                  <Icon name="plus" className="w-3.5 h-3.5" />Generate new map
+            {activeTab === 'canvas' && (
+              <div className="flex items-center gap-2 pb-2 sm:pb-0">
+                <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => addStep('tool')}>
+                  <Icon name="plus" className="w-3 h-3 mr-1" />
+                  Add Tool Step
+                </Button>
+                <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => addStep('decision')}>
+                  <Icon name="plus" className="w-3 h-3 mr-1" />
+                  Add Decision Gate
                 </Button>
               </div>
-            </div>
+            )}
           </div>
 
-          {tab === 'pmap' && (
-            <div data-panel="pmap" data-od-id="panel-pmap">
-              <div className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden">
-                <div className="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground">
-                      Billing Dispute Resolution <span className="text-muted font-normal">· v3</span>
-                    </h3>
-                    <div className="text-xs text-muted mt-0.5">
-                      Generated from cluster &ldquo;Invoice Disputes&rdquo; (2,847 calls) · 5 tools · 2 sub-agent routes
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-medium rounded-full ${statusBadge.className}`} id="map-status">
-                      <span className="w-1.5 h-1.5 rounded-full bg-current" />{statusBadge.text}
-                    </span>
-                    <OpenButton
-                      variant="outline"
-                      size="sm"
-                      className="gap-1.5 h-8 px-2.5 cursor-pointer"
-                      target="dlg-export"
-                    >
-                      <Icon name="download" className="w-3.5 h-3.5 text-muted" />Export
-                    </OpenButton>
-                  </div>
+          {/* TAB 1: INTERACTIVE VISUAL NODE CANVAS + INSPECTOR PANEL */}
+          <TabsContent value="canvas" className="m-0">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 items-start">
+              {/* Left: Interactive Visual Flow Nodes */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-xs text-muted px-1">
+                  <span>Conversational Nodes Sequence ({nodes.length} steps)</span>
+                  <span>Click any step to inspect &amp; edit properties</span>
                 </div>
-                <div className="p-4 sm:p-6 overflow-x-auto scrollbar-none flex justify-center bg-surface-inset/30">
-                  <div className="w-full max-w-[800px] min-w-[580px]">
-                    <ProcessMapSvg activeNode={activeNode} onNodeClick={openNode} />
-                  </div>
+
+                <div className="space-y-2.5">
+                  {nodes.map((node, index) => {
+                    const isSelected = node.id === selectedNodeId;
+                    return (
+                      <div key={node.id} className="relative group">
+                        <Card
+                          onClick={() => setSelectedNodeId(node.id)}
+                          className={`p-3.5 border transition-all cursor-pointer rounded-xl ${
+                            isSelected
+                              ? 'border-accent-strong bg-accent-soft/30 shadow-xs'
+                              : 'bg-surface border-border hover:border-border-strong hover:bg-surface-hover/50'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-3">
+                              <span className="w-6 h-6 rounded-md bg-surface-inset border border-border text-[11px] font-mono font-semibold text-muted grid place-items-center shrink-0 mt-0.5">
+                                {index + 1}
+                              </span>
+                              <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h4 className="text-xs sm:text-sm font-semibold text-foreground">{node.title}</h4>
+                                  <Badge
+                                    variant="outline"
+                                    className={`text-[10px] py-0 px-1.5 uppercase font-medium ${
+                                      node.type === 'tool'
+                                        ? 'border-emerald-500/30 text-emerald-600 bg-emerald-500/10'
+                                        : node.type === 'decision'
+                                        ? 'border-amber-500/30 text-amber-600 bg-amber-500/10'
+                                        : node.type === 'handoff'
+                                        ? 'border-purple-500/30 text-purple-600 bg-purple-500/10'
+                                        : 'border-border text-muted bg-surface-inset'
+                                    }`}
+                                  >
+                                    {node.type}
+                                  </Badge>
+                                </div>
+                                <p className="text-xs text-muted mt-0.5">{node.subtitle}</p>
+
+                                {node.tool && (
+                                  <div className="mt-1.5 inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface-inset border border-border font-mono text-[11px] text-foreground">
+                                    <Icon name="bolt" className="w-3 h-3 text-accent-strong" />
+                                    {node.tool}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Reorder Up / Down Controls */}
+                            <div className="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon-xs"
+                                className="h-6 w-6 text-muted hover:text-foreground cursor-pointer"
+                                aria-label="Move step up"
+                                disabled={index === 0}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  moveNode(index, 'up');
+                                }}
+                              >
+                                &uarr;
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon-xs"
+                                className="h-6 w-6 text-muted hover:text-foreground cursor-pointer"
+                                aria-label="Move step down"
+                                disabled={index === nodes.length - 1}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  moveNode(index, 'down');
+                                }}
+                              >
+                                &darr;
+                              </Button>
+                            </div>
+                          </div>
+                        </Card>
+
+                        {/* Connector line between steps */}
+                        {index < nodes.length - 1 && (
+                          <div className="w-0.5 h-2.5 bg-border mx-auto my-0.5" />
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-            </div>
-          )}
 
-          {tab === 'uml' && (
-            <div data-panel="uml" data-od-id="panel-uml">
-              <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_250px] gap-4 items-start">
-                <div className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden">
-                  <div className="p-4 border-b border-border flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-semibold text-foreground">UML sequence — Billing Dispute</h3>
-                      <div className="text-xs text-muted mt-0.5">Synced with process map v3 · flow between user, orchestrator, tools</div>
+              {/* Right: Node Inspector & Property Editor */}
+              <Card className="bg-surface border border-border rounded-xl p-4 sticky top-6 shadow-xs space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-border">
+                  <div>
+                    <h3 className="text-xs sm:text-sm font-semibold text-foreground">Node Inspector</h3>
+                    <p className="text-[11px] text-muted">Configure step rules &amp; tools</p>
+                  </div>
+                  <Badge variant="outline" className="text-xs font-mono uppercase">
+                    {selectedNode.type}
+                  </Badge>
+                </div>
+
+                <div className="space-y-3.5">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="node-title" className="text-xs">Step Title</Label>
+                    <Input
+                      id="node-title"
+                      value={selectedNode.title}
+                      onChange={(e) => updateSelectedNode({ title: e.target.value })}
+                      className="h-8 text-xs sm:text-sm"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="node-subtitle" className="text-xs">Summary Description</Label>
+                    <Input
+                      id="node-subtitle"
+                      value={selectedNode.subtitle}
+                      onChange={(e) => updateSelectedNode({ subtitle: e.target.value })}
+                      className="h-8 text-xs sm:text-sm"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="node-type" className="text-xs">Step Type</Label>
+                    <SelectField
+                      id="node-type"
+                      value={selectedNode.type}
+                      onValueChange={(val) => updateSelectedNode({ type: val as FlowNode['type'] })}
+                      options={[
+                        { value: 'start', label: 'Start / Intake Trigger' },
+                        { value: 'message', label: 'Message & Prompt' },
+                        { value: 'tool', label: 'Tool Call / API Trigger' },
+                        { value: 'decision', label: 'Decision Gate / Branch' },
+                        { value: 'handoff', label: 'Sub-agent Handoff' },
+                        { value: 'end', label: 'End / Resolution Call' },
+                      ]}
+                      className="h-8 text-xs w-full"
+                    />
+                  </div>
+
+                  {selectedNode.type === 'tool' && (
+                    <div className="space-y-1.5">
+                      <Label htmlFor="node-tool" className="text-xs">Bound API Tool</Label>
+                      <Input
+                        id="node-tool"
+                        value={selectedNode.tool || ''}
+                        onChange={(e) => updateSelectedNode({ tool: e.target.value })}
+                        placeholder="e.g. billing.apply_credit(amount)"
+                        className="h-8 font-mono text-xs"
+                      />
                     </div>
+                  )}
+
+                  {selectedNode.type === 'handoff' && (
+                    <div className="space-y-1.5">
+                      <Label htmlFor="node-agent" className="text-xs">Target Sub-agent</Label>
+                      <Input
+                        id="node-agent"
+                        value={selectedNode.subAgent || ''}
+                        onChange={(e) => updateSelectedNode({ subAgent: e.target.value })}
+                        placeholder="e.g. retention_negotiator_agent"
+                        className="h-8 font-mono text-xs"
+                      />
+                    </div>
+                  )}
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="node-rules" className="text-xs">Branching Rules &amp; Policy</Label>
+                    <Textarea
+                      id="node-rules"
+                      value={selectedNode.rule || ''}
+                      onChange={(e) => updateSelectedNode({ rule: e.target.value })}
+                      rows={3}
+                      className="text-xs"
+                    />
+                  </div>
+
+                  <div className="pt-2 border-t border-border flex items-center justify-between">
+                    <span className="text-xs text-muted">ID: <code className="font-mono">{selectedNode.id}</code></span>
                     <Button
                       type="button"
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
-                      className="gap-1.5 h-8 px-2.5 cursor-pointer"
-                      onClick={() => toast('Sequence regenerated from map v3', 'sync')}
+                      className="h-7 text-xs text-danger-fg hover:bg-danger-soft"
+                      onClick={() => {
+                        if (nodes.length <= 2) {
+                          toast('Cannot delete root start or end nodes', 'warn');
+                          return;
+                        }
+                        setNodes(nodes.filter((n) => n.id !== selectedNodeId));
+                        setSelectedNodeId(nodes[0].id);
+                        toast('Node removed', 'trash');
+                      }}
                     >
-                      <Icon name="sync" className="w-3.5 h-3.5 text-muted" />Regenerate
+                      Delete Node
                     </Button>
                   </div>
-                  <div className="p-4 sm:p-6 overflow-x-auto scrollbar-none">
-                    <UmlSequenceSvg />
-                  </div>
                 </div>
-
-                <div className="p-4 bg-surface border border-border rounded-xl shadow-xs space-y-3" data-od-id="uml-guardrails">
-                  <div className="pb-2 border-b border-border">
-                    <h3 className="text-sm font-semibold text-foreground">Handoff guardrails</h3>
-                  </div>
-                  <div className="space-y-3 text-xs leading-relaxed">
-                    <div>
-                      <span className="text-muted block">Escalation agent joins after</span>
-                      <span className="text-foreground font-medium">2 declined offers or account value &gt; ₹8,000/mo</span>
-                    </div>
-                    <div>
-                      <span className="text-muted block">Tools in scope</span>
-                      <span className="font-mono text-muted text-[11px] block mt-0.5">crm.get_customer · crm.get_invoice · billing.apply_credit · comms.send_receipt</span>
-                    </div>
-                    <div>
-                      <span className="text-muted block">Coverage</span>
-                      <span className="text-foreground font-medium">63% of disputes resolve without escalation</span>
-                    </div>
-                    <div className="p-2.5 rounded-lg border border-accent-border bg-accent-soft text-accent-strong flex items-start gap-2">
-                      <Icon name="info" className="w-4 h-4 mt-0.5 shrink-0" />
-                      <div className="text-[11.5px]">Ready for Develop — snapshot locks on approval. Regen keeps your overlays.</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              </Card>
             </div>
-          )}
-        </div>
-      </div>
+          </TabsContent>
 
-      {/* Node Inspector Drawer */}
-      <Drawer id="dw-node" dataOdId="node-inspector">
-        {node && (
-          <>
-            <div className="p-4 sm:p-5 border-b border-border flex items-center justify-between">
-              <div className="min-w-0 flex-1">
-                <div className="text-[10px] uppercase tracking-wider font-semibold text-muted">Process map node</div>
-                <div id="node-name" className="text-sm sm:text-base font-bold text-foreground tracking-tight mt-0.5">{node.name}</div>
+          {/* TAB 2: SVG PROCESS MAP VIEW */}
+          <TabsContent value="diagram" className="m-0">
+            <Card className="bg-surface border border-border rounded-xl p-4 sm:p-6 overflow-x-auto">
+              <div className="w-full max-w-[880px] min-w-[620px] mx-auto">
+                <ProcessMapSvg activeNode="pn-valid" />
               </div>
-              <CloseButton className="inline-flex items-center justify-center w-8 h-8 rounded-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer" title="Close">
-                <Icon name="x" className="w-4 h-4" />
-              </CloseButton>
-            </div>
-            <div className="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1">
-              <div className="grid grid-cols-2 gap-2.5">
-                <div className="p-3 bg-surface border border-border rounded-lg shadow-xs">
-                  <div className="text-[10px] uppercase tracking-wider font-semibold text-muted">Avg. handle time</div>
-                  <div className="font-mono text-base font-bold text-foreground mt-1" id="node-aht">{node.aht}</div>
-                </div>
-                <div className="p-3 bg-surface border border-border rounded-lg shadow-xs">
-                  <div className="text-[10px] uppercase tracking-wider font-semibold text-muted">Resolution share</div>
-                  <div className="font-mono text-base font-bold text-foreground mt-1" id="node-res">{node.res}</div>
-                </div>
+            </Card>
+          </TabsContent>
+
+          {/* TAB 3: UML SEQUENCE DIAGRAM */}
+          <TabsContent value="uml" className="m-0">
+            <Card className="bg-surface border border-border rounded-xl p-4 sm:p-6 overflow-x-auto">
+              <div className="min-w-[620px] max-w-[880px] mx-auto">
+                <UmlSequenceSvg />
               </div>
-
-              <div>
-                <span className="block text-xs font-semibold text-foreground tracking-wide mb-1">Bound tool</span>
-                <div className="font-mono text-xs text-foreground bg-surface-inset border border-border rounded-md px-3 py-2 overflow-x-auto whitespace-nowrap" id="node-tool">
-                  {node.tool}
-                </div>
-              </div>
-
-              <div>
-                <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1" htmlFor="node-desc">
-                  Step instructions (what the agent does here)
-                </Label>
-                <Textarea
-                  className="w-full p-2.5 bg-surface text-xs sm:text-sm"
-                  id="node-desc"
-                  rows={4}
-                  value={nodeDesc}
-                  onChange={(e) => setNodeDesc(e.target.value)}
-                />
-                <span className="text-[11px] text-muted mt-1 block">Saving bumps the map to v3.1 and re-syncs the UML diagram.</span>
-              </div>
-
-              <div>
-                <span className="block text-xs font-semibold text-foreground tracking-wide mb-1.5">Common caller phrases at this step</span>
-                <div className="flex flex-wrap gap-1.5" id="node-phrases">
-                  {node.phrases.map((p) => (
-                    <span key={p} className="h-6 px-2.5 rounded-full border border-border bg-surface-inset text-xs text-foreground inline-flex items-center">
-                      &ldquo;{p}&rdquo;
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="p-2.5 rounded-lg border border-warn bg-warn-soft/80 text-warn-fg flex items-start gap-2 text-xs">
-                <Icon name="warn" className="w-4 h-4 mt-0.5 shrink-0" />
-                <div className="leading-relaxed">
-                  Upstream Analysis is re-running (RUN-4821 · 68%). Cluster drift over 5% queues a regen after you approve.
-                </div>
-              </div>
-            </div>
-            <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-end gap-2.5 rounded-b-xl">
-              <CloseButton
-                variant="outline"
-                className="px-3.5 h-8.5 rounded-md text-foreground text-xs font-medium cursor-pointer"
-              >
-                Close
-              </CloseButton>
-              <Button
-                type="button"
-                variant="accent"
-                className="px-3.5 h-8.5 rounded-md text-xs font-medium cursor-pointer"
-                id="node-save"
-                data-od-id="node-save"
-                onClick={() => { close(); toast('Node saved — map v3.1 drafted, UML re-sync queued', 'check'); }}
-              >
-                Save changes
-              </Button>
-            </div>
-          </>
-        )}
-      </Drawer>
-
-      {/* Request Changes Dialog */}
-      <Dialog id="dlg-changes" dataOdId="changes-dialog">
-        <div className="p-5 border-b border-border">
-          <h2 className="text-base font-semibold text-foreground tracking-tight">Request changes</h2>
-          <p className="text-xs text-muted mt-1">Goes back to the owning analyst with your comment.</p>
-        </div>
-        <div className="p-5 space-y-4">
-          <div>
-            <span className="block text-xs font-semibold text-foreground tracking-wide mb-1.5">Severity</span>
-            <ChipGroup
-              value={severity}
-              onChange={setSeverity}
-              options={[
-                { val: 'minor', label: 'Minor — wording only' },
-                { val: 'major', label: 'Major — regenerate branch' },
-              ]}
-            />
-          </div>
-          <div>
-            <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="ch-note">What should change?</Label>
-            <Textarea
-              className="w-full p-2.5 bg-surface border-border text-xs sm:text-sm text-foreground focus-visible:border-accent"
-              id="ch-note"
-              rows={3}
-              placeholder="e.g. Retention escalation should only trigger after two declined offers, not one."
-            />
-          </div>
-        </div>
-        <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-end gap-2.5 rounded-b-xl">
-          <CloseButton
-            variant="outline"
-            className="px-3.5 h-8.5 rounded-md text-foreground text-xs font-medium cursor-pointer"
-          >
-            Cancel
-          </CloseButton>
-          <Button
-            type="button"
-            variant="accent"
-            className="px-3.5 h-8.5 rounded-md text-xs font-medium cursor-pointer"
-            id="ch-send"
-            data-od-id="changes-send"
-            onClick={() => { close(); setMapStatus('changes'); toast('Change request sent to Riya Menon (Analysis)', 'mail'); }}
-          >
-            Send request
-          </Button>
-        </div>
-      </Dialog>
-
-      {/* Approve Dialog */}
-      <Dialog id="dlg-approve" dataOdId="approve-dialog">
-        <div className="p-5 border-b border-border">
-          <h2 className="text-base font-semibold text-foreground tracking-tight">Approve &amp; hand off to Develop</h2>
-          <p className="text-xs text-muted mt-1">Both artifacts lock at the current version. The Develop umbrella gets a read-only snapshot.</p>
-        </div>
-        <div className="p-5 space-y-4">
-          <div>
-            <span className="block text-xs font-semibold text-foreground tracking-wide mb-1.5">Approving</span>
-            <div className="flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-1.5 h-5.5 px-2.5 text-xs font-medium rounded-full bg-surface-inset border border-border text-foreground">
-                <span className="w-1.5 h-1.5 rounded-full bg-success" />Process map v3 — Billing Dispute Resolution
-              </span>
-              <span className="inline-flex items-center gap-1.5 h-5.5 px-2.5 text-xs font-medium rounded-full bg-surface-inset border border-border text-foreground">
-                <span className="w-1.5 h-1.5 rounded-full bg-success" />UML sequence — Billing Dispute v3
-              </span>
-            </div>
-          </div>
-          <div>
-            <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="ap-note">Handoff note (optional)</Label>
-            <Textarea
-              className="w-full p-2.5 bg-surface border-border text-xs sm:text-sm text-foreground focus-visible:border-accent"
-              id="ap-note"
-              rows={3}
-              placeholder="e.g. Start with the Google ADK target — Bedrock follows next sprint."
-            />
-          </div>
-        </div>
-        <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-end gap-2.5 rounded-b-xl">
-          <CloseButton
-            variant="outline"
-            className="px-3.5 h-8.5 rounded-md text-foreground text-xs font-medium cursor-pointer"
-          >
-            Cancel
-          </CloseButton>
-          <Button
-            type="button"
-            variant="accent"
-            className="px-3.5 h-8.5 rounded-md text-xs font-medium cursor-pointer"
-            id="ap-confirm"
-            data-od-id="approve-confirm"
-            onClick={() => { close(); setMapStatus('approved'); toast('Approved — snapshot v3 shared with Develop (Develop is next in the sidebar)', 'check'); }}
-          >
-            Approve &amp; notify Dev team
-          </Button>
-        </div>
-      </Dialog>
-
-      {/* Export Dialog */}
-      <Dialog id="dlg-export" dataOdId="export-dialog">
-        <div className="p-5 border-b border-border">
-          <h2 className="text-base font-semibold text-foreground tracking-tight">Export design data</h2>
-          <p className="text-xs text-muted mt-1">Take the process maps and UML diagrams out of Transform.cx.</p>
-        </div>
-        <div className="p-5 space-y-4">
-          <div>
-            <span className="block text-xs font-semibold text-foreground tracking-wide mb-1.5">What to export</span>
-            <ChipGroup
-              value={exportScope}
-              onChange={setExportScope}
-              options={[
-                { val: 'current', label: 'Current map + UML' },
-                { val: 'approved', label: 'All approved maps' },
-                { val: 'full', label: 'Full design bundle' },
-              ]}
-            />
-          </div>
-          <div>
-            <span className="block text-xs font-semibold text-foreground tracking-wide mb-1.5">Format</span>
-            <ChipGroup
-              value={exportFmt}
-              onChange={setExportFmt}
-              options={[
-                { val: 'PNG', label: 'PNG' },
-                { val: 'SVG', label: 'SVG' },
-                { val: 'PDF', label: 'PDF' },
-                { val: 'JSON', label: 'JSON' },
-                { val: 'CSV', label: 'CSV' },
-              ]}
-            />
-            <span className="text-[11px] text-muted mt-1 block" id="export-hint">{EX_HINT[exportFmt] ?? EX_HINT.PNG}</span>
-          </div>
-          <div className="flex items-center justify-between p-3 border border-border rounded-lg bg-surface-inset">
-            <div>
-              <div className="text-xs font-semibold text-foreground">Include metrics &amp; call evidence</div>
-              <div className="text-[11px] text-muted">Volume, handle time and confidence columns where available.</div>
-            </div>
-            <Switch checked={includeMetrics} onCheckedChange={setIncludeMetrics} aria-label="Include metrics" />
-          </div>
-          <div>
-            <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="export-name">File name</Label>
-            <Input
-              className="w-full h-9 px-3 bg-surface border-border text-xs sm:text-sm text-foreground focus-visible:border-accent"
-              id="export-name"
-              value={exportName}
-              onChange={(e) => setExportName(e.target.value)}
-            />
-          </div>
-        </div>
-        <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-end gap-2.5 rounded-b-xl">
-          <CloseButton
-            variant="outline"
-            className="px-3.5 h-8.5 rounded-md text-foreground text-xs font-medium cursor-pointer"
-          >
-            Cancel
-          </CloseButton>
-          <Button
-            type="button"
-            variant="accent"
-            className="gap-1.5 px-3.5 h-8.5 rounded-md text-xs font-medium cursor-pointer"
-            id="export-confirm"
-            data-od-id="export-confirm"
-            onClick={() => { close(); toast(`${exportName}.${exportFmt.toLowerCase()} downloading`, 'download'); }}
-          >
-            <Icon name="download" className="w-3.5 h-3.5" />Export
-          </Button>
-        </div>
-      </Dialog>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </main>
     </AppShell>
   );
 }

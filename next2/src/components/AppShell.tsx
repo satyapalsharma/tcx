@@ -3,7 +3,6 @@
 import React from 'react';
 import { Link, usePathname } from '../lib/navigation';
 import { Icon } from './Icon';
-import { useToast } from './Toast';
 import { useApp } from '@/context/AppContext';
 import {
   SidebarProvider,
@@ -25,7 +24,6 @@ import {
 import {
   Breadcrumb,
   BreadcrumbItem,
-  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
@@ -42,7 +40,6 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { NewRunModal } from './modals/NewRunModal';
 import { CreateOrgModal } from './modals/CreateOrgModal';
 import { CreateWorkspaceModal } from './modals/CreateWorkspaceModal';
@@ -54,26 +51,24 @@ const NAV_GROUPS: { section: string; items: NavItem[] }[] = [
   {
     section: 'Workspace',
     items: [
-      { to: '/dashboard', icon: 'chart', label: 'Dashboard' },
+      { to: '/dashboard', icon: 'chart', label: 'Overview' },
       { to: '/jobs', icon: 'clock', label: 'Jobs' },
-      { to: '/projects', icon: 'grid', label: 'Projects' },
+      { to: '/projects', icon: 'grid', label: 'Workspaces' },
     ],
   },
   {
-    section: 'Studio',
+    section: 'Results',
     items: [
-      { to: '/analysis', icon: 'search', label: 'Intent Discovery' },
-      { to: '/design', icon: 'flow', label: 'Process Designer' },
-      { to: '/develop', icon: 'code', label: 'Agent Builder' },
+      { to: '/analysis', icon: 'search', label: 'Intents & clusters' },
+      { to: '/design', icon: 'flow', label: 'Flows' },
+      { to: '/develop', icon: 'code', label: 'Agents' },
     ],
   },
   {
     section: 'Organization',
     items: [
       { to: '/rbac', icon: 'users', label: 'Members' },
-      { to: '/connectors', icon: 'plug', label: 'Integrations' },
       { to: '/settings', icon: 'gear', label: 'Settings' },
-      { to: '/audit-log', icon: 'scroll', label: 'Audit Log' },
     ],
   },
 ];
@@ -92,7 +87,7 @@ export function AppShell({
   actions?: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const toast = useToast();
+  const organizationPage = ['/projects', '/rbac', '/settings', '/connectors', '/audit-log'].includes(pathname);
   const {
     organizations,
     currentOrg,
@@ -123,9 +118,9 @@ export function AppShell({
                         {currentOrg.name.slice(0, 2).toUpperCase()}
                       </span>
                       <span className="min-w-0 flex-1 text-left leading-tight">
-                        <span className="block font-semibold text-xs text-foreground truncate">{currentOrg.name}</span>
+                        <span className="block font-semibold text-sm text-foreground truncate">{currentOrg.name}</span>
                         <span className="block text-[11px] text-muted truncate">
-                          {currentOrg.plan} · {currentOrg.memberCount} members
+                          {currentOrg.memberCount} members
                         </span>
                       </span>
                       <Icon name="chev" className="w-3.5 h-3.5 text-muted shrink-0" />
@@ -169,7 +164,7 @@ export function AppShell({
                 {/* Workspace Switcher */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <SidebarMenuButton size="sm" className="text-xs cursor-pointer" data-od-id="workspace-switcher">
+                    <SidebarMenuButton className="text-sm cursor-pointer h-9" data-od-id="workspace-switcher">
                       <Icon name="folder" className="w-3.5 h-3.5 text-muted shrink-0" />
                       <span className="font-medium text-foreground truncate flex-1">{currentWorkspace.name}</span>
                       <Icon name="chev" className="w-3 h-3 text-muted shrink-0" />
@@ -208,11 +203,11 @@ export function AppShell({
               variant="accent"
               size="sm"
               onClick={() => openNewRun()}
-              className="w-full h-8 text-xs font-semibold gap-1.5 shadow-xs cursor-pointer"
+              className="w-full h-9 text-sm font-semibold gap-1.5 shadow-xs cursor-pointer"
               data-od-id="side-quick-run"
             >
               <Icon name="plus" className="w-3.5 h-3.5" />
-              New task
+              New job
             </Button>
           </SidebarHeader>
 
@@ -231,10 +226,11 @@ export function AppShell({
                         <SidebarMenuItem key={item.to}>
                           <SidebarMenuButton
                             asChild
+                            tooltip={item.label}
                             isActive={isActive}
-                            className={`h-8 px-2.5 my-0.5 rounded-md text-xs sm:text-[13px] font-medium transition-colors ${
+                            className={`h-9 px-2.5 my-0.5 rounded-md text-xs sm:text-[13px] font-medium transition-colors ${
                               isActive
-                                ? 'bg-foreground text-surface font-semibold shadow-xs hover:bg-foreground hover:text-surface'
+                                ? 'bg-surface-inset text-foreground font-semibold hover:bg-surface-active hover:text-foreground'
                                 : 'text-foreground hover:bg-surface-hover'
                             }`}
                           >
@@ -250,14 +246,14 @@ export function AppShell({
                             >
                               <Icon
                                 name={item.icon}
-                                className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-surface' : 'text-muted'}`}
+                                className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-accent-strong' : 'text-muted'}`}
                               />
                               <span className="truncate">{item.label}</span>
                               {item.to === '/jobs' && runningCount > 0 && (
                                 <SidebarMenuBadge
                                   className={`ml-auto text-[10.5px] font-medium px-1.5 py-0.2 rounded ${
                                     isActive
-                                      ? 'text-[oklch(80%_0.04_250)] bg-transparent'
+                                      ? 'text-muted bg-transparent'
                                       : 'text-muted bg-surface-inset'
                                   }`}
                                 >
@@ -316,10 +312,12 @@ export function AppShell({
                   <span className="font-medium text-muted">{currentOrg.name}</span>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden sm:inline-flex" />
-                <BreadcrumbItem className="hidden md:inline-flex">
-                  <span className="text-muted">{currentWorkspace.name}</span>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:inline-flex" />
+                {!organizationPage && <>
+                  <BreadcrumbItem className="hidden md:inline-flex">
+                    <span className="text-muted">{currentWorkspace.name}</span>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator className="hidden md:inline-flex" />
+                </>}
                 {middleCrumb ? (
                   <>
                     <BreadcrumbItem className="hidden md:inline-flex max-w-[180px] truncate">
@@ -342,7 +340,7 @@ export function AppShell({
                 size="icon-sm"
                 onClick={() => openNewRun()}
                 className="md:hidden cursor-pointer"
-                aria-label="New task"
+                aria-label="New job"
                 data-od-id="top-quick-run"
               >
                 <Icon name="plus" className="w-4 h-4" />
@@ -351,21 +349,7 @@ export function AppShell({
               <div className="hidden sm:flex items-center gap-2">{badge}</div>
             </div>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  className="w-8 h-8 text-muted hover:text-foreground cursor-pointer"
-                  title="Notifications"
-                  aria-label="Notifications"
-                  onClick={() => toast('No new notifications', 'bell')}
-                >
-                  <Icon name="bell" className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Notifications</TooltipContent>
-            </Tooltip>
+
           </header>
 
           {children}

@@ -1,5 +1,5 @@
-import Launcher from '@/views/Launcher';
+import Dashboard from '@/views/Dashboard';
 
 export default function Page() {
-  return <Launcher />;
+  return <Dashboard />;
 }

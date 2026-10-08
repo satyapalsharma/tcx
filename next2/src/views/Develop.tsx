@@ -1,874 +1,506 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
-import { Link } from '../lib/navigation';
+import { useState } from 'react';
 import { AppShell } from '../components/AppShell';
 import { Icon } from '../components/Icon';
-import { CloseButton, Dialog, useOverlay } from '../components/Overlay';
-import { Tabs } from '../components/ui';
 import { useToast } from '../components/Toast';
 import { useReveal } from '../hooks/useReveal';
 import { useApp } from '@/context/AppContext';
-import { PageHeader, StatusBadge, SelectField } from '@/components/common';
+import { PageHeader, SelectField } from '@/components/common';
 import { Card } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Textarea } from '@/components/ui/textarea';
-import { Toggle } from '@/components/ui/toggle';
 
-const TARGETS = [
-  { id: 'adk', name: 'Google ADK', desc: 'Python agents with FunctionTools, direct Vertex AI deploy.', badge: 'bg-accent-soft text-accent-strong', badgeText: 'Recommended' },
-  { id: 'cx', name: 'CX Agent Studio', desc: 'Google Contact Center AI flows and playbooks.', badge: 'bg-surface-inset text-foreground', badgeText: 'Flows' },
-  { id: 'bedrock', name: 'Amazon Bedrock', desc: 'Agents for Bedrock with action groups wired to Lambda tools.', badge: 'bg-surface-inset text-foreground', badgeText: 'AWS stack' },
-  { id: 'langgraph', name: 'LangGraph', desc: 'Stateful graph runtime, bring-your-own LLM with checkpoints.', badge: 'bg-surface-inset text-foreground', badgeText: 'OSS' },
-];
+interface CodeFile {
+  id: string;
+  name: string;
+  runtime: string;
+  description: string;
+  code: string;
+}
 
-const FILES: Record<string, string> = {
-  agent: `# Generated from process map v3 — Billing Dispute Resolution
-# Snapshot: approved by Devika Sharma · UML v3 · 5 tools · 2 sub-agent routes
+const RUNTIMES = ['Google ADK', 'Amazon Bedrock', 'LangGraph', 'CX Agent Studio'];
+
+const CODE_FILES: Record<string, CodeFile[]> = {
+  'Google ADK': [
+    {
+      id: 'agent-py',
+      name: 'agent.py',
+      runtime: 'Google ADK',
+      description: 'Agent definition, prompt, and tool wiring',
+      code: `# Generated from approved Design Blueprint: Billing Dispute Resolution v3
+# Upstream: Derived from Analysis L1 Cluster "Billing & Payments"
+# Target Runtime: Google ADK (Vertex AI)
 
 from google.adk import Agent
 from google.adk.tools import FunctionTool
+from tools import get_invoice, apply_credit, route_retention
 from policies import GUARDRAILS
 
-billing_dispute_agent = Agent(
+billing_agent = Agent(
     name="billing_dispute_agent",
-    model="gemini-2.0-flash",
-    instruction="""Resolve billing disputes. Verify identity, fetch the
-       invoice, check dispute_rules, apply credit inside guardrails.
-       Escalate to retention after two declined offers.""",
-    tools=GUARDRAILS.wired_tools,
-)`,
-  tools: `# tools.py — bound tools with scopes from the UML diagram
+    model="gemini-2.5-flash",
+    description="Resolves consumer billing discrepancies, validates overcharges, and applies credits within policy limits.",
+    system_instruction="""
+    You are an automated billing dispute specialist for Skyline Communications.
+    1. Authenticate the caller and verify the disputed billing cycle.
+    2. Call 'get_invoice' to inspect itemized line items and promo credits.
+    3. If overcharge is confirmed and amount <= ₹2,500, call 'apply_credit' immediately.
+    4. If overcharge > ₹2,500 or customer rejects credit offer twice, call 'route_retention'.
+    5. Always maintain professional, empathetic tone and mask account numbers.
+    """,
+    tools=[
+        FunctionTool(get_invoice),
+        FunctionTool(apply_credit),
+        FunctionTool(route_retention),
+    ],
+    guardrails=GUARDRAILS,
+)
 
-async def get_invoice(msisdn: str) -> dict:
-    """Fetch the current invoice for the verified account."""
-    return crm.invoices.latest(msisdn=msisdn)
+if __name__ == "__main__":
+    billing_agent.run_local_server(port=8080)
+`,
+    },
+    {
+      id: 'tools-py',
+      name: 'tools.py',
+      runtime: 'Google ADK',
+      description: 'Tool implementations bound to enterprise CRM & Billing API',
+      code: `# External Tool implementations for Billing Agent
 
-async def apply_credit(invoice_id: str, amount: float) -> dict:
-    if amount > 2500:
-        return escalate(reason="supervisor_token_required")
-    return billing.credit(invoice_id=invoice_id, amount=amount)
+import os
+from typing import Dict, Any
 
-async def route_retention(context: dict) -> dict:
-    return queue.route("retention", context=context)`,
-  policy: `# policies.py — guardrails baked into the build
+async def get_invoice(msisdn: str, cycle: str = "latest") -> Dict[str, Any]:
+    """Fetch itemized invoice from CRM for the authenticated customer MSISDN."""
+    # In production, queries enterprise Billing Gateway via mTLS
+    return {
+        "msisdn": msisdn,
+        "invoice_id": "INV-2026-0841",
+        "billed_amount": 1499.00,
+        "expected_promo_amount": 999.00,
+        "discrepancy": 500.00,
+        "reason": "Expired promo coupon code rollover",
+        "status": "unpaid",
+    }
 
-GUARDRAILS = dict(
-    credit_cap_inr=2500,
-    max_agent_turns=14,
-    redact_pii=True,
-    escalation=dict(
-        after_declined_offers=2,
-        queue="retention",
-        carry_context=True,
-    ),
-)`,
-  test: `# tests/test_flow.py — happy path + 3 edge cases
+async def apply_credit(invoice_id: str, amount: float) -> Dict[str, Any]:
+    """Apply an automated billing credit memo against a verified disputed invoice."""
+    if amount > 2500.0:
+        raise PermissionError("Amount exceeds supervisor policy delegation limit of ₹2,500.")
+    
+    return {
+        "status": "success",
+        "credit_memo_id": "CR-78219",
+        "adjusted_balance": 999.00,
+        "sms_notification_dispatched": True,
+    }
 
-class TestBillingDispute:
+async def route_retention(msisdn: str, reason: str, conversation_summary: str) -> Dict[str, Any]:
+    """Escalate to specialized retention negotiation sub-agent."""
+    return {
+        "queue": "retention_specialist_tier2",
+        "priority": "P1",
+        "context_transferred": True,
+        "jwt_session_token": "valid",
+    }
+`,
+    },
+    {
+      id: 'policies-py',
+      name: 'policies.py',
+      runtime: 'Google ADK',
+      description: 'Execution guardrails, credit limits, and escalation rules',
+      code: `# Enterprise Safety & Policy Guardrails
 
-    def test_valid_dispute_gets_credit(self):
-        out = run_scenario("charged_after_cancel")
-        assert out.tool_calls["apply_credit"].amount == 412.0
-
-    def test_over_cap_escalates(self):
-        out = run_scenario("credit_above_2500")
-        assert out.last_action == "escalate"
-
-    def test_two_declines_route_retention(self):
-        out = run_scenario("declined_twice")
-        assert out.queue == "retention"`,
-};
-
-const GEN_STEPS = [
-  { label: 'Scaffold agent package', meta: 'agent.py · state.py · tools.py' },
-  { label: 'Wire tools and sub-agent routes', meta: '5 tools · 2 queues' },
-  { label: 'Apply guardrails policy', meta: 'credit cap + escalation rules' },
-  { label: 'Unit tests', meta: 'happy path + 3 edge cases' },
-];
-
-const GAP_TYPES = ['Wording', 'Missing step', 'Wrong tool / data', 'Guardrail gap'];
-
-type ChatMsg = { who: string; text: string; isBot: boolean; typing?: boolean };
-type Gap = { sev: string; note: string; quote: string };
-
-function agentReply(q: string) {
-  const s = q.toLowerCase();
-  if (s.includes('hi') || s.includes('hello')) return "Hello — you're through to the Skyline billing agent. I can help with invoice disputes, credits and cancellations. What's the issue today?";
-  if (s.includes('cancel') || s.includes('still')) return 'I can see the line was cancelled on 12 June, but billing continued to 31 July. I can apply a pro-rata credit of ₹412.00 to invoice INV-98231 — shall I go ahead?';
-  if (s.includes('credit') || s.includes('refund') || s.includes('apply')) return 'Credit of ₹412.00 applied to invoice INV-98231. A confirmation is on its way by SMS and email with reference SBB-2026-44817.';
-  if (s.includes('supervisor') || s.includes('human') || s.includes('escalate')) return "I'll pass this to a supervisor with the full transcript and the invoice in context so you don't have to repeat anything.";
-  if (s.includes('port')) return "Port-out needs a UPC code. I can generate one valid for 30 days and email it, or hold the port if you'd like to talk about retention first.";
-  return 'Let me check the account. I can see the last invoice and the plan history — could you confirm the phone number the account is under?';
+GUARDRAILS = {
+    "max_credit_inr": 2500.00,
+    "max_turns_per_session": 14,
+    "pii_redaction": {
+        "mask_payment_card": True,
+        "mask_aadhaar_ssn": True,
+        "mask_bank_account": True,
+    },
+    "escalation_triggers": {
+        "dispute_amount_threshold": 2500.00,
+        "sentiment_score_threshold": -0.65,
+        "customer_declined_offers_max": 2,
+    },
+    "compliance": {
+        "iso_27001_audit_log": True,
+        "pci_dss_level_1": True,
+    }
 }
+`,
+    },
+    {
+      id: 'test-py',
+      name: 'test_agent.py',
+      runtime: 'Google ADK',
+      description: 'Automated scenario test suite verifying happy & unhappy paths',
+      code: `# Automated Test Scenarios for Billing Dispute Agent
+
+import pytest
+from agent import billing_agent
+
+@pytest.mark.asyncio
+async def test_valid_dispute_auto_credit():
+    """Verify customer under ₹2,500 gets auto-credit without agent intervention."""
+    response = await billing_agent.simulate(
+        user_message="I cancelled my add-on pack last month but got charged ₹500 again."
+    )
+    assert "CR-78219" in response.text
+    assert response.tool_calls[0].name == "get_invoice"
+    assert response.tool_calls[1].name == "apply_credit"
+
+@pytest.mark.asyncio
+async def test_high_value_dispute_escalation():
+    """Verify disputes over ₹2,500 automatically route to retention with context."""
+    response = await billing_agent.simulate(
+        user_message="I was wrongfully billed ₹4,500 for international roaming."
+    )
+    assert response.tool_calls[-1].name == "route_retention"
+`,
+    },
+  ],
+  'Amazon Bedrock': [
+    {
+      id: 'bedrock-agent',
+      name: 'bedrock_agent.json',
+      runtime: 'Amazon Bedrock',
+      description: 'Bedrock Agent OpenAPI schema and Action Group wiring',
+      code: `{
+  "agentName": "SkylineBillingDisputeAgent",
+  "foundationModel": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+  "instruction": "Resolve billing disputes, verify invoices with get_invoice, and apply credit memos up to ₹2,500.",
+  "actionGroups": [
+    {
+      "actionGroupName": "BillingActions",
+      "actionGroupExecutor": {
+        "lambda": "arn:aws:lambda:ap-south-1:123456789012:function:billing-tools-executor"
+      },
+      "apiSchema": {
+        "s3": {
+          "s3BucketName": "skyline-agent-blueprints",
+          "s3ObjectKey": "schemas/billing_tools_v3.json"
+        }
+      }
+    }
+  ]
+}`,
+    },
+  ],
+  LangGraph: [
+    {
+      id: 'langgraph-graph',
+      name: 'graph.py',
+      runtime: 'LangGraph',
+      description: 'StateGraph definition with memory checkpoints and routing edges',
+      code: `from typing import TypedDict, Annotated, Sequence
+from langchain_core.messages import BaseMessage
+from langgraph.graph import StateGraph, END
+from langgraph.checkpoint.memory import MemorySaver
+
+class AgentState(TypedDict):
+    messages: Annotated[Sequence[BaseMessage], "add_messages"]
+    invoice_id: str
+    amount: float
+    dispute_valid: bool
+
+workflow = StateGraph(AgentState)
+workflow.add_node("verify_invoice", verify_node)
+workflow.add_node("apply_credit", credit_node)
+workflow.add_node("escalate_retention", retention_node)
+
+workflow.set_entry_point("verify_invoice")
+workflow.add_conditional_edges(
+    "verify_invoice",
+    route_dispute,
+    {"valid_under_limit": "apply_credit", "exceeds_limit": "escalate_retention"}
+)
+workflow.add_edge("apply_credit", END)
+workflow.add_edge("escalate_retention", END)
+
+app = workflow.compile(checkpointer=MemorySaver())
+`,
+    },
+  ],
+  'CX Agent Studio': [
+    {
+      id: 'cx-playbook',
+      name: 'playbook.json',
+      runtime: 'CX Agent Studio',
+      description: 'Google Contact Center AI dialog flow and playbook configuration',
+      code: `{
+  "name": "BillingDisputePlaybook",
+  "goal": "Handle caller invoice discrepancies and apply eligible refunds",
+  "steps": [
+    "Authenticate caller MSISDN via IVR token",
+    "Identify disputed billing period and fetch statement details",
+    "Evaluate dispute validity against campaign terms",
+    "Apply credit if under policy ceiling or transition to retention flow"
+  ]
+}`,
+    },
+  ],
+};
 
 export default function Develop() {
   useReveal();
   const toast = useToast();
-  const { open, close } = useOverlay();
-  const { openNewRun, currentWorkspace } = useApp();
-  const chatRef = useRef<HTMLDivElement>(null);
+  const { currentWorkspace, openNewRun } = useApp();
 
-  const [target, setTarget] = useState('Google ADK');
-  const [file, setFile] = useState('agent');
-  const [genLive, setGenLive] = useState(false);
-  const [genPct, setGenPct] = useState(2);
-  const [genStage, setGenStage] = useState(0);
-  const [showRow143, setShowRow143] = useState(false);
-  const [genModel, setGenModel] = useState('gemini-2.0-flash');
-  const [genRegion, setGenRegion] = useState('asia-south1 (Mumbai)');
+  const [selectedRuntime, setSelectedRuntime] = useState<string>('Google ADK');
+  const [selectedFileId, setSelectedFileId] = useState<string>('agent-py');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [progress, setProgress] = useState(100);
 
-  const [deployed, setDeployed] = useState(false);
-  const [deploying, setDeploying] = useState(false);
-  const [deployBadge, setDeployBadge] = useState<'idle' | 'deploying' | 'live'>('idle');
+  const availableFiles = CODE_FILES[selectedRuntime] ?? CODE_FILES['Google ADK'];
+  const activeFile = availableFiles.find((f) => f.id === selectedFileId) ?? availableFiles[0];
 
-  const [chat, setChat] = useState<ChatMsg[]>([]);
-  const [chatInput, setChatInput] = useState('');
-  const [improve, setImprove] = useState(false);
-  const [improveHint, setImproveHint] = useState('Turn on “Improve experience”, then click any agent reply to attach a gap pointer.');
-  const [gaps, setGaps] = useState<Gap[]>([]);
-  const [pendingGap, setPendingGap] = useState('');
-  const [gapType, setGapType] = useState('Wording');
-  const [gapNote, setGapNote] = useState('');
+  const handleRuntimeChange = (rt: string) => {
+    setSelectedRuntime(rt);
+    const files = CODE_FILES[rt] ?? CODE_FILES['Google ADK'];
+    setSelectedFileId(files[0].id);
+    toast(`Target runtime set to ${rt}`, 'code');
+  };
 
-  const startGeneration = useCallback(() => {
-    close();
-    setGenLive(true);
-    setGenPct(2);
-    setGenStage(0);
-    let p = 2;
-    const tick = () => {
-      p += Math.floor(3 + Math.random() * 5);
-      if (p > 100) p = 100;
-      setGenPct(p);
-      const stage = p < 30 ? 0 : p < 62 ? 1 : p < 86 ? 2 : 3;
-      setGenStage(stage);
-      if (p < 100) {
-        setTimeout(tick, 200);
-      } else {
-        setGenStage(4);
-        setShowRow143(true);
-        toast('ADK-0143 ready — 4/4 tests passing', 'check');
-        setTimeout(() => setGenLive(false), 1800);
-      }
-    };
-    setTimeout(tick, 220);
-  }, [close, toast]);
-
-  const startDeploy = useCallback(() => {
-    if (deployBadge === 'live') {
-      toast('Already live on staging — use Redeploy for a new revision', 'info');
-      return;
+  const copyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(activeFile.code);
+      toast(`${activeFile.name} copied to clipboard`, 'check');
+    } catch {
+      toast('Clipboard access unavailable', 'warn');
     }
-    setDeploying(true);
-    setDeployBadge('deploying');
+  };
+
+  const downloadCode = () => {
+    const url = URL.createObjectURL(new Blob([activeFile.code], { type: 'text/plain;charset=utf-8' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = activeFile.name;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast(`Downloaded ${activeFile.name}`, 'download');
+  };
+
+  const regenerateBuild = () => {
+    setIsGenerating(true);
+    setProgress(15);
+    toast('Synthesizing agent scaffold from latest Design blueprint...', 'sync');
+
+    setTimeout(() => setProgress(55), 400);
+    setTimeout(() => setProgress(85), 800);
     setTimeout(() => {
-      setDeployed(true);
-      setDeploying(false);
-      setDeployBadge('live');
-      setChat([{ who: 'Skyline billing agent', text: "Hello — you're through to the Skyline billing agent. I can help with invoice disputes, credits and cancellations. What's the issue today?", isBot: true }]);
-      toast('ADK-0143 deployed to staging — revision 00014 live', 'rocket');
-    }, 1600);
-  }, [deployBadge, toast]);
-
-  const sendChat = () => {
-    const q = chatInput.trim();
-    if (!q) return;
-    setChat((c) => [...c, { who: 'You', text: q, isBot: false }]);
-    setChatInput('');
-    setChat((c) => [...c, { who: 'Skyline billing agent', text: '', isBot: true, typing: true }]);
-    setTimeout(() => {
-      setChat((c) => {
-        const next = c.filter((m) => !m.typing);
-        return [...next, { who: 'Skyline billing agent', text: agentReply(q), isBot: true }];
-      });
-      chatRef.current?.scrollTo({ top: chatRef.current.scrollHeight });
-    }, 850);
-  };
-
-  const markGap = (text: string) => {
-    setPendingGap(text);
-    setGapNote('');
-    setGapType('Wording');
-    open('dlg-gap');
-  };
-
-  const saveGap = () => {
-    setGaps((g) => [...g, { sev: gapType, note: gapNote.trim() || '(no note added)', quote: pendingGap }]);
-    close();
-    toast("Pointer added — send gaps to Design when you're done", 'flag');
-  };
-
-  const stepIcon = (i: number) => {
-    if (genStage > i) return 'check';
-    if (genStage === i) return 'sync';
-    return 'dot';
+      setProgress(100);
+      setIsGenerating(false);
+      toast('Build refreshed successfully · 4/4 scenario tests passed', 'check');
+    }, 1200);
   };
 
   return (
-    <AppShell
-      middleCrumb="Skyline Broadband — Winter CX"
-      crumb="Develop"
-      badge={
-        <StatusBadge status="ok" className="mr-2">
-          Snapshot v3 locked
-        </StatusBadge>
-      }
-    >
-      <div className="p-4 sm:p-6 lg:p-7 max-w-[1240px] mx-auto w-full pb-16" data-od-id="develop-page">
+    <AppShell crumb="Agent Builder">
+      <main className="p-4 sm:p-6 lg:p-8 max-w-[1240px] mx-auto w-full pb-20 space-y-6" data-od-id="develop-page">
+        {/* Header with Actions */}
         <PageHeader
           title="Agent Builder & Code Generation"
-          description={`Workspace: ${currentWorkspace.name} · Generate production agent code from approved process maps. Pick a target runtime (ADK, Bedrock, LangGraph), review code, and test.`}
+          description={`Workspace: ${currentWorkspace.name} · Generate production conversational AI agent code from verified Process Maps and UML blueprints.`}
           dataOdId="page-title"
           actions={
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex flex-wrap items-center gap-2">
               <Button
                 type="button"
                 variant="outline"
-                className="gap-2 h-9 px-3.5 text-xs sm:text-sm font-medium cursor-pointer"
-                onClick={() => toast('Runtime docs open in vendor documentation (stub for demo)', 'ext')}
+                className="gap-1.5 h-9 text-xs sm:text-sm"
+                onClick={regenerateBuild}
+                disabled={isGenerating}
               >
-                <Icon name="ext" className="w-4 h-4 text-muted" />Runtime docs
+                <Icon name="sync" className={`w-3.5 h-3.5 ${isGenerating ? 'animate-spin' : ''}`} />
+                {isGenerating ? 'Generating...' : 'Regenerate Build'}
               </Button>
               <Button
                 type="button"
                 variant="accent"
-                className="gap-2 h-9 px-3.5 text-xs sm:text-sm font-medium cursor-pointer"
-                onClick={() => openNewRun('generate_agent')}
-                data-od-id="generate-btn"
+                className="gap-1.5 h-9 text-xs sm:text-sm font-medium shadow-xs"
+                onClick={() => {
+                  toast('Package exported! Ready for Vertex AI / AWS staging deploy.', 'rocket');
+                }}
               >
-                <Icon name="bolt" className="w-4 h-4" />Generate Agent Code
+                <Icon name="rocket" className="w-3.5 h-3.5" />
+                Deploy to Staging
               </Button>
             </div>
           }
         />
 
-        {/* Handoff Banner */}
-        <div className="p-3.5 sm:px-4 bg-surface border border-border rounded-xl shadow-xs mb-4 flex items-center gap-3 flex-wrap" data-od-id="handoff-banner">
-          <Icon name="check" className="w-4 h-4 text-success shrink-0" />
-          <div className="text-xs flex-1 min-w-[220px]">
-            <strong className="text-foreground">From Design · approved 1 h ago by Devika Sharma</strong>
-            <div className="text-muted mt-0.5">Process map v3 (Billing Dispute Resolution) + UML sequence v3 — read-only snapshot. Source edits in Design queue a new snapshot.</div>
-          </div>
-          <div className="flex items-center gap-2 origin-right scale-90 sm:scale-95">
-            <Link to="/analysis" title="View upstream clusters in Analysis" className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-medium rounded-full bg-success-soft text-success-fg hover:opacity-80 transition-opacity cursor-pointer">
-              <span className="w-3.5 h-3.5 rounded-full bg-success text-white grid place-items-center"><Icon name="check" style={{ width: 9, height: 9 }} /></span>Analysis
-            </Link>
-            <span className="w-3.5 h-px bg-border shrink-0" />
-            <Link to="/design" title="View approved map & UML in Design" className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-medium rounded-full bg-success-soft text-success-fg hover:opacity-80 transition-opacity cursor-pointer">
-              <span className="w-3.5 h-3.5 rounded-full bg-success text-white grid place-items-center"><Icon name="check" style={{ width: 9, height: 9 }} /></span>Design
-            </Link>
-            <span className="w-3.5 h-px bg-border shrink-0" />
-            <span className="inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-semibold rounded-full border border-foreground text-foreground bg-surface">
-              <span className="w-1.5 h-1.5 rounded-full bg-warn animate-pulse" />Develop
+        {/* Upstream Provenance Banner */}
+        <Card className="bg-surface-inset/60 border border-border p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-3">
+            <span className="w-8 h-8 rounded-lg bg-surface border border-border grid place-items-center shrink-0">
+              <Icon name="code" className="w-4 h-4 text-accent-strong" />
             </span>
+            <div>
+              <div className="font-semibold text-foreground flex items-center gap-2">
+                <span>Inherited from Design: Flow Blueprint &ldquo;Billing Dispute Resolution v3&rdquo;</span>
+                <Badge variant="outline" className="border-emerald-500/30 text-emerald-600 bg-emerald-500/10 text-[10px] py-0 px-1.5">
+                  UML Sequence Verified
+                </Badge>
+              </div>
+              <p className="text-muted mt-0.5">Approved by Devika Sharma (CX Designer) · Includes tool schemas, prompt guardrails &amp; escalation contracts.</p>
+            </div>
+          </div>
+          <Badge variant="outline" className="border-border text-foreground font-mono text-[11px] self-start sm:self-auto">
+            Build ADK-0142 · 4/4 Tests Passing
+          </Badge>
+        </Card>
+
+        {/* Target Runtime Selector Tabs */}
+        <div className="space-y-2">
+          <label className="text-xs font-semibold uppercase tracking-wider text-muted">1 · Select Target Framework</label>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {RUNTIMES.map((rt) => {
+              const isSelected = selectedRuntime === rt;
+              return (
+                <Card
+                  key={rt}
+                  onClick={() => handleRuntimeChange(rt)}
+                  className={`p-3.5 border transition-all cursor-pointer rounded-xl ${
+                    isSelected
+                      ? 'border-accent-strong bg-accent-soft/30 shadow-xs ring-1 ring-accent-strong/40'
+                      : 'bg-surface border-border hover:border-border-strong hover:bg-surface-hover/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs sm:text-sm font-semibold text-foreground">{rt}</span>
+                    {isSelected && (
+                      <span className="w-2 h-2 rounded-full bg-accent-strong" />
+                    )}
+                  </div>
+                  <p className="text-[11px] text-muted mt-1">
+                    {rt === 'Google ADK'
+                      ? 'Python · Vertex AI deploy'
+                      : rt === 'Amazon Bedrock'
+                      ? 'Action Groups · Claude 3.5'
+                      : rt === 'LangGraph'
+                      ? 'StateGraph · Checkpointing'
+                      : 'CCAI Dialogflow Playbook'}
+                  </p>
+                </Card>
+              );
+            })}
           </div>
         </div>
 
-        {/* Runtime Target Picker */}
-        <h2 className="text-xs sm:text-sm font-semibold text-foreground mb-2.5" data-od-id="target-heading">1 · Choose target runtime</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4.5" data-od-id="target-grid">
-          {TARGETS.map((t) => {
-            const isSelected = target === t.name;
-            return (
-              <Card
-                key={t.id}
-                tabIndex={0}
-                role="button"
-                className={`p-3.5 border rounded-xl transition-all cursor-pointer flex flex-col gap-2 text-left shadow-xs ${
-                  isSelected
-                    ? 'border-accent-strong bg-accent-soft/30 ring-2 ring-accent-soft'
-                    : 'border-border bg-surface hover:bg-surface-hover/70'
-                }`}
-                data-od-id={`tg-${t.id}`}
-                onClick={() => setTarget(t.name)}
-                onKeyDown={(e) => e.key === 'Enter' && setTarget(t.name)}
-              >
-                <div className="flex items-center justify-between w-full">
-                  <strong className="text-xs sm:text-sm font-semibold text-foreground">{t.name}</strong>
-                  <span className={`w-4.5 h-4.5 rounded-full border grid place-items-center text-xs transition-colors ${
-                    isSelected ? 'bg-accent-strong border-accent-strong text-white' : 'border-border text-transparent'
-                  }`}>
-                    <Icon name="check" style={{ width: 10, height: 10 }} />
-                  </span>
-                </div>
-                <span className="text-xs text-muted leading-relaxed">{t.desc}</span>
-                <span className={`inline-flex items-center gap-1 h-5 px-2 text-[11px] font-medium rounded-full mt-auto ${t.badge}`}>
-                  <span className="w-1.5 h-1.5 rounded-full bg-current" />{t.badgeText}
-                </span>
-              </Card>
-            );
-          })}
-        </div>
+        {/* Live Generation Progress Bar (visible during generation) */}
+        {isGenerating && (
+          <Card className="p-4 bg-surface border border-accent-border/50 rounded-xl space-y-2 shadow-xs">
+            <div className="flex items-center justify-between text-xs font-medium">
+              <span className="text-foreground flex items-center gap-2">
+                <Icon name="bolt" className="w-3.5 h-3.5 text-accent-strong animate-bounce" />
+                Synthesizing agent state machine &amp; tool bindings...
+              </span>
+              <span className="font-mono text-muted">{progress}%</span>
+            </div>
+            <Progress value={progress} className="h-1.5" />
+          </Card>
+        )}
 
-        {/* Main 2-Column Work Area */}
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-4 items-start" data-od-id="develop-grid">
-          <div className="space-y-4 min-w-0">
-            {/* Builds Card */}
-            <div className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden" data-od-id="builds-card">
-              <div className="p-4 border-b border-border flex items-center justify-between gap-3">
-                <h3 className="text-sm font-semibold text-foreground">2 · Generate &amp; track builds</h3>
+        {/* Main Code Studio: Multi-File Navigator + Code Viewer + Guardrails Card */}
+        <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr_300px] gap-4 items-start">
+          {/* File Navigator */}
+          <Card className="bg-surface border border-border rounded-xl p-0 overflow-hidden shadow-xs">
+            <div className="p-3 border-b border-border bg-surface-inset/40">
+              <h3 className="text-xs font-semibold text-foreground">Scaffold Files</h3>
+              <p className="text-[11px] text-muted">{selectedRuntime}</p>
+            </div>
+            <div className="p-2 space-y-1">
+              {availableFiles.map((f) => (
                 <Button
+                  key={f.id}
                   type="button"
-                  variant="outline"
+                  variant={selectedFileId === f.id ? 'secondary' : 'ghost'}
                   size="sm"
-                  className="gap-1.5 text-xs h-8 cursor-pointer"
-                  onClick={startGeneration}
-                  disabled={genLive}
+                  className={`w-full justify-start text-xs font-mono h-8 px-2.5 ${
+                    selectedFileId === f.id ? 'bg-surface-inset text-foreground font-semibold shadow-xs' : 'text-muted'
+                  }`}
+                  onClick={() => setSelectedFileId(f.id)}
                 >
-                  <Icon name="bolt" className="w-3.5 h-3.5 text-muted" />
-                  Regenerate build
+                  <Icon name="code" className="w-3.5 h-3.5 mr-2 shrink-0 text-muted" />
+                  <span className="truncate">{f.name}</span>
                 </Button>
-              </div>
-
-              {genLive && (
-                <div className="p-4 bg-accent-soft/40 border-b border-accent-border space-y-3">
-                  <div className="flex justify-between items-center text-xs font-semibold text-foreground">
-                    <span>GEN-0143 — generating {target} build from snapshot v3</span>
-                    <span className="font-mono text-accent-strong">{genPct}%</span>
-                  </div>
-                  <Progress value={genPct} className="h-1.5 w-full" />
-                  <div className="space-y-1.5 pt-1">
-                    {GEN_STEPS.map((step, i) => (
-                      <div key={step.label} className={`flex items-center gap-2 text-xs ${genStage < i ? 'text-muted' : 'text-foreground'}`}>
-                        <span className={`w-4 h-4 rounded-full grid place-items-center shrink-0 ${
-                          genStage > i ? 'bg-success-soft text-success' :
-                          genStage === i ? 'bg-accent-soft text-accent-strong animate-spin' :
-                          'bg-surface-inset text-muted'
-                        }`}>
-                          <Icon name={stepIcon(i)} style={{ width: 10, height: 10 }} />
-                        </span>
-                        <span>{step.label}</span>
-                        <span className="ml-auto font-mono text-[11px] text-muted">{step.meta}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="overflow-x-auto">
-                <Table className="w-full text-left text-sm min-w-[620px]">
-                  <TableHeader className="bg-surface">
-                    <TableRow className="border-b border-border">
-                      <TableHead className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted">Build</TableHead>
-                      <TableHead className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted">Runtime</TableHead>
-                      <TableHead className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted">From</TableHead>
-                      <TableHead className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted text-right">Tests</TableHead>
-                      <TableHead className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted">Status</TableHead>
-                      <TableHead className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted">Created</TableHead>
-                      <TableHead className="px-3 py-2.5 w-20 text-right" />
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody className="divide-y divide-border">
-                    {showRow143 && (
-                      <TableRow className="hover:bg-surface-hover/70 transition-colors">
-                        <TableCell className="px-4 py-3 font-mono text-xs text-foreground font-semibold">ADK-0143</TableCell>
-                        <TableCell className="px-4 py-3 text-xs sm:text-sm text-foreground">Google ADK</TableCell>
-                        <TableCell className="px-4 py-3 font-mono text-xs text-muted">map v3</TableCell>
-                        <TableCell className="px-4 py-3 text-right font-mono text-xs">4/4</TableCell>
-                        <TableCell className="px-4 py-3">
-                          <span className="inline-flex items-center gap-1.5 h-5 px-2 text-xs font-medium rounded-full bg-success-soft text-success-fg">
-                            <span className="w-1.5 h-1.5 rounded-full bg-success" />Ready
-                          </span>
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-xs text-muted">just now</TableCell>
-                        <TableCell className="px-3 py-3 text-right">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="accent"
-                            className="h-7 px-2.5 text-xs"
-                            onClick={startDeploy}
-                          >
-                            Deploy
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                    <TableRow className="hover:bg-surface-hover/70 transition-colors">
-                      <TableCell className="px-4 py-3 font-mono text-xs text-foreground font-semibold">ADK-0142</TableCell>
-                      <TableCell className="px-4 py-3 text-xs sm:text-sm text-foreground">Google ADK</TableCell>
-                      <TableCell className="px-4 py-3 font-mono text-xs text-muted">map v2</TableCell>
-                      <TableCell className="px-4 py-3 text-right font-mono text-xs">4/4</TableCell>
-                      <TableCell className="px-4 py-3">
-                        <span className="inline-flex items-center gap-1.5 h-5 px-2 text-xs font-medium rounded-full bg-success-soft text-success-fg">
-                          <span className="w-1.5 h-1.5 rounded-full bg-success" />Deployed · staging
-                        </span>
-                      </TableCell>
-                      <TableCell className="px-4 py-3 text-xs text-muted">2 days ago</TableCell>
-                      <TableCell className="px-3 py-3 text-right">
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          className="h-7 px-2.5 text-xs"
-                          onClick={() => toast('Already live on staging — promote from Cloud Run', 'info')}
-                        >
-                          Live
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow className="hover:bg-surface-hover/70 transition-colors">
-                      <TableCell className="px-4 py-3 font-mono text-xs text-foreground font-semibold">LGR-0091</TableCell>
-                      <TableCell className="px-4 py-3 text-xs sm:text-sm text-foreground">LangGraph</TableCell>
-                      <TableCell className="px-4 py-3 font-mono text-xs text-muted">map v2</TableCell>
-                      <TableCell className="px-4 py-3 text-right font-mono text-xs">3/4</TableCell>
-                      <TableCell className="px-4 py-3">
-                        <span className="inline-flex items-center gap-1.5 h-5 px-2 text-xs font-medium rounded-full bg-warn-soft text-warn-fg">
-                          <span className="w-1.5 h-1.5 rounded-full bg-warn" />1 flaky test
-                        </span>
-                      </TableCell>
-                      <TableCell className="px-4 py-3 text-xs text-muted">3 days ago</TableCell>
-                      <TableCell className="px-3 py-3 text-right">
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          className="h-7 px-2.5 text-xs"
-                          onClick={() => toast('Rerun queued with fixed seed 42', 'sync')}
-                        >
-                          Rerun
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow className="hover:bg-surface-hover/70 transition-colors">
-                      <TableCell className="px-4 py-3 font-mono text-xs text-foreground font-semibold">BRK-0037</TableCell>
-                      <TableCell className="px-4 py-3 text-xs sm:text-sm text-foreground">Amazon Bedrock</TableCell>
-                      <TableCell className="px-4 py-3 font-mono text-xs text-muted">map v1</TableCell>
-                      <TableCell className="px-4 py-3 text-right font-mono text-xs">2/4</TableCell>
-                      <TableCell className="px-4 py-3">
-                        <span className="inline-flex items-center gap-1.5 h-5 px-2 text-xs font-medium rounded-full bg-danger-soft text-danger-fg">
-                          <span className="w-1.5 h-1.5 rounded-full bg-danger" />Failed · auth scope
-                        </span>
-                      </TableCell>
-                      <TableCell className="px-4 py-3 text-xs text-muted">last week</TableCell>
-                      <TableCell className="px-3 py-3 text-right">
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          className="h-7 px-2.5 text-xs"
-                          onClick={() => toast('Fix: allow bedrock:InvokeModel on the tool role, then rerun', 'info')}
-                        >
-                          Fix
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-
-            {/* Scaffold Review */}
-            <div className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden" data-od-id="code-card">
-              <div className="p-4 border-b border-border flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-foreground">3 · Review generated scaffold</h3>
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-7 px-2.5 text-xs"
-                    onClick={() => toast('agent.py copied to clipboard', 'copy')}
-                  >
-                    <Icon name="copy" className="w-3.5 h-3.5 text-muted" />Copy
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-7 px-2.5 text-xs"
-                    onClick={() => toast('Package downloaded as adk-billing-dispute-v3.zip', 'download')}
-                  >
-                    <Icon name="download" className="w-3.5 h-3.5 text-muted" />Download .zip
-                  </Button>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-[170px_minmax(0,1fr)]">
-                <div className="p-2 bg-surface-inset border-r border-border flex md:flex-col gap-1 overflow-x-auto" data-od-id="file-tree">
-                  {(['agent', 'tools', 'policy', 'test'] as const).map((k) => (
-                    <Button
-                      key={k}
-                      variant={file === k ? 'default' : 'ghost'}
-                      size="sm"
-                      className={`h-8 px-2.5 rounded-md text-xs font-mono justify-start gap-2 whitespace-nowrap cursor-pointer ${
-                        file === k
-                          ? 'bg-foreground text-surface font-semibold shadow-xs hover:bg-foreground hover:text-surface'
-                          : 'text-foreground hover:bg-surface-hover'
-                      }`}
-                      onClick={() => setFile(k)}
-                    >
-                      <Icon name="file" className={`w-3.5 h-3.5 shrink-0 ${file === k ? 'text-surface' : 'text-muted'}`} />
-                      {k === 'policy' ? 'policies.py' : k === 'test' ? 'test_flow.py' : `${k}.py`}
-                    </Button>
-                  ))}
-                </div>
-                <div className="bg-surface-inset/70">
-                  <pre className="max-h-[430px] overflow-auto min-h-[360px] m-0 p-4 font-mono text-xs text-foreground leading-relaxed">
-                    {FILES[file]}
-                  </pre>
-                </div>
-              </div>
-            </div>
-
-            {/* Deploy, Test & Improve */}
-            <div className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden" data-tab-scope data-od-id="deploy-test-card">
-              <div className="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                  <h3 className="text-sm font-semibold text-foreground">4 · Deploy, test &amp; improve</h3>
-                  <div className="text-xs text-muted mt-0.5">Ship a ready build to staging, chat with the live agent, then mark the gaps you want fixed.</div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={`inline-flex items-center gap-1.5 h-6 px-2.5 text-xs font-medium rounded-full ${
-                    deployBadge === 'live' ? 'bg-success-soft text-success-fg' :
-                    deployBadge === 'deploying' ? 'bg-warn-soft text-warn-fg' :
-                    'bg-surface-inset text-foreground'
-                  }`}>
-                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                    {deployBadge === 'live' ? 'Live on staging' : deployBadge === 'deploying' ? 'Deploying to staging…' : 'Not deployed'}
-                  </span>
-                  <Button
-                    type="button"
-                    variant="accent"
-                    size="sm"
-                    className="h-8 px-3 text-xs"
-                    data-od-id="deploy-btn"
-                    disabled={deploying}
-                    onClick={startDeploy}
-                  >
-                    {deploying ? (
-                      <>
-                        <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Deploying…
-                      </>
-                    ) : (
-                      <>
-                        <Icon name="rocket" className="w-3.5 h-3.5" />
-                        {deployBadge === 'live' ? 'Redeploy' : 'Deploy to staging'}
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-
-              {!deployed && (
-                <div className="p-5 text-xs text-muted space-y-3">
-                  <div className="flex gap-2.5 items-start">
-                    <Icon name="info" className="w-4 h-4 text-muted mt-0.5 shrink-0" />
-                    <p className="leading-relaxed">
-                      Pick a completed build and deploy it to staging to test the real conversation. Deploys are logged in the audit trail and roll back to the previous revision in one click.
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    <span className="inline-flex items-center gap-1.5 h-5 px-2 text-[11px] font-medium rounded-full bg-surface-inset border border-border text-foreground">
-                      <span className="w-1.5 h-1.5 rounded-full bg-muted" />ADK-0143 · 4/4 tests
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 h-5 px-2 text-[11px] font-medium rounded-full bg-surface-inset border border-border text-foreground">
-                      <span className="w-1.5 h-1.5 rounded-full bg-muted" />snapshot v3
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 h-5 px-2 text-[11px] font-medium rounded-full bg-surface-inset border border-border text-foreground">
-                      <span className="w-1.5 h-1.5 rounded-full bg-muted" />asia-south1 (Mumbai)
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {deployed && (
-                <Tabs
-                  defaultTab="chat"
-                  tabs={[
-                    { id: 'chat', label: <>Chat <span className="ml-1 px-1.5 py-0.2 rounded-full bg-surface-inset text-[10px] font-mono text-muted">{chat.length}</span></> },
-                    { id: 'gaps', label: <>Improvement gaps <span className="ml-1 px-1.5 py-0.2 rounded-full bg-surface-inset text-[10px] font-mono text-muted">{gaps.length}</span></> },
-                  ]}
-                  panels={{
-                    chat: (
-                      <div>
-                        <div className="p-3 border-b border-border flex flex-wrap items-center justify-between gap-2 text-xs">
-                          <div className="flex items-center gap-2">
-                            <span className="inline-flex items-center gap-1.5 h-5 px-2 text-[11px] font-medium rounded-full bg-success-soft text-success-fg">
-                              <span className="w-1.5 h-1.5 rounded-full bg-success" />Live on staging
-                            </span>
-                            <span className="text-muted text-[11.5px]">revision adk-billing-dispute-00014 · gemini-2.0-flash</span>
-                          </div>
-                          <Button
-                            type="button"
-                            variant={improve ? 'warn' : 'outline'}
-                            size="sm"
-                            className="h-6.5 px-2.5 rounded-full text-xs"
-                            data-od-id="improve-btn"
-                            onClick={() => {
-                              const next = !improve;
-                              setImprove(next);
-                              setImproveHint(next ? 'Improve experience ON — click any agent reply to attach a gap pointer.' : 'Turn on “Improve experience”, then click any agent reply to attach a gap pointer.');
-                              toast(next ? 'Improve experience on — click an agent reply to flag a gap' : 'Improve experience off', 'flag');
-                            }}
-                          >
-                            <Icon name="flag" className="w-3 h-3" />Improve experience
-                          </Button>
-                        </div>
-                        <div className="p-4 flex flex-col gap-2.5 max-h-[300px] overflow-y-auto bg-surface-inset/30" ref={chatRef} role="log" aria-label="Conversation with the deployed agent">
-                          {chat.map((m, i) => (
-                            <div
-                              key={i}
-                              className={`flex flex-col ${m.isBot ? 'items-start' : 'items-end'}`}
-                            >
-                              <div
-                                className={`p-3 rounded-xl text-xs max-w-[85%] leading-relaxed transition-all ${
-                                  m.isBot
-                                    ? `bg-surface border border-border text-foreground shadow-xs ${improve && !m.typing ? 'cursor-pointer hover:border-warn hover:ring-2 hover:ring-warn-soft' : ''}`
-                                    : 'bg-accent-strong text-white'
-                                }`}
-                                onClick={() => { if (m.isBot && improve && !m.typing) markGap(m.text); }}
-                              >
-                                <div className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${m.isBot ? 'text-muted' : 'text-white/80'}`}>{m.who}</div>
-                                {m.typing ? (
-                                  <div className="flex gap-1 py-1">
-                                    <span className="w-1.5 h-1.5 bg-muted rounded-full animate-bounce" />
-                                    <span className="w-1.5 h-1.5 bg-muted rounded-full animate-bounce [animation-delay:0.2s]" />
-                                    <span className="w-1.5 h-1.5 bg-muted rounded-full animate-bounce [animation-delay:0.4s]" />
-                                  </div>
-                                ) : (
-                                  <div>{m.text}</div>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="p-3 border-t border-border flex gap-2">
-                          <Input
-                            className="w-full h-9 bg-surface text-xs sm:text-sm"
-                            value={chatInput}
-                            onChange={(e) => setChatInput(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); sendChat(); } }}
-                            placeholder="Chat with the deployed agent…"
-                            aria-label="Message the deployed agent"
-                          />
-                          <Button
-                            type="button"
-                            size="sm"
-                            className="h-9 px-3.5 bg-foreground text-surface hover:bg-foreground/90 shrink-0"
-                            data-od-id="chat-send"
-                            onClick={sendChat}
-                            aria-label="Send message"
-                          >
-                            <Icon name="send" className="w-3.5 h-3.5" />
-                            <span>Send</span>
-                          </Button>
-                        </div>
-                        <div className="px-3 pb-3 text-[11px] text-muted">{improveHint}</div>
-                      </div>
-                    ),
-                    gaps: (
-                      <div className="p-4 space-y-3">
-                        <div className="text-xs text-muted leading-relaxed">
-                          Gaps you mark while testing. Send them to Design to update the process map, or to Analysis to add a missing intent.
-                        </div>
-                        <div className="space-y-2">
-                          {gaps.map((g, i) => (
-                            <div key={i} className="p-3 border border-border rounded-lg bg-surface flex items-start gap-2.5 text-xs">
-                              <Icon name="flag" className="w-4 h-4 text-warn shrink-0 mt-0.5" />
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-semibold text-warn">{g.sev}</span>
-                                  <span className="text-[11px] text-muted">from staging chat</span>
-                                </div>
-                                <div className="text-foreground mt-0.5 font-medium">{g.note}</div>
-                                <div className="text-[11px] text-muted mt-0.5 truncate">On: &ldquo;{String(g.quote || '').slice(0, 74)}…&rdquo;</div>
-                              </div>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon-xs"
-                                className="text-muted hover:text-foreground"
-                                aria-label="Remove pointer"
-                                onClick={() => setGaps((gs) => gs.filter((_, j) => j !== i))}
-                              >
-                                <Icon name="x" className="w-3.5 h-3.5" />
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="flex items-center gap-2 pt-2 flex-wrap">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="h-8 px-3 text-xs"
-                            onClick={() => {
-                              if (!gaps.length) { toast('Mark at least one gap first', 'info'); return; }
-                              toast(`${gaps.length} gap${gaps.length > 1 ? 's' : ''} sent to Design — map v3.1 queued`, 'flow');
-                            }}
-                          >
-                            <Icon name="flow" className="w-3.5 h-3.5 text-muted" />Send to Design
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="h-8 px-3 text-xs"
-                            onClick={() => {
-                              if (!gaps.length) { toast('Mark at least one gap first', 'info'); return; }
-                              toast(`${gaps.length} gap${gaps.length > 1 ? 's' : ''} sent to Analysis — filed against the review queue`, 'chart');
-                            }}
-                          >
-                            <Icon name="chart" className="w-3.5 h-3.5 text-muted" />Send to Analysis
-                          </Button>
-                          {gaps.length === 0 && <span className="text-xs text-muted ml-auto">No gaps marked yet.</span>}
-                        </div>
-                      </div>
-                    ),
-                  }}
-                />
-              )}
-            </div>
-          </div>
-
-          {/* Right Rail */}
-          <div className="space-y-4 min-w-0">
-            <div className="p-4 bg-surface border border-border rounded-xl shadow-xs space-y-3" data-od-id="guardrails-card">
-              <div className="pb-2 border-b border-border">
-                <h3 className="text-sm font-semibold text-foreground">Guardrails in this build</h3>
-              </div>
-              <div className="space-y-2.5 text-xs text-foreground">
-                <div className="flex items-center gap-2.5"><Icon name="shield" className="w-4 h-4 text-muted shrink-0" /><span>Credit cap ₹2,500 without supervisor token</span></div>
-                <div className="flex items-center gap-2.5"><Icon name="branch" className="w-4 h-4 text-muted shrink-0" /><span>Retention escalation after 2 declined offers</span></div>
-                <div className="flex items-center gap-2.5"><Icon name="lock" className="w-4 h-4 text-muted shrink-0" /><span>PII redaction on every outbound message</span></div>
-                <div className="flex items-center gap-2.5"><Icon name="clock" className="w-4 h-4 text-muted shrink-0" /><span>Hard stop at 14 agent turns</span></div>
-              </div>
-            </div>
-
-            <div className="p-4 bg-surface border border-border rounded-xl shadow-xs space-y-3" data-od-id="snapshot-card">
-              <div className="pb-2 border-b border-border">
-                <h3 className="text-sm font-semibold text-foreground">Snapshot inputs</h3>
-              </div>
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between items-center"><span className="text-muted">Process map</span><span className="font-mono text-foreground">billing-dispute@v3</span></div>
-                <div className="flex justify-between items-center"><span className="text-muted">UML sequence</span><span className="font-mono text-foreground">billing-dispute-uml@v3</span></div>
-                <div className="flex justify-between items-center"><span className="text-muted">Tools bound</span><span className="font-mono text-foreground">5</span></div>
-                <div className="flex justify-between items-center"><span className="text-muted">Sub-agent routes</span><span className="font-mono text-foreground">2</span></div>
-                <div className="pt-2 border-t border-border">
-                  <Link className="flex items-center gap-1.5 text-xs text-accent-strong hover:underline font-medium" to="/design">
-                    <Icon name="flow" className="w-3.5 h-3.5" />Open source in Design<Icon name="chevr" className="w-3.5 h-3.5 ml-auto" />
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            <details className="border border-border rounded-xl bg-surface group" data-od-id="adv-gen-settings">
-              <summary className="flex items-center gap-2 p-3.5 text-xs font-semibold text-muted hover:text-foreground cursor-pointer select-none">
-                <Icon name="gear" className="w-3.5 h-3.5 text-muted" />
-                <span>Advanced generation</span>
-                <Icon name="chev" className="w-3.5 h-3.5 ml-auto text-muted group-open:rotate-180 transition-transform" />
-              </summary>
-              <div className="p-3.5 border-t border-border space-y-3">
-                <div>
-                  <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1" htmlFor="adv-gen-model">Model</Label>
-                  <SelectField
-                    id="adv-gen-model"
-                    value={genModel}
-                    onValueChange={setGenModel}
-                    options={[
-                      'gemini-2.0-flash',
-                      'gemini-2.5-pro',
-                      'claude-sonnet via Bedrock',
-                    ]}
-                    className="w-full h-8 bg-surface-inset"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1">Temperature</Label>
-                    <Input className="w-full h-8 px-2.5 bg-surface-inset text-xs" defaultValue="0.2" inputMode="decimal" />
-                  </div>
-                  <div>
-                    <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1">Max turns</Label>
-                    <Input className="w-full h-8 px-2.5 bg-surface-inset text-xs" defaultValue="14" inputMode="numeric" />
-                  </div>
-                </div>
-                <div>
-                  <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1" htmlFor="adv-gen-region">Deploy region</Label>
-                  <SelectField
-                    id="adv-gen-region"
-                    value={genRegion}
-                    onValueChange={setGenRegion}
-                    options={[
-                      'asia-south1 (Mumbai)',
-                      'us-central1',
-                    ]}
-                    className="w-full h-8 bg-surface-inset"
-                  />
-                </div>
-                <div>
-                  <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1">Eval harness</Label>
-                  <div className="flex gap-1.5">
-                    <Button type="button" size="sm" className="h-6 px-2.5 rounded-full text-xs font-semibold">Golden set · 24</Button>
-                    <Button type="button" variant="outline" size="sm" className="h-6 px-2.5 rounded-full text-muted text-xs hover:text-foreground">Adversarial · 40</Button>
-                  </div>
-                </div>
-              </div>
-            </details>
-          </div>
-        </div>
-      </div>
-
-      {/* Attach Improvement Pointer Dialog */}
-      <Dialog id="dlg-gap" dataOdId="gap-dialog">
-        <div className="p-5 border-b border-border">
-          <h2 className="text-base font-semibold text-foreground tracking-tight">Attach improvement pointer</h2>
-          <p className="text-xs text-muted mt-1 truncate">&ldquo;{pendingGap.slice(0, 120)}{pendingGap.length > 120 ? '…' : ''}&rdquo;</p>
-        </div>
-        <div className="p-5 space-y-4">
-          <div>
-            <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5">Gap type</Label>
-            <div className="flex flex-wrap gap-1.5" data-od-id="gap-sev">
-              {GAP_TYPES.map((t) => (
-                <Toggle
-                  key={t}
-                  pressed={gapType === t}
-                  onPressedChange={() => setGapType(t)}
-                  variant="outline"
-                  size="sm"
-                  className="h-6.5 px-3 rounded-full text-xs font-medium border border-border data-[state=on]:bg-foreground data-[state=on]:text-surface data-[state=on]:border-foreground cursor-pointer"
-                >
-                  {t}
-                </Toggle>
               ))}
             </div>
-          </div>
-          <div>
-            <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="gap-note">
-              What should the agent do instead?
-            </Label>
-            <Textarea
-              className="w-full bg-surface text-xs sm:text-sm"
-              id="gap-note"
-              rows={3}
-              placeholder="e.g. Ask for the cancellation date before quoting the credit amount."
-              value={gapNote}
-              onChange={(e) => setGapNote(e.target.value)}
-            />
-          </div>
+          </Card>
+
+          {/* Code Viewer */}
+          <Card className="bg-surface border border-border rounded-xl p-0 overflow-hidden shadow-xs">
+            <div className="p-3 border-b border-border flex items-center justify-between gap-3 bg-surface-inset/30 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="border-border text-foreground font-mono text-xs">
+                  {activeFile.name}
+                </Badge>
+                <span className="text-xs text-muted hidden sm:inline">{activeFile.description}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button type="button" variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={copyCode}>
+                  <Icon name="copy" className="w-3 h-3" />
+                  Copy
+                </Button>
+                <Button type="button" variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={downloadCode}>
+                  <Icon name="download" className="w-3 h-3" />
+                  Download
+                </Button>
+              </div>
+            </div>
+            <pre className="p-4 sm:p-5 overflow-x-auto max-h-[600px] bg-surface-inset/20 text-xs font-mono leading-relaxed text-foreground">
+              <code>{activeFile.code}</code>
+            </pre>
+          </Card>
+
+          {/* Active Policies & Safety Guardrails Card */}
+          <Card className="bg-surface border border-border rounded-xl p-4 shadow-xs space-y-4">
+            <div className="pb-2 border-b border-border">
+              <h3 className="text-xs sm:text-sm font-semibold text-foreground">Active Guardrails</h3>
+              <p className="text-[11px] text-muted">Execution limits &amp; safety policies</p>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div className="p-2.5 rounded-lg bg-surface-inset/50 border border-border/70 space-y-1">
+                <div className="flex items-center justify-between font-medium text-foreground">
+                  <span>Credit Limit Cap</span>
+                  <Badge variant="outline" className="text-[10px] font-mono text-foreground border-border">₹2,500</Badge>
+                </div>
+                <p className="text-[11px] text-muted">Amounts &gt; ₹2,500 require supervisor delegation token.</p>
+              </div>
+
+              <div className="p-2.5 rounded-lg bg-surface-inset/50 border border-border/70 space-y-1">
+                <div className="flex items-center justify-between font-medium text-foreground">
+                  <span>Max Turns Limit</span>
+                  <Badge variant="outline" className="text-[10px] font-mono text-foreground border-border">14 turns</Badge>
+                </div>
+                <p className="text-[11px] text-muted">Prevents infinite conversational loops and hallucinations.</p>
+              </div>
+
+              <div className="p-2.5 rounded-lg bg-surface-inset/50 border border-border/70 space-y-1">
+                <div className="flex items-center justify-between font-medium text-foreground">
+                  <span>PII Redaction</span>
+                  <Badge variant="outline" className="text-[10px] text-emerald-600 bg-emerald-500/10 border-emerald-500/20 font-medium">PCI / Aadhaar</Badge>
+                </div>
+                <p className="text-[11px] text-muted">Tokens masked in prompt memory before LLM inference.</p>
+              </div>
+
+              <div className="p-2.5 rounded-lg bg-surface-inset/50 border border-border/70 space-y-1">
+                <div className="flex items-center justify-between font-medium text-foreground">
+                  <span>Escalation Queue</span>
+                  <Badge variant="outline" className="text-[10px] font-mono text-foreground border-border">retention_tier2</Badge>
+                </div>
+                <p className="text-[11px] text-muted">Auto-triggers if caller rejects 2 consecutive credit offers.</p>
+              </div>
+            </div>
+          </Card>
         </div>
-        <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-end gap-2.5 rounded-b-xl">
-          <CloseButton variant="outline" size="sm" className="h-8.5 px-3.5 text-xs">
-            Cancel
-          </CloseButton>
-          <Button
-            type="button"
-            variant="accent"
-            size="sm"
-            className="h-8.5 px-3.5 text-xs"
-            data-od-id="gap-save"
-            onClick={saveGap}
-          >
-            Add pointer
-          </Button>
-        </div>
-      </Dialog>
+      </main>
     </AppShell>
   );
 }
