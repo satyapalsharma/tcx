@@ -10,6 +10,7 @@ import { ChipGroup } from '../components/ui';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '../components/Toast';
 import { useReveal } from '../hooks/useReveal';
+import { useApp } from '@/context/AppContext';
 import { KpiCard, PageHeader, StatusBadge, EmptyState } from '@/components/common';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -86,6 +87,7 @@ export default function Analysis() {
   useReveal();
   const toast = useToast();
   const { open, close } = useOverlay();
+  const { openNewRun, currentWorkspace } = useApp();
   const [pct, setPct] = useState(0);
   const [paused, setPaused] = useState(false);
   const [tab, setTab] = useState('intents');
@@ -227,28 +229,37 @@ export default function Analysis() {
     >
       <div className="p-4 sm:p-6 lg:p-7 max-w-[1240px] mx-auto w-full pb-16" data-od-id="analysis-page">
         <PageHeader
-          title="Analysis"
-          description="Customer interactions flow in from connectors, intents get extracted, then clustered into L1 → L2 → L3. Approve clusters to unblock the Design team."
+          title="Intent Discovery & Taxonomy"
+          description={`Workspace: ${currentWorkspace.name} · Extract discovered caller intents from interactions, or cluster existing intents into L1 → L2 → L3 categories.`}
           dataOdId="page-title"
           actions={
-            <>
-              <OpenButton
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button
+                type="button"
                 variant="outline"
-                className="gap-2 text-xs sm:text-sm"
-                target="dlg-upload"
-                data-od-id="upload-btn"
+                className="gap-1.5 text-xs sm:text-sm font-medium cursor-pointer"
+                onClick={() => openNewRun('extract_intents')}
               >
-                <Icon name="upload" className="w-4 h-4 text-muted" />Upload data
-              </OpenButton>
-              <OpenButton
+                <Icon name="search" className="w-4 h-4 text-muted" />Extract Intents
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="gap-1.5 text-xs sm:text-sm font-medium cursor-pointer"
+                onClick={() => openNewRun('cluster_intents')}
+              >
+                <Icon name="chart" className="w-4 h-4 text-muted" />Cluster Taxonomy
+              </Button>
+              <Button
+                type="button"
                 variant="accent"
-                className="gap-2 text-xs sm:text-sm"
-                target="dlg-run"
+                className="gap-1.5 text-xs sm:text-sm font-medium cursor-pointer"
+                onClick={() => openNewRun('full_pipeline')}
                 data-od-id="run-btn"
               >
-                <Icon name="play" className="w-4 h-4" />Run pipeline
-              </OpenButton>
-            </>
+                <Icon name="bolt" className="w-4 h-4" />Full Pipeline
+              </Button>
+            </div>
           }
         />
 

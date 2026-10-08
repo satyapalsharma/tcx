@@ -9,6 +9,7 @@ import { Tabs } from '../components/ui';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '../components/Toast';
 import { useReveal } from '../hooks/useReveal';
+import { useApp } from '@/context/AppContext';
 import { PageHeader, StatusBadge } from '@/components/common';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -110,6 +111,7 @@ export default function Develop() {
   useReveal();
   const toast = useToast();
   const { open, close } = useOverlay();
+  const { openNewRun, currentWorkspace } = useApp();
   const chatRef = useRef<HTMLDivElement>(null);
 
   const [target, setTarget] = useState('Google ADK');
@@ -220,11 +222,11 @@ export default function Develop() {
     >
       <div className="p-4 sm:p-6 lg:p-7 max-w-[1240px] mx-auto w-full pb-16" data-od-id="develop-page">
         <PageHeader
-          title="Develop"
-          description="Generate production agent code from the approved process map and UML snapshot. Pick a target runtime, review the scaffold, then deploy to staging."
+          title="Agent Builder & Code Generation"
+          description={`Workspace: ${currentWorkspace.name} · Generate production agent code from approved process maps. Pick a target runtime (ADK, Bedrock, LangGraph), review code, and test.`}
           dataOdId="page-title"
           actions={
-            <>
+            <div className="flex items-center gap-2 flex-wrap">
               <Button
                 type="button"
                 variant="outline"
@@ -233,15 +235,16 @@ export default function Develop() {
               >
                 <Icon name="ext" className="w-4 h-4 text-muted" />Runtime docs
               </Button>
-              <OpenButton
+              <Button
+                type="button"
                 variant="accent"
                 className="gap-2 h-9 px-3.5 text-xs sm:text-sm font-medium cursor-pointer"
-                target="dlg-gen"
+                onClick={() => openNewRun('generate_agent')}
                 data-od-id="generate-btn"
               >
-                <Icon name="bolt" className="w-4 h-4" />Generate agent build
-              </OpenButton>
-            </>
+                <Icon name="bolt" className="w-4 h-4" />Generate Agent Code
+              </Button>
+            </div>
           }
         />
 

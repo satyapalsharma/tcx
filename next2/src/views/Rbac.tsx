@@ -2,594 +2,398 @@
 
 import { useState } from 'react';
 import { AppShell } from '../components/AppShell';
-import { Icon, type IconName } from '../components/Icon';
-import { CloseButton, Dialog, OpenButton, useOverlay } from '../components/Overlay';
-import { useTextFilter } from '../components/ui';
+import { Icon } from '../components/Icon';
+import { CloseButton, Dialog, useOverlay } from '../components/Overlay';
 import { useToast } from '../components/Toast';
 import { useReveal } from '../hooks/useReveal';
+import { useApp } from '@/context/AppContext';
 import { PageHeader, StatusBadge, EmptyState, SearchToolbar } from '@/components/common';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Toggle } from '@/components/ui/toggle';
-
-const ROLE_OPTIONS = ['Admin', 'Business Analyst', 'CX Designer', 'Developer', 'Viewer'];
-
-type UmbrellaChip = { label: string; off?: boolean };
+import { Badge } from '@/components/ui/badge';
 
 type Member = {
   id: string;
-  odId: string;
   name: string;
   email: string;
-  role: string;
-  roleDisabled?: boolean;
-  roleOptions?: string[];
-  chips: UmbrellaChip[];
+  role: 'Admin' | 'Builder' | 'Viewer';
+  workspaces: string;
   lastActive: string;
-  statusLabel: string;
-  statusBadge: string;
-  actionTitle: string;
-  actionIcon: IconName;
-  actionToast: string;
-  service?: boolean;
+  status: 'active' | 'invited' | 'service';
   initials: string;
-  avatarMuted?: boolean;
-};
-
-type RoleCard = {
-  id: string;
-  icon: IconName;
-  name: string;
-  desc: string;
-  deletable: boolean;
 };
 
 const INITIAL_MEMBERS: Member[] = [
   {
-    id: 'priya', odId: 'mem-priya', name: 'Priya Nair', email: 'priya@skyline-broadband.com', role: 'Admin',
-    chips: [{ label: 'Analysis' }, { label: 'Design' }, { label: 'Develop' }, { label: 'Admin' }],
-    lastActive: 'now', statusLabel: 'Active', statusBadge: 'ok',
-    actionTitle: 'Reset password', actionIcon: 'key', actionToast: 'Reset link sent to Priya',
+    id: 'priya',
+    name: 'Priya Nair',
+    email: 'priya@skyline-broadband.com',
+    role: 'Admin',
+    workspaces: 'All Workspaces',
+    lastActive: 'Just now',
+    status: 'active',
     initials: 'PN',
   },
   {
-    id: 'riya', odId: 'mem-riya', name: 'Riya Menon', email: 'riya.m@skyline-broadband.com', role: 'Business Analyst',
-    chips: [{ label: 'Analysis' }, { label: 'Design · view', off: true }, { label: 'Develop · —', off: true }],
-    lastActive: '12 min ago', statusLabel: 'Active', statusBadge: 'ok',
-    actionTitle: 'Reset password', actionIcon: 'key', actionToast: 'Reset link sent to Riya',
+    id: 'riya',
+    name: 'Riya Menon',
+    email: 'riya.m@skyline-broadband.com',
+    role: 'Builder',
+    workspaces: 'Customer Operations',
+    lastActive: '12 min ago',
+    status: 'active',
     initials: 'RM',
   },
   {
-    id: 'devika', odId: 'mem-devika', name: 'Devika Sharma', email: 'devika.s@skyline-broadband.com', role: 'CX Designer',
-    chips: [{ label: 'Analysis · view', off: true }, { label: 'Design' }, { label: 'Develop · —', off: true }],
-    lastActive: '1 h ago', statusLabel: 'Active', statusBadge: 'ok',
-    actionTitle: 'Reset password', actionIcon: 'key', actionToast: 'Reset link sent to Devika',
+    id: 'devika',
+    name: 'Devika Sharma',
+    email: 'devika.s@skyline-broadband.com',
+    role: 'Builder',
+    workspaces: 'Billing & Payments',
+    lastActive: '1 hr ago',
+    status: 'active',
     initials: 'DS',
   },
   {
-    id: 'arjun', odId: 'mem-arjun', name: 'Arjun Shah', email: 'arjun.sh@skyline-broadband.com', role: 'Developer',
-    chips: [{ label: 'Analysis · —', off: true }, { label: 'Design · view', off: true }, { label: 'Develop' }],
-    lastActive: '24 min ago', statusLabel: 'Active', statusBadge: 'ok',
-    actionTitle: 'Reset password', actionIcon: 'key', actionToast: 'Reset link sent to Arjun',
+    id: 'arjun',
+    name: 'Arjun Shah',
+    email: 'arjun.sh@skyline-broadband.com',
+    role: 'Builder',
+    workspaces: 'Network Support Staging',
+    lastActive: '24 min ago',
+    status: 'active',
     initials: 'AS',
   },
   {
-    id: 'karan', odId: 'mem-karan', name: 'Karan Mehta', email: 'k.mehhta@partner.skylinebb.com', role: 'Viewer',
-    chips: [{ label: 'Analysis · view', off: true }, { label: 'Design · view', off: true }, { label: 'Develop · view', off: true }],
-    lastActive: '2 days ago', statusLabel: 'Invite pending', statusBadge: 'warn',
-    actionTitle: 'Resend invite', actionIcon: 'sync', actionToast: 'Invite resent to Karan',
+    id: 'karan',
+    name: 'Karan Mehta',
+    email: 'k.mehta@partner.skylinebb.com',
+    role: 'Viewer',
+    workspaces: 'Customer Operations',
+    lastActive: '2 days ago',
+    status: 'invited',
     initials: 'KM',
   },
   {
-    id: 'svc', odId: 'mem-svc', name: 'svc-transform-bot', email: 'service account · deploy CI', role: 'Developer',
-    roleDisabled: true, roleOptions: ['Developer'], service: true,
-    chips: [{ label: 'Develop · deploy only', off: true }],
-    lastActive: 'via CI', statusLabel: 'Service acct', statusBadge: 'default',
-    actionTitle: 'Rotate token', actionIcon: 'key', actionToast: 'Token rotation started — old token valid for 24 h',
-    initials: 'SC', avatarMuted: true,
+    id: 'svc-deploy',
+    name: 'svc-transform-bot',
+    email: 'ci-runner@skyline-broadband.internal',
+    role: 'Builder',
+    workspaces: 'All Workspaces',
+    lastActive: 'via CI (5m ago)',
+    status: 'service',
+    initials: 'SB',
   },
 ];
 
-const INITIAL_ROLES: RoleCard[] = [
-  { id: 'role-admin', icon: 'shield', name: 'Admin', desc: 'Full workspace control, connectors, billing, users.', deletable: false },
-  { id: 'role-analyst', icon: 'chart', name: 'Business Analyst', desc: 'Runs pipelines, curates intents, approves clusters.', deletable: true },
-  { id: 'role-designer', icon: 'flow', name: 'CX Designer', desc: 'Edits process maps & UML, manages the review queue.', deletable: true },
-  { id: 'role-developer', icon: 'code', name: 'Developer', desc: 'Generates builds, deploys to staging, reads approved maps.', deletable: true },
-  { id: 'role-viewer', icon: 'eye', name: 'Viewer', desc: 'Read-only across all stages. Good for leadership reviews.', deletable: true },
+const ROLES_INFO = [
+  {
+    role: 'Admin',
+    icon: 'shield' as const,
+    summary: 'Full access to organization settings, team members, workspace creation, and billing.',
+    badge: 'Full Access',
+  },
+  {
+    role: 'Builder',
+    icon: 'code' as const,
+    summary: 'Can run intent discovery, design process maps, scaffold agent code, and trigger jobs.',
+    badge: 'Pipeline & Code',
+  },
+  {
+    role: 'Viewer',
+    icon: 'eye' as const,
+    summary: 'Read-only access to view dashboards, analytics, execution traces, and architecture diagrams.',
+    badge: 'Read Only',
+  },
 ];
-
-const MATRIX_ROWS: { cap: string; perms: ('f' | 'p' | 'n')[] }[] = [
-  { cap: 'Upload data & run intent pipeline', perms: ['f', 'f', 'n', 'n', 'n'] },
-  { cap: 'Edit / merge intents, curate taxonomy', perms: ['f', 'f', 'p', 'n', 'n'] },
-  { cap: 'Approve clusters & hand to Design', perms: ['f', 'f', 'n', 'n', 'n'] },
-  { cap: 'Edit process maps & UML diagrams', perms: ['f', 'p', 'f', 'n', 'n'] },
-  { cap: 'Approve maps / request changes', perms: ['f', 'p', 'f', 'n', 'n'] },
-  { cap: 'Generate agent builds', perms: ['f', 'n', 'p', 'f', 'n'] },
-  { cap: 'Deploy to staging / production', perms: ['f', 'n', 'n', 'p', 'n'] },
-  { cap: 'Manage connectors & credentials', perms: ['f', 'p', 'n', 'n', 'n'] },
-  { cap: 'Invite users & change roles', perms: ['f', 'n', 'n', 'n', 'n'] },
-  { cap: 'View audit log', perms: ['f', 'p', 'p', 'p', 'p'] },
-];
-
-function Perm({ type }: { type: 'f' | 'p' | 'n' }) {
-  if (type === 'f') return <span className="inline-block w-3.5 h-3.5 rounded-full bg-foreground align-middle" title="Full" />;
-  if (type === 'p') return <span className="inline-block w-3.5 h-3.5 rounded-full bg-warn ring-2 ring-warn-soft align-middle" title="Limited" />;
-  return <span className="inline-block w-3.5 h-3.5 rounded-full border border-border align-middle" title="None" />;
-}
-
-function MultiChips({ labels, selected, onChange, odId }: {
-  labels: string[];
-  selected: string[];
-  onChange: (next: string[]) => void;
-  odId?: string;
-}) {
-  const toggle = (label: string) => {
-    onChange(selected.includes(label) ? selected.filter((l) => l !== label) : [...selected, label]);
-  };
-  return (
-    <div className="flex flex-wrap items-center gap-1.5" data-chips-multi data-od-id={odId}>
-      {labels.map((label) => {
-        const isSelected = selected.includes(label);
-        return (
-          <Toggle
-            key={label}
-            pressed={isSelected}
-            onPressedChange={() => toggle(label)}
-            variant="outline"
-            size="sm"
-            className="h-6.5 px-2.5 rounded-full text-xs font-medium border border-border data-[state=on]:bg-foreground data-[state=on]:text-surface data-[state=on]:border-foreground cursor-pointer"
-          >
-            {label}
-          </Toggle>
-        );
-      })}
-    </div>
-  );
-}
 
 export default function Rbac() {
   useReveal();
   const toast = useToast();
   const { open, close } = useOverlay();
-  const [members, setMembers] = useState(INITIAL_MEMBERS);
-  const [roles, setRoles] = useState(INITIAL_ROLES);
-  const { query, setQuery, filtered, count } = useTextFilter(members, (m) => `${m.name} ${m.email} ${m.role}`);
+  const { currentOrg, setIsInviteOpen } = useApp();
 
-  const [invite, setInvite] = useState({ name: '', email: '', role: 'Business Analyst' });
-  const [inviteUmbrellas, setInviteUmbrellas] = useState(['Analysis']);
-  const [roleForm, setRoleForm] = useState({ name: '', desc: '' });
-  const [roleUmbrellas, setRoleUmbrellas] = useState(['Analysis']);
-  const [editingRole, setEditingRole] = useState<string | null>(null);
+  const [members, setMembers] = useState<Member[]>(INITIAL_MEMBERS);
+  const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<Member | null>(null);
 
-  const [confirm, setConfirm] = useState<{
-    title: string;
-    body: string;
-    okLabel: string;
-    onOk: () => void;
-  } | null>(null);
+  const filteredMembers = members.filter((m) => {
+    const matchesSearch =
+      !search.trim() ||
+      `${m.name} ${m.email} ${m.workspaces}`.toLowerCase().includes(search.trim().toLowerCase());
+    const matchesRole = !roleFilter || m.role === roleFilter;
+    return matchesSearch && matchesRole;
+  });
 
-  const askConfirm = (title: string, body: string, okLabel: string, onOk: () => void) => {
-    setConfirm({ title, body, okLabel, onOk });
-    open('dlg-confirm');
-  };
-
-  const updateMemberRole = (id: string, newRole: string) => {
-    setMembers((prev) => prev.map((m) => {
-      if (m.id !== id) return m;
-      const chips: UmbrellaChip[] = newRole === 'Admin'
-        ? [{ label: 'Analysis' }, { label: 'Design' }, { label: 'Develop' }, { label: 'Admin' }]
-        : newRole === 'Business Analyst'
-        ? [{ label: 'Analysis' }, { label: 'Design · view', off: true }, { label: 'Develop · —', off: true }]
-        : newRole === 'CX Designer'
-        ? [{ label: 'Analysis · view', off: true }, { label: 'Design' }, { label: 'Develop · —', off: true }]
-        : newRole === 'Developer'
-        ? [{ label: 'Analysis · —', off: true }, { label: 'Design · view', off: true }, { label: 'Develop' }]
-        : [{ label: 'Analysis · view', off: true }, { label: 'Design · view', off: true }, { label: 'Develop · view', off: true }];
-      return { ...m, role: newRole, chips };
-    }));
-    toast(`Role updated to ${newRole}`, 'check');
-  };
-
-  const sendInvite = () => {
-    const name = invite.name.trim();
-    const email = invite.email.trim();
-    if (!email) {
-      toast('Please provide a work email', 'warn');
-      return;
-    }
-    const initials = name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase() || email.slice(0, 2).toUpperCase();
-    const newMember: Member = {
-      id: `mem-${Date.now()}`,
-      odId: `mem-${Date.now()}`,
-      name: name || email.split('@')[0],
-      email,
-      role: invite.role,
-      chips: inviteUmbrellas.map((u) => ({ label: u })),
-      lastActive: 'just now',
-      statusLabel: 'Invite pending',
-      statusBadge: 'warn',
-      actionTitle: 'Resend invite',
-      actionIcon: 'sync',
-      actionToast: `Invite resent to ${email}`,
-      initials,
-    };
-    setMembers((prev) => [newMember, ...prev]);
-    close();
-    toast(`Invitation sent to ${email}`, 'mail');
-    setInvite({ name: '', email: '', role: 'Business Analyst' });
-    setInviteUmbrellas(['Analysis']);
-  };
-
-  const deleteMember = (m: Member) => {
-    if (m.service) {
-      toast('Service accounts are revoked from Connectors, not deleted here', 'info');
-      return;
-    }
-    askConfirm(
-      `Delete ${m.name}?`,
-      'They lose access immediately. Existing work they own stays in the workspace and is reassigned to the workspace admin. This is logged in the audit log.',
-      'Delete member',
-      () => {
-        setMembers((prev) => prev.filter((x) => x.id !== m.id));
-        toast(`${m.name} removed — access revoked`, 'trash');
-        setConfirm(null);
-      },
+  const handleRoleChange = (memberId: string, newRole: 'Admin' | 'Builder' | 'Viewer') => {
+    setMembers((prev) =>
+      prev.map((m) => (m.id === memberId ? { ...m, role: newRole } : m))
     );
+    toast(`Updated role to ${newRole}`, 'check');
   };
 
-  const openRoleDialog = (name = '', desc = '') => {
-    setEditingRole(name && name !== 'New role' ? name : null);
-    setRoleForm({ name, desc });
-    setRoleUmbrellas(['Analysis']);
-    open('dlg-role');
+  const askDelete = (member: Member) => {
+    setDeleteTarget(member);
+    open('dlg-delete-member');
   };
 
-  const deleteRole = (role: RoleCard) => {
-    askConfirm(
-      `Delete the ${role.name} role?`,
-      'Members holding this role fall back to Viewer. Connectors, builds and maps created by them are unaffected.',
-      'Delete role',
-      () => {
-        setRoles((prev) => prev.filter((r) => r.id !== role.id));
-        toast(`${role.name} role deleted — holders moved to Viewer`, 'trash');
-        setConfirm(null);
-      },
-    );
-  };
-
-  const saveRole = () => {
-    const name = roleForm.name.trim() || 'Untitled role';
+  const confirmDelete = () => {
+    if (!deleteTarget) return;
+    setMembers((prev) => prev.filter((m) => m.id !== deleteTarget.id));
+    toast(`Removed ${deleteTarget.name} from organization`, 'trash');
+    setDeleteTarget(null);
     close();
-    toast(editingRole ? `Role "${name}" updated` : `Role "${name}" created`, 'users');
-    setRoleForm({ name: '', desc: '' });
-    setEditingRole(null);
   };
 
   return (
-    <AppShell crumb="Team & roles">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6" data-od-id="rbac-page">
+    <AppShell crumb="Team & Members">
+      <div className="p-4 sm:p-6 lg:p-7 max-w-[1240px] mx-auto w-full pb-16 space-y-6" data-od-id="rbac-page">
         <PageHeader
-          title="Team & roles"
-          description="Roles map to umbrellas — Analysts own Analysis, Designers own Design, Developers own Develop. Everyone else watches. Access changes apply on next sign-in and are logged in the audit log."
+          title="Team & Access Control"
+          description={`Organization: ${currentOrg.name} · Manage collaborators, access permissions, and workspace scoping.`}
           dataOdId="page-title"
-          className="pb-4 border-b border-border mb-0"
           actions={
-            <>
-              <Button
-                variant="outline"
-                size="sm"
-                id="new-role-btn"
-                data-od-id="new-role-btn"
-                onClick={() => openRoleDialog()}
-              >
-                <Icon name="plus" />New role
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => toast('Role report exported as roles-skyline.csv', 'download')}
-              >
-                <Icon name="download" />Export roles
-              </Button>
-              <OpenButton
-                variant="accent"
-                size="sm"
-                target="dlg-invite"
-                data-od-id="invite-btn"
-              >
-                <Icon name="plus" />Invite member
-              </OpenButton>
-            </>
+            <Button
+              type="button"
+              variant="accent"
+              className="gap-2 h-9 px-3.5 text-xs sm:text-sm font-medium cursor-pointer"
+              onClick={() => setIsInviteOpen(true)}
+              data-od-id="invite-member-btn"
+            >
+              <Icon name="plus" className="w-4 h-4" />Invite team member
+            </Button>
           }
         />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5" data-od-id="roles-strip">
-          {roles.map((role) => (
-            <Card key={role.id} className="bg-surface border border-border rounded-xl p-4 flex flex-col gap-2 shadow-xs hover:border-border-strong transition-all" data-od-id={role.id}>
-              <div className="flex items-center gap-2">
-                <Icon name={role.icon} className="text-muted" />
-                <strong className="text-[13px] font-semibold text-foreground truncate">{role.name}</strong>
+        {/* Roles Overview Cards (Occam's Razor: 3 clear SaaS roles instead of 60-checkbox matrix) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {ROLES_INFO.map((r) => (
+            <Card key={r.role} className="p-4 bg-surface border border-border rounded-xl shadow-xs space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-surface-inset border border-border grid place-items-center text-foreground">
+                    <Icon name={r.icon} className="w-4 h-4" />
+                  </div>
+                  <span className="font-semibold text-sm text-foreground">{r.role}</span>
+                </div>
+                <Badge variant="outline" className="text-[10px] font-medium border-border">
+                  {r.badge}
+                </Badge>
               </div>
-              <span className="text-xs text-muted leading-relaxed line-clamp-2">{role.desc}</span>
-              <span className="text-[11.5px] text-muted">1 member</span>
-              <div className="flex items-center gap-1 mt-auto pt-2 border-t border-border/60">
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  aria-label="Edit role"
-                  onClick={() => openRoleDialog(role.name, role.desc)}
-                >
-                  <Icon name="edit" />
-                </Button>
-                {role.deletable && (
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    className="hover:text-danger-fg hover:bg-danger-soft"
-                    aria-label="Delete role"
-                    onClick={() => deleteRole(role)}
-                  >
-                    <Icon name="trash" />
-                  </Button>
-                )}
-              </div>
+              <p className="text-xs text-muted leading-relaxed">{r.summary}</p>
             </Card>
           ))}
         </div>
 
-        <Card className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden p-0 gap-0" data-od-id="members-card">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:px-5 sm:py-3.5 border-b border-border">
-            <h3 className="text-sm font-semibold text-foreground">
-              Members <span className="font-normal text-muted">· {members.length}</span>
-            </h3>
+        {/* Members Table */}
+        <Card className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden p-0 gap-0">
+          <div className="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Organization Members</h3>
+              <p className="text-xs text-muted">People with access to workspaces in {currentOrg.name}</p>
+            </div>
             <SearchToolbar
-              query={query}
-              onQueryChange={setQuery}
-              placeholder="Search members"
-              inputClassName="w-full sm:w-56"
-            />
+              query={search}
+              onQueryChange={setSearch}
+              placeholder="Search member or email"
+              count={filteredMembers.length}
+              countLabel="shown"
+            >
+              <select
+                className="h-8 px-2.5 bg-surface-inset border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+                aria-label="Filter by role"
+              >
+                <option value="">All roles</option>
+                <option value="Admin">Admin</option>
+                <option value="Builder">Builder</option>
+                <option value="Viewer">Viewer</option>
+              </select>
+            </SearchToolbar>
           </div>
 
-          <Table id="members-table">
-            <TableHeader className="bg-surface-inset/60 text-muted font-semibold border-b border-border">
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="px-4 py-2.5 whitespace-nowrap text-muted font-semibold">Member</TableHead>
-                <TableHead className="px-4 py-2.5 whitespace-nowrap w-44 text-muted font-semibold">Role</TableHead>
-                <TableHead className="px-4 py-2.5 whitespace-nowrap text-muted font-semibold">Umbrella access</TableHead>
-                <TableHead className="px-4 py-2.5 whitespace-nowrap text-muted font-semibold">Last active</TableHead>
-                <TableHead className="px-4 py-2.5 whitespace-nowrap text-muted font-semibold">Status</TableHead>
-                <TableHead className="px-4 py-2.5 whitespace-nowrap w-20" />
-              </TableRow>
-            </TableHeader>
-            <TableBody id="members-body" className="divide-y divide-border/60">
-              {filtered.map((m) => {
-                const statusType = m.statusBadge === 'ok' || m.statusBadge.includes('badge-ok')
-                  ? 'ok'
-                  : m.statusBadge === 'warn' || m.statusBadge.includes('badge-warn')
-                  ? 'warn'
-                  : 'neutral';
-
-                return (
-                  <TableRow key={m.id} className="hover:bg-surface-hover/30 transition-colors" data-filter-row data-od-id={m.odId}>
-                    <TableCell className="px-4 py-3 whitespace-nowrap">
-                      <div className="flex items-center gap-2.5">
-                        <Avatar className={`w-7 h-7 text-[11px] font-bold ${m.avatarMuted ? 'bg-surface-inset text-muted' : 'bg-foreground text-surface'}`}>
-                          <AvatarFallback className={m.avatarMuted ? 'bg-surface-inset text-muted' : 'bg-foreground text-surface font-bold text-[11px]'}>
+          <div className="overflow-x-auto">
+            <Table className="min-w-[700px]">
+              <TableHeader className="bg-surface-inset/50 border-b border-border">
+                <TableRow className="text-[11px] font-semibold uppercase tracking-wider text-muted hover:bg-transparent">
+                  <TableHead className="px-4 py-3 text-muted">Member</TableHead>
+                  <TableHead className="px-4 py-3 text-muted">Role</TableHead>
+                  <TableHead className="px-4 py-3 text-muted">Workspace Scope</TableHead>
+                  <TableHead className="px-4 py-3 text-muted">Status</TableHead>
+                  <TableHead className="px-4 py-3 text-muted">Last Active</TableHead>
+                  <TableHead className="px-4 py-3 text-right text-muted">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-border/60">
+                {filteredMembers.map((m) => (
+                  <TableRow key={m.id} className="hover:bg-surface-hover/40 transition-colors">
+                    <TableCell className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="w-8 h-8 rounded-full border border-border text-xs font-semibold">
+                          <AvatarFallback className={m.status === 'service' ? 'bg-surface-inset text-muted' : 'bg-foreground text-background'}>
                             {m.initials}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <div className="font-semibold text-foreground text-xs">{m.name}</div>
-                          <div className="text-[11.5px] text-muted">{m.email}</div>
+                          <div className="font-semibold text-xs text-foreground flex items-center gap-1.5">
+                            {m.name}
+                            {m.status === 'service' && (
+                              <Badge variant="outline" className="text-[9px] py-0 px-1 border-border text-muted">
+                                Service Account
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="text-[11px] text-muted">{m.email}</div>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="px-4 py-3 whitespace-nowrap">
+
+                    <TableCell className="px-4 py-3">
                       <select
-                        className="h-7.5 px-2.5 rounded-md border border-border bg-surface text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-50 disabled:bg-surface-inset"
-                        data-role-select
                         value={m.role}
-                        disabled={m.roleDisabled}
-                        onChange={(e) => updateMemberRole(m.id, e.target.value)}
+                        onChange={(e) => handleRoleChange(m.id, e.target.value as 'Admin' | 'Builder' | 'Viewer')}
+                        className="h-7 px-2 bg-surface-inset border border-border rounded-md text-xs font-medium text-foreground focus:outline-none focus:border-accent"
+                        aria-label={`Change role for ${m.name}`}
                       >
-                        {(m.roleOptions ?? ROLE_OPTIONS).map((r) => <option key={r} value={r}>{r}</option>)}
+                        <option value="Admin">Admin</option>
+                        <option value="Builder">Builder</option>
+                        <option value="Viewer">Viewer</option>
                       </select>
                     </TableCell>
-                    <TableCell className="px-4 py-3 whitespace-nowrap">
-                      <div className="flex flex-wrap gap-1">
-                        {m.chips.map((c) => (
-                          <span
-                            key={c.label}
-                            className={`text-[11px] px-2 py-0.5 rounded-full border ${
-                              c.off
-                                ? 'bg-surface text-muted/60 border-border/60 opacity-60'
-                                : 'bg-surface-inset text-foreground border-border font-medium'
-                            }`}
+
+                    <TableCell className="px-4 py-3 text-xs text-foreground">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-surface-inset border border-border text-[11px]">
+                        <Icon name="grid" className="w-3 h-3 text-muted" />
+                        {m.workspaces}
+                      </span>
+                    </TableCell>
+
+                    <TableCell className="px-4 py-3">
+                      {m.status === 'active' ? (
+                        <StatusBadge status="ok">Active</StatusBadge>
+                      ) : m.status === 'invited' ? (
+                        <StatusBadge status="warn">Invited</StatusBadge>
+                      ) : (
+                        <StatusBadge status="neutral">System</StatusBadge>
+                      )}
+                    </TableCell>
+
+                    <TableCell className="px-4 py-3 text-xs text-muted font-mono">
+                      {m.lastActive}
+                    </TableCell>
+
+                    <TableCell className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        {m.status === 'invited' ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-xs"
+                            className="text-muted hover:text-foreground cursor-pointer"
+                            title="Resend Invitation"
+                            onClick={() => toast(`Invitation resent to ${m.email}`, 'mail')}
                           >
-                            {c.label}
-                          </span>
-                        ))}
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 whitespace-nowrap text-muted">{m.lastActive}</TableCell>
-                    <TableCell className="px-4 py-3 whitespace-nowrap">
-                      <StatusBadge status={statusType}>
-                        {m.statusLabel}
-                      </StatusBadge>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 whitespace-nowrap">
-                      <div className="flex items-center gap-1 justify-end">
+                            <Icon name="sync" className="w-3.5 h-3.5" />
+                          </Button>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-xs"
+                            className="text-muted hover:text-foreground cursor-pointer"
+                            title="Reset Password / Keys"
+                            onClick={() => toast(`Password reset sent to ${m.email}`, 'key')}
+                          >
+                            <Icon name="key" className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
+
                         <Button
+                          type="button"
                           variant="ghost"
                           size="icon-xs"
-                          title={m.actionTitle}
-                          onClick={() => toast(m.actionToast, m.actionIcon === 'sync' ? 'mail' : m.actionIcon)}
+                          className="text-muted hover:text-danger-fg hover:bg-danger-soft cursor-pointer"
+                          title="Remove Member"
+                          onClick={() => askDelete(m)}
                         >
-                          <Icon name={m.actionIcon} />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon-xs"
-                          className="hover:text-danger-fg hover:bg-danger-soft"
-                          aria-label="Delete member"
-                          data-del-member
-                          onClick={() => deleteMember(m)}
-                        >
-                          <Icon name="trash" />
+                          <Icon name="trash" className="w-3.5 h-3.5" />
                         </Button>
                       </div>
                     </TableCell>
                   </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
 
-          {filtered.length === 0 && (
+          {filteredMembers.length === 0 && (
             <EmptyState
-              icon="filter"
+              icon="users"
               title="No members match this search."
-              dataOdId="members-empty"
+              description="Try adjusting your search query or role filter."
+              action={
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 text-xs"
+                  onClick={() => {
+                    setSearch('');
+                    setRoleFilter('');
+                  }}
+                >
+                  Reset filters
+                </Button>
+              }
             />
           )}
 
-          <div className="flex items-center justify-end px-4 py-2.5 border-t border-border bg-surface-inset/20 text-xs text-muted">
-            <span><span id="members-count" className="font-semibold text-foreground">{count}</span> shown</span>
+          <div className="p-3.5 border-t border-border bg-surface-inset/30 flex justify-between items-center text-xs text-muted">
+            <span>
+              Showing <span className="font-semibold text-foreground">{filteredMembers.length}</span> of {members.length} members
+            </span>
+            <Button
+              type="button"
+              variant="link"
+              size="sm"
+              className="text-xs text-accent p-0 h-auto cursor-pointer"
+              onClick={() => setIsInviteOpen(true)}
+            >
+              + Invite another collaborator
+            </Button>
           </div>
-        </Card>
-
-        <Card className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden p-0 gap-0" data-od-id="matrix-card">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:px-5 sm:py-3.5 border-b border-border">
-            <h3 className="text-sm font-semibold text-foreground">Permission matrix</h3>
-            <div className="flex items-center gap-4 text-xs text-muted">
-              <span className="inline-flex items-center gap-1.5"><Perm type="f" />Full</span>
-              <span className="inline-flex items-center gap-1.5"><Perm type="p" />Limited</span>
-              <span className="inline-flex items-center gap-1.5"><Perm type="n" />None</span>
-            </div>
-          </div>
-          <Table data-od-id="perm-matrix">
-            <TableHeader className="bg-surface-inset/60 text-muted font-semibold border-b border-border">
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="px-4 py-2.5 text-left text-muted font-semibold">Capability</TableHead>
-                <TableHead className="px-4 py-2.5 text-center text-muted font-semibold">Admin</TableHead>
-                <TableHead className="px-4 py-2.5 text-center text-muted font-semibold">Business Analyst</TableHead>
-                <TableHead className="px-4 py-2.5 text-center text-muted font-semibold">CX Designer</TableHead>
-                <TableHead className="px-4 py-2.5 text-center text-muted font-semibold">Developer</TableHead>
-                <TableHead className="px-4 py-2.5 text-center text-muted font-semibold">Viewer</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody className="divide-y divide-border/60">
-              {MATRIX_ROWS.map((row) => (
-                <TableRow key={row.cap} className="hover:bg-surface-hover/30 transition-colors">
-                  <TableCell className="px-4 py-2.5 font-medium text-foreground">{row.cap}</TableCell>
-                  {row.perms.map((p, i) => (
-                    <TableCell key={i} className="px-4 py-2.5 text-center">
-                      <Perm type={p} />
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
         </Card>
       </div>
 
-      <Dialog id="dlg-invite" data-od-id="invite-dialog">
-        <div className="p-4 sm:p-5 border-b border-border">
-          <h2 className="text-base font-semibold text-foreground">Invite member</h2>
-          <p className="text-xs text-muted mt-0.5">They get an email with a sign-in link. Access starts on first sign-in.</p>
+      {/* Confirm Delete Dialog */}
+      <Dialog id="dlg-delete-member">
+        <div className="p-5 border-b border-border">
+          <h2 className="text-base font-semibold text-foreground tracking-tight">Remove team member?</h2>
+          <p className="text-xs text-muted mt-1">
+            They will lose access to all workspaces and pipelines in <span className="font-semibold text-foreground">{currentOrg.name}</span> immediately.
+          </p>
         </div>
-        <div className="p-4 sm:p-5 flex flex-col gap-4">
-          <div>
-            <Label className="block text-xs font-semibold text-foreground mb-1.5" htmlFor="inv-name">Full name</Label>
-            <Input id="inv-name" placeholder="e.g. Sneha Kulkarni" value={invite.name} onChange={(e) => setInvite({ ...invite, name: e.target.value })} />
-          </div>
-          <div>
-            <Label className="block text-xs font-semibold text-foreground mb-1.5" htmlFor="inv-email">Work email</Label>
-            <Input id="inv-email" type="email" placeholder="name@company.com" value={invite.email} onChange={(e) => setInvite({ ...invite, email: e.target.value })} />
-          </div>
-          <div>
-            <Label className="block text-xs font-semibold text-foreground mb-1.5" htmlFor="inv-role">Role</Label>
-            <select className="w-full h-9 px-3 rounded-md border border-border bg-surface text-xs sm:text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent" id="inv-role" value={invite.role} onChange={(e) => setInvite({ ...invite, role: e.target.value })}>
-              <option>Business Analyst</option>
-              <option>CX Designer</option>
-              <option>Developer</option>
-              <option>Viewer</option>
-              <option>Admin</option>
-            </select>
-          </div>
-          <div>
-            <span className="block text-xs font-semibold text-foreground mb-1.5">Umbrella access</span>
-            <MultiChips labels={['Analysis', 'Design', 'Develop']} selected={inviteUmbrellas} onChange={setInviteUmbrellas} odId="inv-umbrellas" />
-          </div>
+        <div className="p-5 text-xs text-foreground">
+          Are you sure you want to remove <strong className="font-semibold">{deleteTarget?.name}</strong> ({deleteTarget?.email})? This action cannot be undone.
         </div>
-        <div className="flex items-center justify-end gap-2 p-4 border-t border-border bg-surface-inset/30">
-          <CloseButton variant="outline" size="sm">Cancel</CloseButton>
-          <Button variant="accent" size="sm" id="inv-send" data-od-id="invite-send" onClick={sendInvite}>Send invite</Button>
+        <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-end gap-2.5 rounded-b-xl">
+          <CloseButton variant="outline" className="px-3.5 h-8.5 text-xs">
+            Cancel
+          </CloseButton>
+          <Button
+            type="button"
+            variant="destructive"
+            className="px-3.5 h-8.5 text-xs"
+            onClick={confirmDelete}
+          >
+            Remove member
+          </Button>
         </div>
       </Dialog>
-
-      <Dialog id="dlg-role" data-od-id="role-dialog">
-        <div className="p-4 sm:p-5 border-b border-border">
-          <h2 className="text-base font-semibold text-foreground" id="role-title">{editingRole ? `Edit ${editingRole}` : 'New role'}</h2>
-          <p className="text-xs text-muted mt-0.5">Roles decide which umbrella a teammate can work in and which pipeline actions they can take. Changes are written to the audit log.</p>
-        </div>
-        <div className="p-4 sm:p-5 flex flex-col gap-4">
-          <div>
-            <Label className="block text-xs font-semibold text-foreground mb-1.5" htmlFor="role-name">Role name</Label>
-            <Input id="role-name" placeholder="e.g. QA Reviewer" value={roleForm.name} onChange={(e) => setRoleForm({ ...roleForm, name: e.target.value })} />
-          </div>
-          <div>
-            <Label className="block text-xs font-semibold text-foreground mb-1.5" htmlFor="role-desc">Description</Label>
-            <Input id="role-desc" placeholder="What this role can do" value={roleForm.desc} onChange={(e) => setRoleForm({ ...roleForm, desc: e.target.value })} />
-          </div>
-          <div>
-            <span className="block text-xs font-semibold text-foreground mb-1.5">Umbrella access</span>
-            <MultiChips labels={['Analysis', 'Design', 'Develop']} selected={roleUmbrellas} onChange={setRoleUmbrellas} odId="role-umbs" />
-          </div>
-          <div>
-            <span className="block text-xs font-semibold text-foreground mb-2">Capabilities</span>
-            <div className="flex flex-col gap-2 max-h-44 overflow-y-auto pr-1">
-              <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer"><Checkbox defaultChecked /> Upload data &amp; run intent pipeline</label>
-              <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer"><Checkbox defaultChecked /> Edit / merge intents and clusters</label>
-              <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer"><Checkbox /> Edit process maps &amp; UML diagrams</label>
-              <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer"><Checkbox /> Generate agent builds</label>
-              <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer"><Checkbox /> Deploy to staging / production</label>
-              <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer"><Checkbox /> View audit log</label>
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center justify-end gap-2 p-4 border-t border-border bg-surface-inset/30">
-          <CloseButton variant="outline" size="sm">Cancel</CloseButton>
-          <Button variant="accent" size="sm" id="role-save" data-od-id="role-save" onClick={saveRole}>Save role</Button>
-        </div>
-      </Dialog>
-
-      {confirm && (
-        <Dialog id="dlg-confirm" data-od-id="confirm-dialog">
-          <div className="p-4 sm:p-5 border-b border-border">
-            <h2 className="text-base font-semibold text-foreground" id="cf-title">{confirm.title}</h2>
-            <p className="text-xs text-muted mt-0.5" id="cf-body">{confirm.body}</p>
-          </div>
-          <div className="flex items-center justify-end gap-2 p-4 border-t border-border bg-surface-inset/30">
-            <CloseButton variant="outline" size="sm" onClick={() => setConfirm(null)}>Cancel</CloseButton>
-            <Button
-              variant="destructive"
-              size="sm"
-              id="cf-ok"
-              data-od-id="confirm-ok"
-              onClick={confirm.onOk}
-            >
-              {confirm.okLabel}
-            </Button>
-          </div>
-        </Dialog>
-      )}
     </AppShell>
   );
 }

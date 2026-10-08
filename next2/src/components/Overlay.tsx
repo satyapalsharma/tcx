@@ -1,3 +1,5 @@
+'use client';
+
 import { createContext, useCallback, useContext, useState, type ReactNode } from 'react';
 import { Dialog as ShadcnDialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Sheet as ShadcnSheet, SheetContent, SheetTitle } from '@/components/ui/sheet';

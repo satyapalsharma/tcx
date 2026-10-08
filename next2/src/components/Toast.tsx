@@ -1,3 +1,5 @@
+'use client';
+
 import { createContext, useCallback, useContext, type ReactNode } from 'react';
 import { toast as sonnerToast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';

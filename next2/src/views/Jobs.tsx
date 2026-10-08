@@ -3,9 +3,10 @@
 import { useMemo, useState } from 'react';
 import { AppShell } from '../components/AppShell';
 import { Icon } from '../components/Icon';
-import { CloseButton, Dialog, Drawer, OpenButton, useOverlay } from '../components/Overlay';
+import { CloseButton, Dialog, Drawer, useOverlay } from '../components/Overlay';
 import { useToast } from '../components/Toast';
 import { useReveal } from '../hooks/useReveal';
+import { useApp } from '@/context/AppContext';
 import { JOBS, JOB_STEPS, type Job, type StepStatus } from '../data/jobs';
 import { KpiCard, PageHeader, StatusBadge, EmptyState, SearchToolbar } from '@/components/common';
 import { Card } from '@/components/ui/card';
@@ -28,6 +29,7 @@ export default function Jobs() {
   useReveal();
   const toast = useToast();
   const { open, close } = useOverlay();
+  const { openNewRun, currentWorkspace } = useApp();
   const [jobs, setJobs] = useState(JOBS);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
@@ -35,8 +37,6 @@ export default function Jobs() {
   const [pipe, setPipe] = useState('');
   const [selected, setSelected] = useState<Job | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Job | null>(null);
-  const [express, setExpress] = useState(false);
-  const [njClient, setNjClient] = useState('Skyline Broadband');
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -75,14 +75,9 @@ export default function Jobs() {
     setPipe('');
   };
 
-  const startJob = () => {
-    close();
-    toast(`Job queued and tagged to ${njClient}`, 'play');
-  };
-
   return (
     <AppShell
-      crumb="Jobs"
+      crumb="Jobs & Runs"
       badge={
         <StatusBadge status="warn" pulse className="mr-2">
           2 running
@@ -91,8 +86,8 @@ export default function Jobs() {
     >
       <div className="p-4 sm:p-6 lg:p-7 max-w-[1240px] mx-auto w-full pb-16" data-od-id="jobs-page">
         <PageHeader
-          title="Jobs"
-          description="Every pipeline run, map generation and agent build in one place — with live status, client cost tag and the ability to cancel, rerun or delete a job."
+          title="Jobs & Execution Runs"
+          description={`Workspace: ${currentWorkspace.name} · Live status, execution traces, and modular task runs.`}
           dataOdId="page-title"
           actions={
             <>
@@ -104,17 +99,100 @@ export default function Jobs() {
               >
                 <Icon name="download" className="w-4 h-4 text-muted" />Export CSV
               </Button>
-              <OpenButton
+              <Button
+                type="button"
                 variant="accent"
                 className="gap-2 h-9 px-3.5 text-xs sm:text-sm font-medium cursor-pointer"
-                target="dlg-newjob"
+                onClick={() => openNewRun()}
                 data-od-id="new-job-btn"
               >
-                <Icon name="plus" className="w-4 h-4" />New job
-              </OpenButton>
+                <Icon name="plus" className="w-4 h-4" />New Task or Pipeline
+              </Button>
             </>
           }
         />
+
+        {/* Modular Fast-Launch Bar */}
+        <div className="mb-6 p-4 rounded-xl border border-border bg-surface shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-muted">Modular Quick Launch</span>
+              <p className="text-xs text-muted">Launch a single isolated stage or run the full end-to-end pipeline with one click:</p>
+            </div>
+            <span className="text-[11px] font-medium text-accent">Occam's Razor: 1-Click Launch</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+            <button
+              type="button"
+              onClick={() => openNewRun('extract_intents')}
+              className="flex items-center gap-2 p-2.5 rounded-lg border border-border bg-surface-inset hover:border-accent/50 hover:bg-surface-hover text-left transition-all group cursor-pointer"
+            >
+              <div className="w-7 h-7 rounded-md bg-accent/10 text-accent grid place-items-center shrink-0">
+                <Icon name="search" className="w-3.5 h-3.5" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-semibold text-foreground group-hover:text-accent truncate">Extract Intents</div>
+                <div className="text-[10px] text-muted truncate">From logs/audio</div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => openNewRun('cluster_intents')}
+              className="flex items-center gap-2 p-2.5 rounded-lg border border-border bg-surface-inset hover:border-accent/50 hover:bg-surface-hover text-left transition-all group cursor-pointer"
+            >
+              <div className="w-7 h-7 rounded-md bg-accent/10 text-accent grid place-items-center shrink-0">
+                <Icon name="chart" className="w-3.5 h-3.5" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-semibold text-foreground group-hover:text-accent truncate">Cluster Intents</div>
+                <div className="text-[10px] text-muted truncate">L1/L2 taxonomy</div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => openNewRun('design_flow')}
+              className="flex items-center gap-2 p-2.5 rounded-lg border border-border bg-surface-inset hover:border-accent/50 hover:bg-surface-hover text-left transition-all group cursor-pointer"
+            >
+              <div className="w-7 h-7 rounded-md bg-accent/10 text-accent grid place-items-center shrink-0">
+                <Icon name="flow" className="w-3.5 h-3.5" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-semibold text-foreground group-hover:text-accent truncate">Design Flow</div>
+                <div className="text-[10px] text-muted truncate">Process maps &amp; rules</div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => openNewRun('generate_agent')}
+              className="flex items-center gap-2 p-2.5 rounded-lg border border-border bg-surface-inset hover:border-accent/50 hover:bg-surface-hover text-left transition-all group cursor-pointer"
+            >
+              <div className="w-7 h-7 rounded-md bg-accent/10 text-accent grid place-items-center shrink-0">
+                <Icon name="code" className="w-3.5 h-3.5" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-semibold text-foreground group-hover:text-accent truncate">Build Agent</div>
+                <div className="text-[10px] text-muted truncate">ADK / Bedrock code</div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => openNewRun('full_pipeline')}
+              className="col-span-2 sm:col-span-1 flex items-center gap-2 p-2.5 rounded-lg border border-accent/40 bg-accent/5 hover:bg-accent/10 text-left transition-all group cursor-pointer"
+            >
+              <div className="w-7 h-7 rounded-md bg-accent text-accent-fg grid place-items-center shrink-0">
+                <Icon name="bolt" className="w-3.5 h-3.5" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-bold text-accent truncate">Full Pipeline</div>
+                <div className="text-[10px] text-muted truncate">End-to-End run</div>
+              </div>
+            </button>
+          </div>
+        </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-6" data-od-id="job-kpis">
           <KpiCard
@@ -541,77 +619,6 @@ export default function Jobs() {
             onClick={confirmDelete}
           >
             Delete job
-          </Button>
-        </div>
-      </Dialog>
-
-      <Dialog id="dlg-newjob" dataOdId="new-job-dialog">
-        <div className="p-5 border-b border-border">
-          <h2 className="text-base font-semibold text-foreground tracking-tight">Start a new job</h2>
-          <p className="text-xs text-muted mt-1">Run any pipeline stage against connected interaction data.</p>
-        </div>
-        <div className="p-5 space-y-4">
-          <div>
-            <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="nj-client">Client</Label>
-            <select
-              className="w-full h-9 px-3 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
-              id="nj-client"
-              value={njClient}
-              onChange={(e) => setNjClient(e.target.value)}
-            >
-              <option>Skyline Broadband</option>
-              <option>Northwind Retail</option>
-              <option>Helios Health</option>
-            </select>
-          </div>
-          <div>
-            <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="nj-pipe">Pipeline stage</Label>
-            <select
-              className="w-full h-9 px-3 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
-              id="nj-pipe"
-            >
-              <option>Analysis — intent extraction &amp; clustering</option>
-              <option>Design — process map &amp; UML generation</option>
-              <option>Develop — agent code generation (ADK / Bedrock)</option>
-              <option>Full pipeline (Analysis → Design → Develop)</option>
-            </select>
-          </div>
-          <div>
-            <Label className="block text-xs font-semibold text-foreground tracking-wide mb-1.5" htmlFor="nj-source">Data source</Label>
-            <select
-              className="w-full h-9 px-3 bg-surface border border-border rounded-md text-xs sm:text-sm text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
-              id="nj-source"
-            >
-              <option>Genesys Cloud — last 30 days (18,442 records)</option>
-              <option>Zendesk — last 14 days (6,211 records)</option>
-              <option>Manual CSV upload</option>
-            </select>
-          </div>
-          <div className="flex items-center justify-between p-3 border border-border rounded-lg bg-surface-inset">
-            <div>
-              <div className="text-xs font-semibold text-foreground">Express mode</div>
-              <div className="text-[11px] text-muted leading-tight mt-0.5">Runs all stages without pausing for manual review gates.</div>
-            </div>
-            <span data-od-id="nj-express">
-              <Switch checked={express} onCheckedChange={setExpress} aria-label="Express mode" />
-            </span>
-          </div>
-        </div>
-        <div className="p-4 border-t border-border bg-surface-inset/40 flex items-center justify-end gap-2.5 rounded-b-xl">
-          <CloseButton
-            variant="outline"
-            className="px-3.5 h-8.5 rounded-md text-foreground text-xs font-medium cursor-pointer"
-          >
-            Cancel
-          </CloseButton>
-          <Button
-            type="button"
-            variant="accent"
-            className="px-3.5 h-8.5 rounded-md text-xs font-medium cursor-pointer"
-            id="nj-start"
-            onClick={startJob}
-          >
-            Start job
           </Button>
         </div>
       </Dialog>

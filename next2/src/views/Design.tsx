@@ -10,6 +10,7 @@ import { CloseButton, Dialog, Drawer, OpenButton, useOverlay } from '../componen
 import { ChipGroup } from '../components/ui';
 import { useToast } from '../components/Toast';
 import { useReveal } from '../hooks/useReveal';
+import { useApp } from '@/context/AppContext';
 import { PageHeader, StatusBadge } from '@/components/common';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -50,6 +51,7 @@ export default function Design() {
   useReveal();
   const toast = useToast();
   const { open, close } = useOverlay();
+  const { openNewRun, currentWorkspace } = useApp();
   const [tab, setTab] = useState('pmap');
   const [activeMap, setActiveMap] = useState('mi-billing');
   const [mapStatus, setMapStatus] = useState<'review' | 'approved' | 'changes'>('review');
@@ -94,11 +96,19 @@ export default function Design() {
     >
       <div className="p-4 sm:p-6 lg:p-7 max-w-[1240px] mx-auto w-full pb-16" data-od-id="design-page">
         <PageHeader
-          title="Design"
-          description="Verify and edit process maps generated from approved Analysis clusters, then review the UML sequence headers before handing off to Develop."
+          title="Process Flow Designer"
+          description={`Workspace: ${currentWorkspace.name} · Verify and edit process maps generated from approved clusters, or design new conversational business flows.`}
           dataOdId="page-title"
           actions={
             <div className="flex items-center gap-2 flex-wrap">
+              <Button
+                type="button"
+                variant="outline"
+                className="gap-1.5 h-9 px-3.5 text-xs sm:text-sm font-medium cursor-pointer"
+                onClick={() => openNewRun('design_flow')}
+              >
+                <Icon name="plus" className="w-4 h-4 text-muted" />Design New Flow
+              </Button>
               <OpenButton
                 variant="outline"
                 className="gap-2 h-9 px-3.5 text-xs sm:text-sm font-medium mr-1 cursor-pointer"
