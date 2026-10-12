@@ -1,506 +1,82 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { AppShell } from '../components/AppShell';
-import { Icon } from '../components/Icon';
-import { useToast } from '../components/Toast';
-import { useReveal } from '../hooks/useReveal';
-import { useApp } from '@/context/AppContext';
-import { PageHeader, SelectField } from '@/components/common';
+import { PageHeader, StatusBadge } from '@/components/common';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { useApp } from '@/context/AppContext';
+import { useToast } from '@/components/Toast';
+import { usePipeline } from '@/context/PipelineContext';
+import { type ArtifactKind } from '@/data/pipeline';
+import { JobOutputPicker, ValidationBadge } from '@/components/pipeline/JobOutputPicker';
 
-interface CodeFile {
-  id: string;
-  name: string;
-  runtime: string;
-  description: string;
-  code: string;
+const runtimes = ['Google ADK', 'Amazon Bedrock', 'LangGraph', 'CX Agent Studio'];
+const designKinds: ArtifactKind[] = ['process_map', 'uml'];
+function fileNameFor(runtime: string) {
+  return runtime === 'Amazon Bedrock' ? 'agent.json' : runtime === 'CX Agent Studio' ? 'agent.yaml' : 'agent.py';
 }
-
-const RUNTIMES = ['Google ADK', 'Amazon Bedrock', 'LangGraph', 'CX Agent Studio'];
-
-const CODE_FILES: Record<string, CodeFile[]> = {
-  'Google ADK': [
-    {
-      id: 'agent-py',
-      name: 'agent.py',
-      runtime: 'Google ADK',
-      description: 'Agent definition, prompt, and tool wiring',
-      code: `# Generated from approved Design Blueprint: Billing Dispute Resolution v3
-# Upstream: Derived from Analysis L1 Cluster "Billing & Payments"
-# Target Runtime: Google ADK (Vertex AI)
-
-from google.adk import Agent
-from google.adk.tools import FunctionTool
-from tools import get_invoice, apply_credit, route_retention
-from policies import GUARDRAILS
-
-billing_agent = Agent(
-    name="billing_dispute_agent",
-    model="gemini-2.5-flash",
-    description="Resolves consumer billing discrepancies, validates overcharges, and applies credits within policy limits.",
-    system_instruction="""
-    You are an automated billing dispute specialist for Skyline Communications.
-    1. Authenticate the caller and verify the disputed billing cycle.
-    2. Call 'get_invoice' to inspect itemized line items and promo credits.
-    3. If overcharge is confirmed and amount <= ₹2,500, call 'apply_credit' immediately.
-    4. If overcharge > ₹2,500 or customer rejects credit offer twice, call 'route_retention'.
-    5. Always maintain professional, empathetic tone and mask account numbers.
-    """,
-    tools=[
-        FunctionTool(get_invoice),
-        FunctionTool(apply_credit),
-        FunctionTool(route_retention),
-    ],
-    guardrails=GUARDRAILS,
-)
-
-if __name__ == "__main__":
-    billing_agent.run_local_server(port=8080)
-`,
-    },
-    {
-      id: 'tools-py',
-      name: 'tools.py',
-      runtime: 'Google ADK',
-      description: 'Tool implementations bound to enterprise CRM & Billing API',
-      code: `# External Tool implementations for Billing Agent
-
-import os
-from typing import Dict, Any
-
-async def get_invoice(msisdn: str, cycle: str = "latest") -> Dict[str, Any]:
-    """Fetch itemized invoice from CRM for the authenticated customer MSISDN."""
-    # In production, queries enterprise Billing Gateway via mTLS
-    return {
-        "msisdn": msisdn,
-        "invoice_id": "INV-2026-0841",
-        "billed_amount": 1499.00,
-        "expected_promo_amount": 999.00,
-        "discrepancy": 500.00,
-        "reason": "Expired promo coupon code rollover",
-        "status": "unpaid",
-    }
-
-async def apply_credit(invoice_id: str, amount: float) -> Dict[str, Any]:
-    """Apply an automated billing credit memo against a verified disputed invoice."""
-    if amount > 2500.0:
-        raise PermissionError("Amount exceeds supervisor policy delegation limit of ₹2,500.")
-    
-    return {
-        "status": "success",
-        "credit_memo_id": "CR-78219",
-        "adjusted_balance": 999.00,
-        "sms_notification_dispatched": True,
-    }
-
-async def route_retention(msisdn: str, reason: str, conversation_summary: str) -> Dict[str, Any]:
-    """Escalate to specialized retention negotiation sub-agent."""
-    return {
-        "queue": "retention_specialist_tier2",
-        "priority": "P1",
-        "context_transferred": True,
-        "jwt_session_token": "valid",
-    }
-`,
-    },
-    {
-      id: 'policies-py',
-      name: 'policies.py',
-      runtime: 'Google ADK',
-      description: 'Execution guardrails, credit limits, and escalation rules',
-      code: `# Enterprise Safety & Policy Guardrails
-
-GUARDRAILS = {
-    "max_credit_inr": 2500.00,
-    "max_turns_per_session": 14,
-    "pii_redaction": {
-        "mask_payment_card": True,
-        "mask_aadhaar_ssn": True,
-        "mask_bank_account": True,
-    },
-    "escalation_triggers": {
-        "dispute_amount_threshold": 2500.00,
-        "sentiment_score_threshold": -0.65,
-        "customer_declined_offers_max": 2,
-    },
-    "compliance": {
-        "iso_27001_audit_log": True,
-        "pci_dss_level_1": True,
-    }
-}
-`,
-    },
-    {
-      id: 'test-py',
-      name: 'test_agent.py',
-      runtime: 'Google ADK',
-      description: 'Automated scenario test suite verifying happy & unhappy paths',
-      code: `# Automated Test Scenarios for Billing Dispute Agent
-
-import pytest
-from agent import billing_agent
-
-@pytest.mark.asyncio
-async def test_valid_dispute_auto_credit():
-    """Verify customer under ₹2,500 gets auto-credit without agent intervention."""
-    response = await billing_agent.simulate(
-        user_message="I cancelled my add-on pack last month but got charged ₹500 again."
-    )
-    assert "CR-78219" in response.text
-    assert response.tool_calls[0].name == "get_invoice"
-    assert response.tool_calls[1].name == "apply_credit"
-
-@pytest.mark.asyncio
-async def test_high_value_dispute_escalation():
-    """Verify disputes over ₹2,500 automatically route to retention with context."""
-    response = await billing_agent.simulate(
-        user_message="I was wrongfully billed ₹4,500 for international roaming."
-    )
-    assert response.tool_calls[-1].name == "route_retention"
-`,
-    },
-  ],
-  'Amazon Bedrock': [
-    {
-      id: 'bedrock-agent',
-      name: 'bedrock_agent.json',
-      runtime: 'Amazon Bedrock',
-      description: 'Bedrock Agent OpenAPI schema and Action Group wiring',
-      code: `{
-  "agentName": "SkylineBillingDisputeAgent",
-  "foundationModel": "anthropic.claude-3-5-sonnet-20241022-v2:0",
-  "instruction": "Resolve billing disputes, verify invoices with get_invoice, and apply credit memos up to ₹2,500.",
-  "actionGroups": [
-    {
-      "actionGroupName": "BillingActions",
-      "actionGroupExecutor": {
-        "lambda": "arn:aws:lambda:ap-south-1:123456789012:function:billing-tools-executor"
-      },
-      "apiSchema": {
-        "s3": {
-          "s3BucketName": "skyline-agent-blueprints",
-          "s3ObjectKey": "schemas/billing_tools_v3.json"
-        }
-      }
-    }
-  ]
-}`,
-    },
-  ],
-  LangGraph: [
-    {
-      id: 'langgraph-graph',
-      name: 'graph.py',
-      runtime: 'LangGraph',
-      description: 'StateGraph definition with memory checkpoints and routing edges',
-      code: `from typing import TypedDict, Annotated, Sequence
-from langchain_core.messages import BaseMessage
-from langgraph.graph import StateGraph, END
-from langgraph.checkpoint.memory import MemorySaver
-
-class AgentState(TypedDict):
-    messages: Annotated[Sequence[BaseMessage], "add_messages"]
-    invoice_id: str
-    amount: float
-    dispute_valid: bool
-
-workflow = StateGraph(AgentState)
-workflow.add_node("verify_invoice", verify_node)
-workflow.add_node("apply_credit", credit_node)
-workflow.add_node("escalate_retention", retention_node)
-
-workflow.set_entry_point("verify_invoice")
-workflow.add_conditional_edges(
-    "verify_invoice",
-    route_dispute,
-    {"valid_under_limit": "apply_credit", "exceeds_limit": "escalate_retention"}
-)
-workflow.add_edge("apply_credit", END)
-workflow.add_edge("escalate_retention", END)
-
-app = workflow.compile(checkpointer=MemorySaver())
-`,
-    },
-  ],
-  'CX Agent Studio': [
-    {
-      id: 'cx-playbook',
-      name: 'playbook.json',
-      runtime: 'CX Agent Studio',
-      description: 'Google Contact Center AI dialog flow and playbook configuration',
-      code: `{
-  "name": "BillingDisputePlaybook",
-  "goal": "Handle caller invoice discrepancies and apply eligible refunds",
-  "steps": [
-    "Authenticate caller MSISDN via IVR token",
-    "Identify disputed billing period and fetch statement details",
-    "Evaluate dispute validity against campaign terms",
-    "Apply credit if under policy ceiling or transition to retention flow"
-  ]
-}`,
-    },
-  ],
-};
 
 export default function Develop() {
-  useReveal();
-  const toast = useToast();
   const { currentWorkspace, openNewRun } = useApp();
+  const toast = useToast();
+  const { artifacts, runs, selectedArtifactId, selectArtifact, handoffArtifact, approveArtifact, retryRun } = usePipeline();
+  const inputs = artifacts.filter((item) => item.kind === 'process_map' || item.kind === 'uml');
+  const builds = artifacts.filter((item) => item.kind === 'agent_code');
+  const [pinnedInputId, setPinnedInputId] = useState<string | null>(null);
+  const selectedInput = inputs.find((item) => item.id === selectedArtifactId);
+  const input = inputs.find((item) => item.id === (pinnedInputId ?? selectedInput?.id));
+  const eligibleBuilds = input ? builds.filter((item) => item.sourceId === input.id || (Boolean(input.runId) && item.runId === input.runId)) : builds;
+  const selected = eligibleBuilds.find((item) => item.id === selectedArtifactId) ?? eligibleBuilds[0];
+  const activeRuns = runs.filter((run) => (run.type === 'generate_agent' || run.plannedStages?.includes('generate_agent')) && ['queued', 'running', 'paused'].includes(run.status));
+  const activePipelineRun = input?.runId ? activeRuns.find((run) => run.id === input.runId && (run.type === 'full_pipeline' || run.plannedStages?.includes('generate_agent'))) : undefined;
+  const code = selected?.content ?? '';
+  const buildRun = runs.find((run) => run.id === selected?.runId);
+  const sourceArtifact = artifacts.find((artifact) => artifact.id === selected?.sourceId);
+  const runtime = buildRun?.runtime ?? (selected ? runtimes.find((value) => selected.name.includes(value) || selected.notes.includes(value)) ?? 'Google ADK' : 'Google ADK');
+  const fileName = fileNameFor(runtime);
+  const latestBuildRun = [...runs].filter((run) => run.type === 'generate_agent' || run.plannedStages?.includes('generate_agent')).sort((a, b) => b.createdAt - a.createdAt)[0];
 
-  const [selectedRuntime, setSelectedRuntime] = useState<string>('Google ADK');
-  const [selectedFileId, setSelectedFileId] = useState<string>('agent-py');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [progress, setProgress] = useState(100);
-
-  const availableFiles = CODE_FILES[selectedRuntime] ?? CODE_FILES['Google ADK'];
-  const activeFile = availableFiles.find((f) => f.id === selectedFileId) ?? availableFiles[0];
-
-  const handleRuntimeChange = (rt: string) => {
-    setSelectedRuntime(rt);
-    const files = CODE_FILES[rt] ?? CODE_FILES['Google ADK'];
-    setSelectedFileId(files[0].id);
-    toast(`Target runtime set to ${rt}`, 'code');
-  };
-
-  const copyCode = async () => {
+  async function copyCode() {
+    if (!code) return;
     try {
-      await navigator.clipboard.writeText(activeFile.code);
-      toast(`${activeFile.name} copied to clipboard`, 'check');
+      if (!navigator.clipboard?.writeText) throw new Error('Clipboard access is unavailable.');
+      await navigator.clipboard.writeText(code);
+      toast('Agent code copied', 'check');
     } catch {
-      toast('Clipboard access unavailable', 'warn');
+      toast('Could not copy automatically. Select the code and copy it manually.', 'warn');
     }
-  };
+  }
+  function downloadCode() {
+    if (!code) return;
+    const blob = new Blob([code], { type: 'text/plain;charset=utf-8' });
+    const href = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = href;
+    link.download = fileName;
+    link.click();
+    URL.revokeObjectURL(href);
+  }
 
-  const downloadCode = () => {
-    const url = URL.createObjectURL(new Blob([activeFile.code], { type: 'text/plain;charset=utf-8' }));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = activeFile.name;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast(`Downloaded ${activeFile.name}`, 'download');
-  };
+  return <AppShell crumb="Develop">
+    <main className="mx-auto w-full max-w-[1280px] space-y-6 p-5 sm:p-8" data-od-id="develop-page">
+      <PageHeader title="Develop" description={`Build agent code from a shared process map or UML sequence in Project ${currentWorkspace.name}.`} actions={<><Button asChild={Boolean(activePipelineRun)} variant="accent" onClick={activePipelineRun ? undefined : () => input ? handoffArtifact(input.id, 'generate_agent') : openNewRun('generate_agent')}>{activePipelineRun ? <Link href={`/jobs?jobId=${encodeURIComponent(activePipelineRun.id)}`}>View pipeline progress</Link> : input ? 'Build from this design' : 'Generate agent code'}</Button><Link href={activePipelineRun ? `/jobs?jobId=${encodeURIComponent(activePipelineRun.id)}` : '/jobs'} className="inline-flex h-9 items-center rounded-lg border border-border px-3 text-sm hover:bg-surface-inset">View runs</Link></>} />
 
-  const regenerateBuild = () => {
-    setIsGenerating(true);
-    setProgress(15);
-    toast('Synthesizing agent scaffold from latest Design blueprint...', 'sync');
+      <section className="space-y-3"><JobOutputPicker key={currentWorkspace.id} kinds={designKinds} selectedId={input?.id ?? null} title="Choose a design input" description="Pick a process map or UML sequence for this build." emptyMessage="No shared design inputs yet. You can build directly from a flow definition you already have." onSelect={(id) => { setPinnedInputId(id); selectArtifact(id); }} />
+        {inputs.length ? input ? <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-surface p-3"><div><p className="text-sm font-medium">Selected input: {input.name}</p><p className="mt-1 text-xs text-muted">{input.kind === 'process_map' ? 'Process map' : 'UML sequence'}</p></div></div> : <p className="text-xs text-muted">Choose one of the inputs above to configure a build from it.</p> : <Card className="flex flex-col items-start gap-3 p-5"><div><h3 className="text-sm font-semibold">Build from your own map</h3><p className="mt-1 max-w-xl text-sm text-muted">Choose an uploaded flow definition or tool specification as the input. You do not need an upstream stage.</p></div><Button variant="accent" onClick={() => openNewRun('generate_agent')}>Generate agent code</Button></Card>}
+      </section>
 
-    setTimeout(() => setProgress(55), 400);
-    setTimeout(() => setProgress(85), 800);
-    setTimeout(() => {
-      setProgress(100);
-      setIsGenerating(false);
-      toast('Build refreshed successfully · 4/4 scenario tests passed', 'check');
-    }, 1200);
-  };
+      {activeRuns.length > 0 && <Card className="space-y-3 p-4"><div className="flex items-center justify-between"><div><h2 className="text-sm font-semibold">Agent build progress</h2><p className="text-xs text-muted">Track current runs from the shared job list.</p></div><Link href={activePipelineRun ? `/jobs?jobId=${encodeURIComponent(activePipelineRun.id)}` : '/jobs'} className="text-xs font-medium text-accent-strong">Open jobs →</Link></div>{activeRuns.map((run) => { const step = run.steps.find((item) => item.status === 'running')?.label ?? (run.status === 'queued' ? 'Waiting to start' : run.status === 'paused' ? 'Paused' : 'Preparing output'); return <div key={run.id} className="rounded-lg border border-border p-3"><div className="flex flex-wrap items-center justify-between gap-2"><div><p className="text-sm font-medium">{run.name}</p><p className="text-xs text-muted">{run.runtime || 'Runtime pending'} · {step}</p></div><StatusBadge status={run.status === 'running' ? 'accent' : 'muted'}>{run.status}</StatusBadge></div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-inset"><div className="h-full rounded-full bg-accent-strong" style={{ width: `${run.progress}%` }} /></div><div className="mt-2 flex flex-wrap gap-1">{run.steps.map((item) => <Badge key={item.id} variant="outline">{item.label} · {item.status}</Badge>)}</div></div>; })}</Card>}
 
-  return (
-    <AppShell crumb="Agent Builder">
-      <main className="p-4 sm:p-6 lg:p-8 max-w-[1240px] mx-auto w-full pb-20 space-y-6" data-od-id="develop-page">
-        {/* Header with Actions */}
-        <PageHeader
-          title="Agent Builder & Code Generation"
-          description={`Workspace: ${currentWorkspace.name} · Generate production conversational AI agent code from verified Process Maps and UML blueprints.`}
-          dataOdId="page-title"
-          actions={
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                className="gap-1.5 h-9 text-xs sm:text-sm"
-                onClick={regenerateBuild}
-                disabled={isGenerating}
-              >
-                <Icon name="sync" className={`w-3.5 h-3.5 ${isGenerating ? 'animate-spin' : ''}`} />
-                {isGenerating ? 'Generating...' : 'Regenerate Build'}
-              </Button>
-              <Button
-                type="button"
-                variant="accent"
-                className="gap-1.5 h-9 text-xs sm:text-sm font-medium shadow-xs"
-                onClick={() => {
-                  toast('Package exported! Ready for Vertex AI / AWS staging deploy.', 'rocket');
-                }}
-              >
-                <Icon name="rocket" className="w-3.5 h-3.5" />
-                Deploy to Staging
-              </Button>
-            </div>
-          }
-        />
+      {latestBuildRun?.status === 'failed' && <Card className="flex flex-wrap items-center justify-between gap-3 border-danger/30 p-4"><div><h2 className="text-sm font-semibold text-danger-fg">Agent build failed</h2><p className="mt-1 text-xs text-muted">{latestBuildRun.error || `${latestBuildRun.name} could not produce an output.`}</p></div><Button size="sm" variant="outline" onClick={() => retryRun(latestBuildRun.id)}>Retry build</Button></Card>}
 
-        {/* Upstream Provenance Banner */}
-        <Card className="bg-surface-inset/60 border border-border p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-3">
-            <span className="w-8 h-8 rounded-lg bg-surface border border-border grid place-items-center shrink-0">
-              <Icon name="code" className="w-4 h-4 text-accent-strong" />
-            </span>
-            <div>
-              <div className="font-semibold text-foreground flex items-center gap-2">
-                <span>Inherited from Design: Flow Blueprint &ldquo;Billing Dispute Resolution v3&rdquo;</span>
-                <Badge variant="outline" className="border-emerald-500/30 text-emerald-600 bg-emerald-500/10 text-[10px] py-0 px-1.5">
-                  UML Sequence Verified
-                </Badge>
-              </div>
-              <p className="text-muted mt-0.5">Approved by Devika Sharma (CX Designer) · Includes tool schemas, prompt guardrails &amp; escalation contracts.</p>
-            </div>
-          </div>
-          <Badge variant="outline" className="border-border text-foreground font-mono text-[11px] self-start sm:self-auto">
-            Build ADK-0142 · 4/4 Tests Passing
-          </Badge>
-        </Card>
+      <section className="space-y-3"><div><h2 className="text-sm font-semibold">Generated code</h2><p className="text-xs text-muted">Choose a saved agent artifact to inspect, copy, or download. The build runtime is selected in the shared run options.</p></div>
+        {selected ? <div className="space-y-4"><div className="rounded-xl border border-border p-3"><h3 className="text-sm font-semibold">Agent outputs{input ? ` for ${input.name}` : ''}</h3><div className="mt-2 flex flex-wrap gap-2">{eligibleBuilds.map((build) => <Button key={build.id} size="sm" variant={selected.id === build.id ? 'secondary' : 'outline'} onClick={() => selectArtifact(build.id)}>{build.name}</Button>)}</div></div><Card className="overflow-hidden"><div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-3"><div className="flex flex-wrap items-center gap-2"><Badge variant="outline" className="font-mono">{fileName}</Badge><span className="text-xs text-muted">{runtime}</span>{selected.sample && <Badge variant="outline">Sample</Badge>}</div><div className="flex gap-2"><Button size="sm" variant="outline" onClick={copyCode} disabled={!code}>Copy</Button><Button size="sm" variant="outline" onClick={downloadCode} disabled={!code}>Download</Button></div></div><pre className="max-h-[600px] overflow-auto bg-surface-inset/30 p-4 text-xs leading-relaxed text-foreground"><code>{code || 'This artifact has no code content yet.'}</code></pre><details className="border-t border-border px-4 py-3"><summary className="cursor-pointer text-xs font-medium">Advanced details and review</summary><p className="mt-2 text-xs text-muted">Source design: {sourceArtifact?.name ?? selected.sourceId ?? 'not recorded'} · Build job: {buildRun?.name ?? buildRun?.id ?? 'not recorded'} · Runtime: {runtime}{selected.notes && ` · ${selected.notes}`}</p><div className="mt-3 flex items-center gap-2"><ValidationBadge status={selected.status} />{selected.validatedBy && <span className="text-xs text-muted">Validated by {selected.validatedBy} · v{selected.validatedVersion ?? selected.version}</span>}{selected.status !== 'approved' && <Button size="sm" variant="outline" onClick={() => approveArtifact(selected.id)}>Mark validated</Button>}</div></details></Card></div> : <Card className="p-8 text-center"><h3 className="font-semibold">{input ? 'No agent build for this input yet' : 'No agent code yet'}</h3><p className="mt-1 text-sm text-muted">{input ? 'Build from this design to create a code artifact linked to the selected input.' : 'Generated code will appear here with its source and build job.'}</p></Card>}
+      </section>
 
-        {/* Target Runtime Selector Tabs */}
-        <div className="space-y-2">
-          <label className="text-xs font-semibold uppercase tracking-wider text-muted">1 · Select Target Framework</label>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {RUNTIMES.map((rt) => {
-              const isSelected = selectedRuntime === rt;
-              return (
-                <Card
-                  key={rt}
-                  onClick={() => handleRuntimeChange(rt)}
-                  className={`p-3.5 border transition-all cursor-pointer rounded-xl ${
-                    isSelected
-                      ? 'border-accent-strong bg-accent-soft/30 shadow-xs ring-1 ring-accent-strong/40'
-                      : 'bg-surface border-border hover:border-border-strong hover:bg-surface-hover/50'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs sm:text-sm font-semibold text-foreground">{rt}</span>
-                    {isSelected && (
-                      <span className="w-2 h-2 rounded-full bg-accent-strong" />
-                    )}
-                  </div>
-                  <p className="text-[11px] text-muted mt-1">
-                    {rt === 'Google ADK'
-                      ? 'Python · Vertex AI deploy'
-                      : rt === 'Amazon Bedrock'
-                      ? 'Action Groups · Claude 3.5'
-                      : rt === 'LangGraph'
-                      ? 'StateGraph · Checkpointing'
-                      : 'CCAI Dialogflow Playbook'}
-                  </p>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Live Generation Progress Bar (visible during generation) */}
-        {isGenerating && (
-          <Card className="p-4 bg-surface border border-accent-border/50 rounded-xl space-y-2 shadow-xs">
-            <div className="flex items-center justify-between text-xs font-medium">
-              <span className="text-foreground flex items-center gap-2">
-                <Icon name="bolt" className="w-3.5 h-3.5 text-accent-strong animate-bounce" />
-                Synthesizing agent state machine &amp; tool bindings...
-              </span>
-              <span className="font-mono text-muted">{progress}%</span>
-            </div>
-            <Progress value={progress} className="h-1.5" />
-          </Card>
-        )}
-
-        {/* Main Code Studio: Multi-File Navigator + Code Viewer + Guardrails Card */}
-        <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr_300px] gap-4 items-start">
-          {/* File Navigator */}
-          <Card className="bg-surface border border-border rounded-xl p-0 overflow-hidden shadow-xs">
-            <div className="p-3 border-b border-border bg-surface-inset/40">
-              <h3 className="text-xs font-semibold text-foreground">Scaffold Files</h3>
-              <p className="text-[11px] text-muted">{selectedRuntime}</p>
-            </div>
-            <div className="p-2 space-y-1">
-              {availableFiles.map((f) => (
-                <Button
-                  key={f.id}
-                  type="button"
-                  variant={selectedFileId === f.id ? 'secondary' : 'ghost'}
-                  size="sm"
-                  className={`w-full justify-start text-xs font-mono h-8 px-2.5 ${
-                    selectedFileId === f.id ? 'bg-surface-inset text-foreground font-semibold shadow-xs' : 'text-muted'
-                  }`}
-                  onClick={() => setSelectedFileId(f.id)}
-                >
-                  <Icon name="code" className="w-3.5 h-3.5 mr-2 shrink-0 text-muted" />
-                  <span className="truncate">{f.name}</span>
-                </Button>
-              ))}
-            </div>
-          </Card>
-
-          {/* Code Viewer */}
-          <Card className="bg-surface border border-border rounded-xl p-0 overflow-hidden shadow-xs">
-            <div className="p-3 border-b border-border flex items-center justify-between gap-3 bg-surface-inset/30 flex-wrap">
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="border-border text-foreground font-mono text-xs">
-                  {activeFile.name}
-                </Badge>
-                <span className="text-xs text-muted hidden sm:inline">{activeFile.description}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button type="button" variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={copyCode}>
-                  <Icon name="copy" className="w-3 h-3" />
-                  Copy
-                </Button>
-                <Button type="button" variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={downloadCode}>
-                  <Icon name="download" className="w-3 h-3" />
-                  Download
-                </Button>
-              </div>
-            </div>
-            <pre className="p-4 sm:p-5 overflow-x-auto max-h-[600px] bg-surface-inset/20 text-xs font-mono leading-relaxed text-foreground">
-              <code>{activeFile.code}</code>
-            </pre>
-          </Card>
-
-          {/* Active Policies & Safety Guardrails Card */}
-          <Card className="bg-surface border border-border rounded-xl p-4 shadow-xs space-y-4">
-            <div className="pb-2 border-b border-border">
-              <h3 className="text-xs sm:text-sm font-semibold text-foreground">Active Guardrails</h3>
-              <p className="text-[11px] text-muted">Execution limits &amp; safety policies</p>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <div className="p-2.5 rounded-lg bg-surface-inset/50 border border-border/70 space-y-1">
-                <div className="flex items-center justify-between font-medium text-foreground">
-                  <span>Credit Limit Cap</span>
-                  <Badge variant="outline" className="text-[10px] font-mono text-foreground border-border">₹2,500</Badge>
-                </div>
-                <p className="text-[11px] text-muted">Amounts &gt; ₹2,500 require supervisor delegation token.</p>
-              </div>
-
-              <div className="p-2.5 rounded-lg bg-surface-inset/50 border border-border/70 space-y-1">
-                <div className="flex items-center justify-between font-medium text-foreground">
-                  <span>Max Turns Limit</span>
-                  <Badge variant="outline" className="text-[10px] font-mono text-foreground border-border">14 turns</Badge>
-                </div>
-                <p className="text-[11px] text-muted">Prevents infinite conversational loops and hallucinations.</p>
-              </div>
-
-              <div className="p-2.5 rounded-lg bg-surface-inset/50 border border-border/70 space-y-1">
-                <div className="flex items-center justify-between font-medium text-foreground">
-                  <span>PII Redaction</span>
-                  <Badge variant="outline" className="text-[10px] text-emerald-600 bg-emerald-500/10 border-emerald-500/20 font-medium">PCI / Aadhaar</Badge>
-                </div>
-                <p className="text-[11px] text-muted">Tokens masked in prompt memory before LLM inference.</p>
-              </div>
-
-              <div className="p-2.5 rounded-lg bg-surface-inset/50 border border-border/70 space-y-1">
-                <div className="flex items-center justify-between font-medium text-foreground">
-                  <span>Escalation Queue</span>
-                  <Badge variant="outline" className="text-[10px] font-mono text-foreground border-border">retention_tier2</Badge>
-                </div>
-                <p className="text-[11px] text-muted">Auto-triggers if caller rejects 2 consecutive credit offers.</p>
-              </div>
-            </div>
-          </Card>
-        </div>
-      </main>
-    </AppShell>
-  );
+      <section aria-labelledby="deploy-heading"><Card className="flex flex-wrap items-center justify-between gap-4 p-4"><div><h2 id="deploy-heading" className="text-sm font-semibold">Deployment</h2><p className="mt-1 text-sm text-muted">No deployment is configured. This project can generate and export code, but cannot deploy it yet.</p></div><Badge variant="outline">Not configured</Badge></Card></section>
+    </main>
+  </AppShell>;
 }

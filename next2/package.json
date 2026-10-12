@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:ux": "node scripts/test-pipeline-api.mjs && node scripts/test-diagram-source.mjs && node scripts/test-job-analytics.mjs && node scripts/test-cluster-operations.mjs"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",

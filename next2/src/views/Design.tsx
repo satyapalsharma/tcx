@@ -1,459 +1,158 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import Link from 'next/link';
 import { AppShell } from '../components/AppShell';
-import { Icon } from '../components/Icon';
-import { ProcessMapSvg } from '../components/ProcessMapSvg';
-import { UmlSequenceSvg } from '../components/UmlSequenceSvg';
-import { useToast } from '../components/Toast';
-import { useReveal } from '../hooks/useReveal';
-import { useApp } from '@/context/AppContext';
-import { PageHeader, SelectField } from '@/components/common';
+import { PageHeader, StatusBadge } from '@/components/common';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { useApp } from '@/context/AppContext';
+import { usePipeline } from '@/context/PipelineContext';
+import { ARTIFACT_LABELS, type Artifact, type ArtifactKind, type StageType } from '@/data/pipeline';
+import { DiagramPreview } from '@/components/pipeline/DiagramPreview';
+import { JobOutputPicker, ValidationBadge } from '@/components/pipeline/JobOutputPicker';
+import { addProcessNode, connectProcessNodes, disconnectProcessNodes, parseDiagramSteps, parseProcessConnections, parseProcessNodes, removeProcessNode, replaceDiagramSteps } from '@/lib/diagram-source';
 
-export interface FlowNode {
-  id: string;
-  title: string;
-  type: 'start' | 'message' | 'tool' | 'decision' | 'handoff' | 'end';
-  subtitle: string;
-  tool?: string;
-  rule?: string;
-  retryLimit?: number;
-  subAgent?: string;
-}
-
-const INITIAL_NODES: FlowNode[] = [
-  {
-    id: 'n-start',
-    title: 'Call Connected & Identity Auth',
-    type: 'start',
-    subtitle: 'IVR match · MSISDN verified',
-    tool: 'auth.verify_caller_jwt',
-    rule: 'Pass session token if authenticated in IVR; else prompt OTP',
-  },
-  {
-    id: 'n-intent',
-    title: 'Verify Caller Intent',
-    type: 'message',
-    subtitle: 'Extract disputed invoice ID & billing cycle',
-    rule: 'LLM intent confidence must exceed 0.85',
-  },
-  {
-    id: 'n-fetch',
-    title: 'Fetch Customer Invoice',
-    type: 'tool',
-    subtitle: 'Query billing CRM for latest statements',
-    tool: 'crm.invoices.latest(msisdn)',
-    rule: 'Retrieve charges, itemized taxes, and active promo discounts',
-  },
-  {
-    id: 'n-decision',
-    title: 'Dispute Validity & Credit Check',
-    type: 'decision',
-    subtitle: 'Is overcharge valid & amount <= ₹2,500?',
-    rule: 'Branch A: Auto-apply credit if <= ₹2,500\nBranch B: Escalate if > ₹2,500 or repeated dispute',
-    retryLimit: 1,
-  },
-  {
-    id: 'n-credit',
-    title: 'Apply Automated Credit',
-    type: 'tool',
-    subtitle: 'Credit adjustment via Billing Gateway',
-    tool: 'billing.apply_credit(invoice_id, amount)',
-    rule: 'Generate instant credit memo and send WhatsApp receipt',
-  },
-  {
-    id: 'n-handoff',
-    title: 'Retention Sub-Agent Handoff',
-    type: 'handoff',
-    subtitle: 'Specialized retention queue negotiation',
-    subAgent: 'retention_negotiator_agent',
-    rule: 'Carry full conversation context and max discount tier matrix',
-  },
-  {
-    id: 'n-end',
-    title: 'Resolution Confirmed & End Call',
-    type: 'end',
-    subtitle: 'Update CRM disposition & close session',
-    tool: 'crm.tickets.resolve(ticket_id)',
-    rule: 'Send CSAT survey link via SMS within 2 minutes',
-  },
-];
+type DesignKind = Extract<ArtifactKind, 'process_map' | 'uml'>;
+const kindLabels: Record<DesignKind, string> = { process_map: 'Process map', uml: 'UML sequence' };
+const designKinds: ArtifactKind[] = ['process_map', 'uml'];
+const nextStage: Record<DesignKind, Exclude<StageType, 'full_pipeline'>> = {
+  process_map: 'generate_uml', uml: 'generate_agent',
+};
 
 export default function Design() {
-  useReveal();
-  const toast = useToast();
   const { currentWorkspace, openNewRun } = useApp();
+  const { artifacts, runs, selectedArtifactId, handoffArtifact, updateArtifact, approveArtifact, retryRun } = usePipeline();
+  const designArtifacts = artifacts.filter((item) => item.kind === 'process_map' || item.kind === 'uml');
+  const selected = designArtifacts.find((item) => item.id === selectedArtifactId) ?? designArtifacts[0];
+  const [tab, setTab] = useState<DesignKind>(selected?.kind === 'uml' ? 'uml' : 'process_map');
+  const [editing, setEditing] = useState(false);
+  const [stepNames, setStepNames] = useState<string[]>([]);
+  const [editContent, setEditContent] = useState('');
+  const [newStepName, setNewStepName] = useState('');
+  const [connectFrom, setConnectFrom] = useState('');
+  const [connectTo, setConnectTo] = useState('');
+  const [notes, setNotes] = useState('');
+  const [editingLabel, setEditingLabel] = useState<string | null>(null);
+  const [sourceOpen, setSourceOpen] = useState(false);
+  const [sourceDraft, setSourceDraft] = useState('');
+  const [nameDraft, setNameDraft] = useState('');
+  const selectedForTab = designArtifacts.find((item) => item.kind === tab && item.id === selectedArtifactId);
+  // Keep the initially selected artifact visible, but never silently replace a
+  // job-specific selection with an unrelated artifact when switching tabs.
+  const current = selectedForTab ?? (!designArtifacts.some((item) => item.id === selectedArtifactId) ? designArtifacts.find((item) => item.kind === tab) : undefined);
 
-  const [nodes, setNodes] = useState<FlowNode[]>(INITIAL_NODES);
-  const [selectedNodeId, setSelectedNodeId] = useState<string>('n-decision');
-  const [activeTab, setActiveTab] = useState<'canvas' | 'diagram' | 'uml'>('canvas');
-  const [isHandedOff, setIsHandedOff] = useState(false);
-
-  const selectedNode = nodes.find((n) => n.id === selectedNodeId) ?? nodes[0];
-
-  const updateSelectedNode = (patch: Partial<FlowNode>) => {
-    setNodes((prev) => prev.map((n) => (n.id === selectedNodeId ? { ...n, ...patch } : n)));
-    toast('Node updated', 'check');
+  const related = useMemo(() => artifacts.filter((item) => item.kind === 'clusters'), [artifacts]);
+  const sourceRun = runs.find((run) => run.id === current?.runId);
+  const stageType: StageType = tab === 'process_map' ? 'design_flow' : 'generate_uml';
+  const stageRun = [...runs].filter((run) => run.type === stageType || run.plannedStages?.includes(stageType)).sort((a, b) => b.createdAt - a.createdAt)[0];
+  const runIsActive = stageRun && ['queued', 'running', 'paused'].includes(stageRun.status);
+  const selectedPipelineActive = Boolean(current && sourceRun && ['queued', 'running', 'paused'].includes(sourceRun.status) && (sourceRun.type === 'full_pipeline' || sourceRun.plannedStages?.includes(nextStage[current.kind as DesignKind])));
+  const draftNodes = current?.kind === 'process_map' ? parseProcessNodes(editContent) : [];
+  const draftConnections = current?.kind === 'process_map' ? parseProcessConnections(editContent) : [];
+  const startEdit = (artifact: Artifact, label?: string) => {
+    const content = artifact.content ?? '';
+    setEditContent(content);
+    setStepNames(parseDiagramSteps(content));
+    const nodes = artifact.kind === 'process_map' ? parseProcessNodes(content) : [];
+    setConnectFrom(nodes[0]?.id ?? '');
+    setConnectTo(nodes[1]?.id ?? nodes[0]?.id ?? '');
+    setEditingLabel(label ?? null);
+    setNotes(artifact.notes ?? '');
+    setNameDraft(artifact.name);
+    setEditing(true);
+  };
+  const updateProcessDraft = (content: string) => {
+    setEditContent(content);
+    setStepNames(parseDiagramSteps(content));
+    const nodes = parseProcessNodes(content);
+    setConnectFrom((value) => nodes.some((node) => node.id === value) ? value : nodes[0]?.id ?? '');
+    setConnectTo((value) => nodes.some((node) => node.id === value) ? value : nodes[1]?.id ?? nodes[0]?.id ?? '');
+  };
+  const saveEdit = () => {
+    if (!current) return;
+    updateArtifact(current.id, { name: nameDraft.trim() || current.name, content: replaceDiagramSteps(editContent || current.content || '', stepNames), notes });
+    setEditing(false);
   };
 
-  const moveNode = (index: number, direction: 'up' | 'down') => {
-    const target = direction === 'up' ? index - 1 : index + 1;
-    if (target < 0 || target >= nodes.length) return;
-    const copy = [...nodes];
-    const temp = copy[index];
-    copy[index] = copy[target];
-    copy[target] = temp;
-    setNodes(copy);
-    toast('Step reordered', 'flow');
-  };
+  return <AppShell crumb="Design">
+    <main className="mx-auto w-full max-w-[1280px] space-y-6 p-5 sm:p-8" data-od-id="design-page">
+      <PageHeader title="Design" description={`Turn shared analysis into process maps and UML sequences for Project ${currentWorkspace.name}.`} actions={selectedPipelineActive && sourceRun ? <Button asChild variant="accent"><a href={`/jobs?jobId=${encodeURIComponent(sourceRun.id)}`}>View pipeline progress</a></Button> : current ? <Button variant="accent" onClick={() => handoffArtifact(current.id, nextStage[current.kind as DesignKind])}>{current.kind === 'process_map' ? 'Continue to UML' : 'Continue to Develop'}</Button> : <Button variant="accent" onClick={() => openNewRun('design_flow')}>Create a process map</Button>} />
 
-  const addStep = (type: FlowNode['type']) => {
-    const newId = `node-${Date.now()}`;
-    const newNode: FlowNode = {
-      id: newId,
-      title: type === 'decision' ? 'New Decision Gate' : type === 'tool' ? 'New Tool Action' : 'New Interaction Step',
-      type,
-      subtitle: type === 'tool' ? 'Call external API' : 'Conversational branching logic',
-      tool: type === 'tool' ? 'crm.custom_api()' : undefined,
-      rule: 'Define evaluation criteria and rules',
-    };
-    setNodes((prev) => [...prev.slice(0, -1), newNode, prev[prev.length - 1]]);
-    setSelectedNodeId(newId);
-    toast('New node added to flow', 'plus');
-  };
+      {related.length > 0 && <details className="rounded-xl border border-border bg-surface px-4"><summary className="cursor-pointer py-3 text-sm font-medium">Advanced · reuse Analysis outputs ({related.length})</summary><div className="grid gap-3 border-t border-border py-3 sm:grid-cols-2 lg:grid-cols-3">{related.slice(0, 6).map((item) => <div key={item.id} className="rounded-xl border border-border bg-surface p-3"><div className="flex justify-between gap-2"><span className="text-sm font-semibold">{item.name}</span><StatusBadge status={item.status === 'approved' ? 'success' : item.status === 'review' ? 'warn' : 'muted'}>{item.status}</StatusBadge></div><p className="mt-1 text-xs text-muted">{ARTIFACT_LABELS[item.kind]}</p><Button size="sm" variant="outline" className="mt-3" onClick={() => handoffArtifact(item.id, 'design_flow')}>Reuse in a flow</Button></div>)}</div></details>}
 
-  const handleHandoff = () => {
-    setIsHandedOff(true);
-    toast('Flow & UML blueprint approved! Handed off to Developers in Agent Builder', 'check');
-  };
+      {runIsActive && stageRun && <Card className="space-y-3 border-accent-border/60 p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-sm font-semibold">{stageRun.status === 'paused' ? 'Design run paused' : 'Design in progress'}</h2><p className="mt-1 text-xs text-muted">{stageRun.name} · {stageRun.progress}%</p></div><Link href={`/jobs?jobId=${encodeURIComponent(stageRun.id)}`} className="text-xs font-medium text-accent-strong hover:underline">Open job details</Link></div><div className="flex flex-wrap gap-2">{stageRun.steps.map((step) => <Badge key={step.id} variant="outline" className="capitalize">{step.label} · {step.status}</Badge>)}</div></Card>}
+      {stageRun?.status === 'failed' && <Card className="flex flex-wrap items-center justify-between gap-3 border-danger/30 p-4"><div><h2 className="text-sm font-semibold text-danger-fg">Design run failed</h2><p className="mt-1 text-xs text-muted">{stageRun.error || `${stageRun.name} could not produce an output.`}</p></div><Button size="sm" variant="outline" onClick={() => retryRun(stageRun.id)}>Retry run</Button></Card>}
 
-  return (
-    <AppShell crumb="Process Designer">
-      <main className="p-4 sm:p-6 lg:p-8 max-w-[1240px] mx-auto w-full pb-20 space-y-6" data-od-id="design-page">
-        {/* Header with Actions */}
-        <PageHeader
-          title="Process Flow Designer"
-          description={`Workspace: ${currentWorkspace.name} · Visually design and edit conversational flows, decision gates, and UML sequence diagrams.`}
-          dataOdId="page-title"
-          actions={
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                className="gap-1.5 h-9 text-xs sm:text-sm"
-                onClick={() => openNewRun('design_flow')}
-              >
-                <Icon name="flow" className="w-3.5 h-3.5" />
-                New Flow Template
-              </Button>
-              <Button
-                type="button"
-                variant="accent"
-                className="gap-1.5 h-9 text-xs sm:text-sm font-medium shadow-xs"
-                onClick={handleHandoff}
-              >
-                <Icon name="check" className="w-3.5 h-3.5" />
-                {isHandedOff ? 'Handoff Approved (v3)' : 'Approve & Hand off to Develop'}
-              </Button>
-            </div>
-          }
-        />
+      <JobOutputPicker key={currentWorkspace.id} kinds={designKinds} selectedId={current?.id ?? null} title="Process maps and UML" description="Choose a specific output from a job or imported flow." emptyMessage="No process map or UML output yet." onSelect={(id) => { const found = designArtifacts.find((item) => item.id === id); if (found) setTab(found.kind as DesignKind); }} />
 
-        {/* Upstream Provenance Banner */}
-        <Card className="bg-surface-inset/60 border border-border p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-3">
-            <span className="w-8 h-8 rounded-lg bg-surface border border-border grid place-items-center shrink-0">
-              <Icon name="flow" className="w-4 h-4 text-accent-strong" />
-            </span>
-            <div>
-              <div className="font-semibold text-foreground flex items-center gap-2">
-                <span>Derived from Analysis: L1 Cluster &ldquo;Billing Dispute Resolution&rdquo;</span>
-                <Badge variant="outline" className="border-emerald-500/30 text-emerald-600 bg-emerald-500/10 text-[10px] py-0 px-1.5">
-                  Verified Snapshot v3
-                </Badge>
-              </div>
-              <p className="text-muted mt-0.5">Approved by Riya Menon (Business Analyst) · 2,847 calls synthesized into this conversational blueprint.</p>
-            </div>
+      <div className="space-y-4">
+        <div className="flex justify-end"><details className="relative"><summary className="cursor-pointer list-none rounded-lg border border-border px-3 py-2 text-xs font-medium">More options</summary><div className="absolute right-0 z-10 mt-1 w-48 rounded-lg border border-border bg-surface p-2 shadow-lg"><Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => openNewRun(tab === 'uml' ? 'generate_uml' : 'design_flow')}>Create {tab === 'uml' ? 'UML sequence' : 'process map'}</Button>{current && current.status !== 'approved' && <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => approveArtifact(current.id)}>Mark validated</Button>}</div></details></div>
+          <Tabs value={tab} onValueChange={(value) => setTab(value as DesignKind)}>
+            <TabsList><TabsTrigger value="process_map">Process maps</TabsTrigger><TabsTrigger value="uml">UML sequences</TabsTrigger></TabsList>
+            {(['process_map', 'uml'] as const).map((kind) => <TabsContent value={kind} key={kind} className="space-y-4">
+              {current && current.kind === kind ? <>
+                <Card className="overflow-hidden"><div className="flex flex-wrap items-start justify-between gap-3 border-b border-border p-4"><div><div className="flex flex-wrap items-center gap-2"><h2 className="text-base font-semibold">{current.name}</h2><StatusBadge status={current.status === 'approved' ? 'success' : current.status === 'review' ? 'warn' : 'muted'}>{current.status}</StatusBadge>{current.sample && <Badge variant="outline">Sample</Badge>}</div></div><Button variant="outline" size="sm" onClick={() => startEdit(current)}>Edit {kind === 'process_map' ? 'process map' : 'sequence'}</Button></div>
+                  <div className="p-3 sm:p-5"><DiagramPreview key={current.id} content={current.content ?? ''} kind={kind} onEdit={(label) => startEdit(current, label)} /></div>
+                {current.sample && <p className="border-t border-border px-4 py-2 text-xs text-muted">Sample content for exploring the designer.</p>}
+                </Card>
+                <details className="rounded-xl border border-border bg-surface p-4"><summary className="cursor-pointer text-sm font-medium">Advanced details and editing</summary><p className="mt-2 text-xs text-muted">Version {current.version} · Updated by {current.updatedBy ?? current.createdBy}{sourceRun && <> · {sourceRun.name} · {sourceRun.id}</>}{current.validatedBy && <> · Validated by {current.validatedBy} at v{current.validatedVersion ?? current.version}</>}</p><ValidationBadge status={current.status} /><p className="mt-2 text-xs text-muted">The source editor supports a limited Mermaid subset; other syntax remains visible as source preview. Source changes create a new revision.</p><Button size="sm" variant="outline" className="mt-3" onClick={() => { setSourceDraft(current.content ?? ''); setSourceOpen(true); }}>Edit {kind === 'process_map' ? 'Mermaid' : 'sequence'} source</Button></details>
+              </> : <Card className="p-10 text-center"><h2 className="font-semibold">No {kindLabels[kind].toLowerCase()} output yet</h2><p className="mt-1 text-sm text-muted">{stageRun?.status === 'failed' ? 'Review the failed run above and retry, or start another run.' : 'Start from an existing Project input or import your own definition.'}</p><Button variant="outline" className="mt-4" onClick={() => openNewRun(kind === 'uml' ? 'generate_uml' : 'design_flow')}>{kind === 'uml' ? 'Create UML' : 'Create process map'}</Button></Card>}
+            </TabsContent>)}
+          </Tabs>
+      </div>
+
+      <Dialog open={editing && Boolean(current)} onOpenChange={(open) => { if (!open) setEditing(false); }}>
+        <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">
+          <div>
+            <DialogTitle className="text-lg">Edit {current ? kindLabels[current.kind as DesignKind].toLowerCase() : 'design'}</DialogTitle>
+            <DialogDescription>{editingLabel ? `Editing “${editingLabel}” · ` : ''}Save creates a new shared revision; teammates can review it.</DialogDescription>
           </div>
-          <Badge variant="outline" className="border-border text-muted font-mono text-[11px] self-start sm:self-auto">
-            5 tools · 2 sub-agents
-          </Badge>
-        </Card>
-
-        {/* Main View Tabs: Visual Canvas Editor vs Diagram vs UML Sequence */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border mb-4">
-            <div className="overflow-x-auto w-full sm:w-auto">
-              <TabsList variant="line" className="w-max justify-start gap-4 h-10 bg-transparent p-0 whitespace-nowrap">
-                <TabsTrigger value="canvas" className="text-xs sm:text-sm font-medium">
-                  <Icon name="flow" className="w-3.5 h-3.5 mr-1.5" />
-                  Flow Canvas
-                </TabsTrigger>
-                <TabsTrigger value="diagram" className="text-xs sm:text-sm font-medium">
-                  <Icon name="chart" className="w-3.5 h-3.5 mr-1.5" />
-                  Process Map
-                </TabsTrigger>
-                <TabsTrigger value="uml" className="text-xs sm:text-sm font-medium">
-                  <Icon name="code" className="w-3.5 h-3.5 mr-1.5" />
-                  UML Sequence
-                </TabsTrigger>
-              </TabsList>
+          {current && <>
+            <label className="block space-y-1 text-sm">Name<Input value={nameDraft} onChange={(event) => setNameDraft(event.target.value)} /></label>
+            <div className="space-y-2">
+              <p className="text-sm font-medium">{current.kind === 'process_map' ? 'Process steps' : 'Participants and messages'}</p>
+              {stepNames.map((step, index) => <div key={`${current.id}-${index}`} className="flex gap-2">
+                <Input aria-label={`${current.kind === 'process_map' ? 'Step' : 'Participant or message'} ${index + 1} name`} autoFocus={Boolean(editingLabel && (step === editingLabel || step.endsWith(editingLabel)))} value={step} onChange={(event) => setStepNames((prev) => prev.map((value, i) => i === index ? event.target.value : value))} />
+                {current.kind === 'process_map' && <Button type="button" variant="ghost" size="sm" aria-label={`Remove ${step}`} onClick={() => updateProcessDraft(removeProcessNode(replaceDiagramSteps(editContent, stepNames), draftNodes[index]?.id ?? ''))}>Remove</Button>}
+              </div>)}
             </div>
-
-            {activeTab === 'canvas' && (
-              <div className="flex items-center gap-2 pb-2 sm:pb-0">
-                <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => addStep('tool')}>
-                  <Icon name="plus" className="w-3 h-3 mr-1" />
-                  Add Tool Step
-                </Button>
-                <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => addStep('decision')}>
-                  <Icon name="plus" className="w-3 h-3 mr-1" />
-                  Add Decision Gate
-                </Button>
+            {current.kind === 'process_map' && <div className="space-y-3 rounded-lg border border-border bg-surface-inset/30 p-3">
+              <div>
+                <p className="text-sm font-medium">Add a process step</p>
+                <div className="mt-2 flex gap-2"><Input value={newStepName} onChange={(event) => setNewStepName(event.target.value)} placeholder="Step name" aria-label="New process step name" /><Button type="button" variant="outline" onClick={() => { if (!newStepName.trim()) return; updateProcessDraft(addProcessNode(replaceDiagramSteps(editContent, stepNames), newStepName).content); setNewStepName(''); }}>Add step</Button></div>
               </div>
-            )}
-          </div>
-
-          {/* TAB 1: INTERACTIVE VISUAL NODE CANVAS + INSPECTOR PANEL */}
-          <TabsContent value="canvas" className="m-0">
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 items-start">
-              {/* Left: Interactive Visual Flow Nodes */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-xs text-muted px-1">
-                  <span>Conversational Nodes Sequence ({nodes.length} steps)</span>
-                  <span>Click any step to inspect &amp; edit properties</span>
-                </div>
-
-                <div className="space-y-2.5">
-                  {nodes.map((node, index) => {
-                    const isSelected = node.id === selectedNodeId;
-                    return (
-                      <div key={node.id} className="relative group">
-                        <Card
-                          onClick={() => setSelectedNodeId(node.id)}
-                          className={`p-3.5 border transition-all cursor-pointer rounded-xl ${
-                            isSelected
-                              ? 'border-accent-strong bg-accent-soft/30 shadow-xs'
-                              : 'bg-surface border-border hover:border-border-strong hover:bg-surface-hover/50'
-                          }`}
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-start gap-3">
-                              <span className="w-6 h-6 rounded-md bg-surface-inset border border-border text-[11px] font-mono font-semibold text-muted grid place-items-center shrink-0 mt-0.5">
-                                {index + 1}
-                              </span>
-                              <div>
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <h4 className="text-xs sm:text-sm font-semibold text-foreground">{node.title}</h4>
-                                  <Badge
-                                    variant="outline"
-                                    className={`text-[10px] py-0 px-1.5 uppercase font-medium ${
-                                      node.type === 'tool'
-                                        ? 'border-emerald-500/30 text-emerald-600 bg-emerald-500/10'
-                                        : node.type === 'decision'
-                                        ? 'border-amber-500/30 text-amber-600 bg-amber-500/10'
-                                        : node.type === 'handoff'
-                                        ? 'border-purple-500/30 text-purple-600 bg-purple-500/10'
-                                        : 'border-border text-muted bg-surface-inset'
-                                    }`}
-                                  >
-                                    {node.type}
-                                  </Badge>
-                                </div>
-                                <p className="text-xs text-muted mt-0.5">{node.subtitle}</p>
-
-                                {node.tool && (
-                                  <div className="mt-1.5 inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface-inset border border-border font-mono text-[11px] text-foreground">
-                                    <Icon name="bolt" className="w-3 h-3 text-accent-strong" />
-                                    {node.tool}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Reorder Up / Down Controls */}
-                            <div className="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon-xs"
-                                className="h-6 w-6 text-muted hover:text-foreground cursor-pointer"
-                                aria-label="Move step up"
-                                disabled={index === 0}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  moveNode(index, 'up');
-                                }}
-                              >
-                                &uarr;
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon-xs"
-                                className="h-6 w-6 text-muted hover:text-foreground cursor-pointer"
-                                aria-label="Move step down"
-                                disabled={index === nodes.length - 1}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  moveNode(index, 'down');
-                                }}
-                              >
-                                &darr;
-                              </Button>
-                            </div>
-                          </div>
-                        </Card>
-
-                        {/* Connector line between steps */}
-                        {index < nodes.length - 1 && (
-                          <div className="w-0.5 h-2.5 bg-border mx-auto my-0.5" />
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Right: Node Inspector & Property Editor */}
-              <Card className="bg-surface border border-border rounded-xl p-4 sticky top-6 shadow-xs space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-border">
+              <details>
+                <summary className="cursor-pointer text-sm font-medium">Connections · add or remove links</summary>
+                <div className="space-y-3 pt-3">
                   <div>
-                    <h3 className="text-xs sm:text-sm font-semibold text-foreground">Node Inspector</h3>
-                    <p className="text-[11px] text-muted">Configure step rules &amp; tools</p>
-                  </div>
-                  <Badge variant="outline" className="text-xs font-mono uppercase">
-                    {selectedNode.type}
-                  </Badge>
-                </div>
-
-                <div className="space-y-3.5">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="node-title" className="text-xs">Step Title</Label>
-                    <Input
-                      id="node-title"
-                      value={selectedNode.title}
-                      onChange={(e) => updateSelectedNode({ title: e.target.value })}
-                      className="h-8 text-xs sm:text-sm"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="node-subtitle" className="text-xs">Summary Description</Label>
-                    <Input
-                      id="node-subtitle"
-                      value={selectedNode.subtitle}
-                      onChange={(e) => updateSelectedNode({ subtitle: e.target.value })}
-                      className="h-8 text-xs sm:text-sm"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="node-type" className="text-xs">Step Type</Label>
-                    <SelectField
-                      id="node-type"
-                      value={selectedNode.type}
-                      onValueChange={(val) => updateSelectedNode({ type: val as FlowNode['type'] })}
-                      options={[
-                        { value: 'start', label: 'Start / Intake Trigger' },
-                        { value: 'message', label: 'Message & Prompt' },
-                        { value: 'tool', label: 'Tool Call / API Trigger' },
-                        { value: 'decision', label: 'Decision Gate / Branch' },
-                        { value: 'handoff', label: 'Sub-agent Handoff' },
-                        { value: 'end', label: 'End / Resolution Call' },
-                      ]}
-                      className="h-8 text-xs w-full"
-                    />
-                  </div>
-
-                  {selectedNode.type === 'tool' && (
-                    <div className="space-y-1.5">
-                      <Label htmlFor="node-tool" className="text-xs">Bound API Tool</Label>
-                      <Input
-                        id="node-tool"
-                        value={selectedNode.tool || ''}
-                        onChange={(e) => updateSelectedNode({ tool: e.target.value })}
-                        placeholder="e.g. billing.apply_credit(amount)"
-                        className="h-8 font-mono text-xs"
-                      />
+                    <p className="text-sm font-medium">Connect steps</p>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <select aria-label="Connection source step" className="h-9 min-w-0 flex-1 rounded-lg border border-border bg-surface px-2 text-xs" value={connectFrom} onChange={(event) => setConnectFrom(event.target.value)}>{draftNodes.map((node) => <option key={node.id} value={node.id}>{node.label}</option>)}</select>
+                      <span aria-hidden="true" className="text-muted">→</span>
+                      <select aria-label="Connection target step" className="h-9 min-w-0 flex-1 rounded-lg border border-border bg-surface px-2 text-xs" value={connectTo} onChange={(event) => setConnectTo(event.target.value)}>{draftNodes.map((node) => <option key={node.id} value={node.id}>{node.label}</option>)}</select>
+                      <Button type="button" variant="outline" size="sm" onClick={() => updateProcessDraft(connectProcessNodes(replaceDiagramSteps(editContent, stepNames), connectFrom, connectTo))} disabled={!connectFrom || !connectTo || connectFrom === connectTo}>Connect</Button>
                     </div>
-                  )}
-
-                  {selectedNode.type === 'handoff' && (
-                    <div className="space-y-1.5">
-                      <Label htmlFor="node-agent" className="text-xs">Target Sub-agent</Label>
-                      <Input
-                        id="node-agent"
-                        value={selectedNode.subAgent || ''}
-                        onChange={(e) => updateSelectedNode({ subAgent: e.target.value })}
-                        placeholder="e.g. retention_negotiator_agent"
-                        className="h-8 font-mono text-xs"
-                      />
-                    </div>
-                  )}
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="node-rules" className="text-xs">Branching Rules &amp; Policy</Label>
-                    <Textarea
-                      id="node-rules"
-                      value={selectedNode.rule || ''}
-                      onChange={(e) => updateSelectedNode({ rule: e.target.value })}
-                      rows={3}
-                      className="text-xs"
-                    />
                   </div>
-
-                  <div className="pt-2 border-t border-border flex items-center justify-between">
-                    <span className="text-xs text-muted">ID: <code className="font-mono">{selectedNode.id}</code></span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 text-xs text-danger-fg hover:bg-danger-soft"
-                      onClick={() => {
-                        if (nodes.length <= 2) {
-                          toast('Cannot delete root start or end nodes', 'warn');
-                          return;
-                        }
-                        setNodes(nodes.filter((n) => n.id !== selectedNodeId));
-                        setSelectedNodeId(nodes[0].id);
-                        toast('Node removed', 'trash');
-                      }}
-                    >
-                      Delete Node
-                    </Button>
+                  <div>
+                    <p className="text-sm font-medium">Current connections</p>
+                    {draftConnections.length ? <ul className="mt-2 space-y-1">{draftConnections.map((edge, index) => <li key={`${edge.from}-${edge.to}-${index}`} className="flex items-center justify-between gap-2 rounded bg-surface px-2 py-1.5 text-xs"><span>{draftNodes.find((node) => node.id === edge.from)?.label ?? edge.from} → {draftNodes.find((node) => node.id === edge.to)?.label ?? edge.to}</span><Button type="button" variant="ghost" size="sm" className="h-7 text-xs" onClick={() => updateProcessDraft(disconnectProcessNodes(replaceDiagramSteps(editContent, stepNames), edge.from, edge.to))}>Remove link</Button></li>)}</ul> : <p className="mt-1 text-xs text-muted">No connections yet.</p>}
                   </div>
                 </div>
-              </Card>
-            </div>
-          </TabsContent>
+              </details>
+            </div>}
+            <label className="block space-y-1 text-sm">Review notes<Textarea rows={3} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Context for the next teammate" /></label>
+            <div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setEditing(false)}>Cancel</Button><Button variant="accent" onClick={saveEdit}>Save revision</Button></div>
+          </>}
+        </DialogContent>
+      </Dialog>
 
-          {/* TAB 2: SVG PROCESS MAP VIEW */}
-          <TabsContent value="diagram" className="m-0">
-            <Card className="bg-surface border border-border rounded-xl p-4 sm:p-6 overflow-x-auto">
-              <div className="w-full max-w-[880px] min-w-[620px] mx-auto">
-                <ProcessMapSvg activeNode="pn-valid" />
-              </div>
-            </Card>
-          </TabsContent>
-
-          {/* TAB 3: UML SEQUENCE DIAGRAM */}
-          <TabsContent value="uml" className="m-0">
-            <Card className="bg-surface border border-border rounded-xl p-4 sm:p-6 overflow-x-auto">
-              <div className="min-w-[620px] max-w-[880px] mx-auto">
-                <UmlSequenceSvg />
-              </div>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </main>
-    </AppShell>
-  );
+      <Dialog open={sourceOpen && Boolean(current)} onOpenChange={(open) => { if (!open) setSourceOpen(false); }}><DialogContent className="max-w-3xl"><DialogTitle>Edit source</DialogTitle><DialogDescription>Advanced source editor · saving updates the shared preview.</DialogDescription><Textarea rows={18} className="font-mono text-xs" value={sourceDraft} onChange={(event) => setSourceDraft(event.target.value)} /><div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setSourceOpen(false)}>Cancel</Button><Button variant="accent" onClick={() => { if (current) updateArtifact(current.id, { content: sourceDraft }); setSourceOpen(false); }}>Save source</Button></div></DialogContent></Dialog>
+    </main>
+  </AppShell>;
 }

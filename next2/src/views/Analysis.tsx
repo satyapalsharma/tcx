@@ -1,702 +1,184 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 import { AppShell } from '../components/AppShell';
-import { Icon } from '../components/Icon';
-import { useToast } from '../components/Toast';
-import { useReveal } from '../hooks/useReveal';
-import { PageHeader, SelectField, StatusBadge } from '@/components/common';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useApp } from '@/context/AppContext';
+import { usePipeline } from '@/context/PipelineContext';
+import { DEMO_CLUSTERS, DEMO_INSIGHTS, ARTIFACT_LABELS, type Artifact, type ArtifactKind, type ClusterNode } from '@/data/pipeline';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { getJobAnalytics, summarizeTranscripts } from '@/lib/job-analytics';
+import { TranscriptExplorer } from '@/components/analytics/TranscriptExplorer';
+import { ClusterManager } from '@/components/analytics/ClusterManager';
+import { JobOutputPicker, ValidationBadge } from '@/components/pipeline/JobOutputPicker';
 
-type TabView = 'intents' | 'taxonomy' | 'pain-points' | 'hold-reasons';
+type Signal = 'intent' | 'resolution' | 'escalation' | 'hold' | 'pain';
+const ANALYSIS_KINDS: ArtifactKind[] = ['insights', 'clusters'];
+const SIGNALS: { id: Signal; label: string; field: keyof (typeof DEMO_INSIGHTS)[number] }[] = [
+  { id: 'intent', label: 'Intents', field: 'intent' },
+  { id: 'resolution', label: 'Resolutions', field: 'resolution' },
+  { id: 'escalation', label: 'Escalation reasons', field: 'escalation' },
+  { id: 'hold', label: 'Hold reasons', field: 'hold' },
+  { id: 'pain', label: 'Pain points', field: 'painPoint' },
+];
 
-interface IntentItem {
-  id: string;
-  name: string;
-  l1: string;
-  l2: string;
-  l3: string;
-  volume: number;
-  confidence: number;
-  escalationRate: number;
-  resolutionRate: number;
-  holdReason: string;
-  painPoint: string;
+function isAnalysisArtifact(artifact: Artifact) {
+  return artifact.kind === 'insights' || artifact.kind === 'clusters';
 }
 
-const INTENT_DATA: IntentItem[] = [
-  {
-    id: 'int-1',
-    name: 'Charged for a cancelled service line',
-    l1: 'Billing & Payments',
-    l2: 'Dispute Handling',
-    l3: 'Post-termination billing glitch',
-    volume: 1842,
-    confidence: 0.96,
-    escalationRate: 41,
-    resolutionRate: 58,
-    holdReason: 'Supervisor credit approval for > ₹2,500',
-    painPoint: 'Customer surprised by auto-debit 30 days after cancellation confirmation',
-  },
-  {
-    id: 'int-2',
-    name: 'Invoice higher than agreed promo price',
-    l1: 'Billing & Payments',
-    l2: 'Promotion Discrepancy',
-    l3: 'Expired discount coupon code',
-    volume: 1631,
-    confidence: 0.94,
-    escalationRate: 33,
-    resolutionRate: 72,
-    holdReason: 'Verifying original sales campaign terms in legacy CRM',
-    painPoint: 'Told ₹999 on sales call, billed ₹1,499 with unitemized addons',
-  },
-  {
-    id: 'int-3',
-    name: 'Internet down — area outage (NOIA)',
-    l1: 'Connectivity & Outages',
-    l2: 'Area Infrastructure',
-    l3: 'Fiber optic cut in node sector 4',
-    volume: 1530,
-    confidence: 0.97,
-    escalationRate: 22,
-    resolutionRate: 88,
-    holdReason: 'Checking NOC network ticket dispatch status',
-    painPoint: 'No proactive SMS sent when sector went down during work hours',
-  },
-  {
-    id: 'int-4',
-    name: 'Slow speeds at peak evening hours',
-    l1: 'Connectivity & Outages',
-    l2: 'Bandwidth & Performance',
-    l3: 'Contention ratio throttling',
-    volume: 1118,
-    confidence: 0.92,
-    escalationRate: 18,
-    resolutionRate: 79,
-    holdReason: 'Running remote router line diagnostics test',
-    painPoint: 'Speed drops from 300 Mbps to 18 Mbps between 8 PM and 11 PM',
-  },
-  {
-    id: 'int-5',
-    name: 'Book new fiber installation slot',
-    l1: 'Installation & Provisioning',
-    l2: 'Slot Booking',
-    l3: 'Technician availability check',
-    volume: 1043,
-    confidence: 0.95,
-    escalationRate: 9,
-    resolutionRate: 94,
-    holdReason: 'Dispatch schedule calendar latency',
-    painPoint: 'Weekend installation slots unavailable for 2 consecutive weeks',
-  },
-  {
-    id: 'int-6',
-    name: 'Port number out to another provider (MNP)',
-    l1: 'Cancellation & Retention',
-    l2: 'Port-out Request',
-    l3: 'UPC code generation block',
-    volume: 976,
-    confidence: 0.93,
-    escalationRate: 57,
-    resolutionRate: 39,
-    holdReason: 'Retention discount matrix negotiation lookup',
-    painPoint: 'UPC SMS delayed past 15-minute regulation window',
-  },
-  {
-    id: 'int-7',
-    name: 'Auto-pay failed but card is valid',
-    l1: 'Billing & Payments',
-    l2: 'Payment Gateway',
-    l3: 'Recurring token mandate rejected',
-    volume: 892,
-    confidence: 0.91,
-    escalationRate: 26,
-    resolutionRate: 82,
-    holdReason: 'Merchant gateway response code query',
-    painPoint: 'Customer penalized with ₹250 late fee despite active e-mandate',
-  },
-  {
-    id: 'int-8',
-    name: 'Router replacement after plan upgrade',
-    l1: 'Plan Changes & Upgrades',
-    l2: 'Hardware Dispatch',
-    l3: 'Wi-Fi 6 router delivery delay',
-    volume: 640,
-    confidence: 0.89,
-    escalationRate: 15,
-    resolutionRate: 86,
-    holdReason: 'Warehouse stock confirmation for dual-band ONT',
-    painPoint: 'Paid for 1 Gbps upgrade but still using older 100 Mbps single-band router',
-  },
-];
+function parseJson<T>(content: string | undefined): T | null {
+  if (!content) return null;
+  try { return JSON.parse(content) as T; } catch { return null; }
+}
 
-const TAXONOMY_TREE = [
-  {
-    l1: 'Billing & Payments',
-    totalVolume: 7045,
-    subClusters: [
-      {
-        l2: 'Dispute Handling',
-        volume: 2410,
-        nodes: ['Post-termination billing glitch', 'Double charge on invoice', 'Refund SLA breach'],
-      },
-      {
-        l2: 'Payment Gateway & Mandates',
-        volume: 2180,
-        nodes: ['Recurring token mandate rejected', 'UPI mandate pending', 'Netbanking timeout'],
-      },
-      {
-        l2: 'Promotion Discrepancy',
-        volume: 1840,
-        nodes: ['Expired discount coupon code', 'Free trial rollover billing', 'Hidden router rental charge'],
-      },
-    ],
-  },
-  {
-    l1: 'Connectivity & Outages',
-    totalVolume: 4445,
-    subClusters: [
-      {
-        l2: 'Area Infrastructure',
-        volume: 2540,
-        nodes: ['Fiber optic cut in node sector 4', 'Local transformer power fault', 'Scheduled maintenance overrun'],
-      },
-      {
-        l2: 'Bandwidth & Performance',
-        volume: 1905,
-        nodes: ['Contention ratio throttling', 'DNS resolution lag', 'High ping during online gaming'],
-      },
-    ],
-  },
-  {
-    l1: 'Installation & Provisioning',
-    totalVolume: 2545,
-    subClusters: [
-      {
-        l2: 'Slot Booking & Rescheduling',
-        volume: 1480,
-        nodes: ['Technician availability check', 'Customer unavailable reschedule', 'Building society NOC delay'],
-      },
-      {
-        l2: 'Hardware Provisioning',
-        volume: 1065,
-        nodes: ['Fiber drop cable shortage', 'ONT device serial binding', 'Wired Ethernet test failure'],
-      },
-    ],
-  },
-];
+function isInsightList(value: unknown): value is typeof DEMO_INSIGHTS {
+  return Array.isArray(value) && value.every((row) => row && typeof row.id === 'string' && typeof row.intent === 'string' && typeof row.quote === 'string' && typeof row.confidence === 'number');
+}
 
-const PAIN_POINTS = [
-  {
-    id: 'pp-1',
-    title: 'Repeated identity verification across department transfers',
-    category: 'Verification & Auth',
-    affectedVolume: 4820,
-    frustrationScore: 84,
-    rootCause: 'Caller authenticated in IVR, but authentication token is dropped when transferred to retention queue.',
-    suggestedAction: 'Forward JWT authentication token into agent session context.',
-  },
-  {
-    id: 'pp-2',
-    title: 'Surprise charges after cancellation confirmation',
-    category: 'Billing Policy',
-    affectedVolume: 2640,
-    frustrationScore: 92,
-    rootCause: 'Cancellation order takes 48 hours to sync with automated billing engine; next cycle generated prematurely.',
-    suggestedAction: 'Trigger immediate billing suspension upon cancellation order creation.',
-  },
-  {
-    id: 'pp-3',
-    title: 'Lack of proactive notification during localized fiber cuts',
-    category: 'Outage Communication',
-    affectedVolume: 3120,
-    frustrationScore: 78,
-    rootCause: 'NOC incidents are not automatically linked to customer MSISDN sector mapping for bulk SMS.',
-    suggestedAction: 'Enable automated WhatsApp/SMS broadcast within 3 minutes of sector alarm.',
-  },
-  {
-    id: 'pp-4',
-    title: 'Mandatory technician visit for simple Wi-Fi SSID reconfiguration',
-    category: 'Self-Service Deficit',
-    affectedVolume: 1890,
-    frustrationScore: 65,
-    rootCause: 'Mobile app lacks remote TR-069 router management API trigger for non-tech-savvy users.',
-    suggestedAction: 'Expose remote Wi-Fi credential reset tool via conversational agent.',
-  },
-];
-
-const HOLD_REASONS = [
-  {
-    id: 'hr-1',
-    reason: 'Supervisor override token for invoice credit adjustment > ₹2,500',
-    avgDuration: '4m 15s',
-    frequency: '34% of billing calls',
-    bottleneck: 'Senior team leads handle approval requests asynchronously via internal chat.',
-    automationOpportunity: 'High: Policy-based automated credit delegation for high-LTV customers.',
-  },
-  {
-    id: 'hr-2',
-    reason: 'Checking NOC network ticket dispatch and optical line terminal (OLT) telemetry',
-    avgDuration: '3m 48s',
-    frequency: '28% of outage calls',
-    bottleneck: 'Agent switches between CRM and legacy network monitoring GUI to verify optical loss readings.',
-    automationOpportunity: 'High: Real-time OLT telemetry fetch tool directly injected in agent workspace.',
-  },
-  {
-    id: 'hr-3',
-    reason: 'Retrieving original sales call recording / promo commitment from archive',
-    avgDuration: '5m 10s',
-    frequency: '18% of promo dispute calls',
-    bottleneck: 'Cold storage audio archive retrieval latency takes up to 4 minutes.',
-    automationOpportunity: 'Medium: Pre-indexed transcript summary linked to customer account history.',
-  },
-];
+function isClusterList(value: unknown): value is ClusterNode[] {
+  return Array.isArray(value) && value.every((row) => row && typeof row.id === 'string' && typeof row.name === 'string' && ['L1', 'L2', 'L3'].includes(row.level) && typeof row.volume === 'number');
+}
 
 export default function Analysis() {
-  useReveal();
-  const toast = useToast();
   const { currentWorkspace, openNewRun } = useApp();
+  const { artifacts, runs, selectedArtifactId, selectArtifact, handoffArtifact, approveArtifact } = usePipeline();
+  const [signal, setSignal] = useState<Signal>('intent');
+  const [query, setQuery] = useState('');
+  const [clusterDirty, setClusterDirty] = useState(false);
+  const [requestedView, setRequestedView] = useState<{ artifactId: string; view: 'insights'|'clusters'|'transcripts' } | null>(null);
+  const [transcriptClusterId, setTranscriptClusterId] = useState<string|null>(null);
+  const [selectedInsight, setSelectedInsight] = useState<(typeof DEMO_INSIGHTS)[number] | null>(null);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const scopedArtifacts = useMemo(() => artifacts.filter((artifact) => artifact.workspaceId === currentWorkspace.id && isAnalysisArtifact(artifact)), [artifacts, currentWorkspace.id]);
+  const selectedArtifact = scopedArtifacts.find((artifact) => artifact.id === selectedArtifactId) ?? scopedArtifacts[0];
+  const analysisView = requestedView?.artifactId === selectedArtifact?.id ? requestedView.view : selectedArtifact?.kind === 'clusters' ? 'clusters' : 'insights';
+  const setAnalysisView = (view: 'insights'|'clusters'|'transcripts') => { if (selectedArtifact) setRequestedView({ artifactId: selectedArtifact.id, view }); };
+  const insightArtifact = selectedArtifact?.kind === 'insights'
+    ? selectedArtifact
+    : selectedArtifact?.kind === 'clusters'
+      ? scopedArtifacts.find((artifact) => artifact.id === selectedArtifact.sourceId && artifact.kind === 'insights')
+      : scopedArtifacts.find((artifact) => artifact.kind === 'insights');
+  const clusterArtifact = selectedArtifact?.kind === 'clusters'
+    ? selectedArtifact
+    : scopedArtifacts.find((artifact) => artifact.kind === 'clusters' && artifact.sourceId === insightArtifact?.id) ?? (selectedArtifact?.kind === 'insights' ? undefined : scopedArtifacts.find((artifact) => artifact.kind === 'clusters'));
+  const insightAnalytics = useMemo(() => {
+    const run = runs.find(item => item.id === insightArtifact?.runId);
+    return run ? getJobAnalytics(run, artifacts) : undefined;
+  }, [runs, artifacts, insightArtifact]);
+  const clusterAnalytics = useMemo(() => {
+    const run = runs.find(item => item.id === clusterArtifact?.runId);
+    return run ? getJobAnalytics(run, artifacts) : undefined;
+  }, [runs, artifacts, clusterArtifact]);
+  const clusterMetrics = new Map(clusterAnalytics?.clusters.map(item => [item.id, item]) ?? []);
+  const intentCounts = useMemo(() => new Map(summarizeTranscripts(insightAnalytics?.transcripts ?? []).intentCounts.map(item => [item.label, item.conversations])), [insightAnalytics]);
+  const transcriptAnalytics = clusterAnalytics?.transcripts.length ? clusterAnalytics : insightAnalytics;
+  const allTranscripts = transcriptAnalytics?.transcripts ?? [];
+  const activeTranscriptCluster = transcriptAnalytics?.clusters.find(cluster => cluster.id === transcriptClusterId);
+  const visibleTranscripts = activeTranscriptCluster ? allTranscripts.filter(record => [record.l1Id, record.l2Id, record.l3Id].includes(activeTranscriptCluster.id)) : allTranscripts;
+  const insightData = useMemo(() => {
+    if (!insightArtifact) return [] as typeof DEMO_INSIGHTS;
+    const parsed = parseJson<unknown>(insightArtifact.content);
+    if (isInsightList(parsed)) return insightAnalytics?.transcripts.length ? parsed.map(item => ({...item,volume:intentCounts.get(item.intent) ?? 0})) : parsed;
+    return insightArtifact.sample ? DEMO_INSIGHTS : [];
+  }, [insightArtifact, insightAnalytics, intentCounts]);
+  const clusterData = useMemo(() => {
+    if (!clusterArtifact) return [] as ClusterNode[];
+    const parsed = parseJson<unknown>(clusterArtifact.content);
+    if (isClusterList(parsed)) return parsed;
+    return clusterArtifact.sample ? DEMO_CLUSTERS : [];
+  }, [clusterArtifact]);
+  const analysisRuns = runs.filter((run) => run.workspaceId === currentWorkspace.id && (run.type === 'extract_intents' || run.type === 'cluster_intents' || run.type === 'full_pipeline' || run.plannedStages?.some(stage => stage === 'extract_intents' || stage === 'cluster_intents')));
+  const notableRuns = analysisRuns.filter((run) => ['queued', 'running', 'paused', 'failed'].includes(run.status)).sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 3);
+  const selectedArtifactRun = selectedArtifact?.runId ? runs.find((run) => run.id === selectedArtifact.runId) : undefined;
+  const selectedPipelineActive = Boolean(selectedArtifactRun && ['queued', 'running', 'paused'].includes(selectedArtifactRun.status) && (selectedArtifact?.kind === 'insights' ? (selectedArtifactRun.type === 'full_pipeline' || selectedArtifactRun.plannedStages?.includes('cluster_intents')) : (selectedArtifactRun.type === 'full_pipeline' || selectedArtifactRun.plannedStages?.includes('design_flow'))));
+  const rows = useMemo(() => {
+    const field = SIGNALS.find((item) => item.id === signal)?.field ?? 'intent';
+    return insightData.filter((item) => String(item[field]).toLowerCase().includes(query.trim().toLowerCase()));
+  }, [insightData, query, signal]);
 
-  const [activeTab, setActiveTab] = useState<TabView>('intents');
-  const [ingestMode, setIngestMode] = useState<'batch' | 'stream'>('batch');
-  const [streamActive, setStreamActive] = useState(true);
-
-  // Filters
-  const [search, setSearch] = useState('');
-  const [clusterFilter, setClusterFilter] = useState('');
-  const [confidenceFilter, setConfidenceFilter] = useState('');
-
-  // Advanced Options
-  const [model, setModel] = useState('Gemini 2.5 Flash');
-  const [clusterGranularity, setClusterGranularity] = useState('Balanced (L1/L2/L3)');
-  const [piiRedaction, setPiiRedaction] = useState('Full redaction (PCI + PII)');
-
-  const filteredIntents = useMemo(() => {
-    return INTENT_DATA.filter((item) => {
-      const matchesSearch =
-        !search.trim() ||
-        `${item.name} ${item.l1} ${item.l2} ${item.l3} ${item.painPoint}`.toLowerCase().includes(search.toLowerCase());
-      const matchesCluster = !clusterFilter || clusterFilter === '__all__' || item.l1 === clusterFilter;
-      const matchesConfidence =
-        !confidenceFilter ||
-        confidenceFilter === '__all__' ||
-        (confidenceFilter === 'high' && item.confidence >= 0.94) ||
-        (confidenceFilter === 'mid' && item.confidence < 0.94);
-      return matchesSearch && matchesCluster && matchesConfidence;
-    });
-  }, [search, clusterFilter, confidenceFilter]);
-
-  const handleHandoff = () => {
-    toast(`Taxonomy snapshot approved & ready for CX Designers in Design studio`, 'flow');
+  const exportArtifact = (artifact: Artifact) => {
+    const payload = {
+      artifact: { id: artifact.id, name: artifact.name, kind: artifact.kind, status: artifact.status, version: artifact.version, sample: artifact.sample },
+      content: artifact.content,
+      insights: artifact.kind === 'insights' ? parseJson(artifact.content) ?? (artifact.sample ? DEMO_INSIGHTS : undefined) : undefined,
+      clusters: artifact.kind === 'clusters' ? parseJson(artifact.content) ?? (artifact.sample ? DEMO_CLUSTERS : undefined) : undefined,
+    };
+    const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${artifact.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
-  return (
-    <AppShell crumb="Intent Discovery">
-      <main className="p-4 sm:p-6 lg:p-8 max-w-[1240px] mx-auto w-full pb-20 space-y-6" data-od-id="analysis-page">
-        {/* Page Header with Action CTA */}
-        <PageHeader
-          title="Intent Discovery & Taxonomy"
-          description={`Workspace: ${currentWorkspace.name} · Extract intents, resolutions, pain points, and build L1 → L2 → L3 clusters from customer interactions.`}
-          dataOdId="page-title"
-          actions={
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                className="gap-1.5 h-9 text-xs sm:text-sm"
-                onClick={() => openNewRun('extract_intents')}
-              >
-                <Icon name="search" className="w-3.5 h-3.5" />
-                New Extraction
-              </Button>
-              <Button
-                type="button"
-                variant="accent"
-                className="gap-1.5 h-9 text-xs sm:text-sm font-medium shadow-xs"
-                onClick={handleHandoff}
-              >
-                <Icon name="check" className="w-3.5 h-3.5" />
-                Approve & Hand off to Design
-              </Button>
-            </div>
-          }
-        />
+  const renderCluster = (node: (typeof DEMO_CLUSTERS)[number], depth = 0) => {
+    const children = node.children ?? [];
+    const metric = clusterMetrics.get(node.id);
+    const volume = metric?.volume ?? node.volume;
+    const total = clusterAnalytics?.transcripts.length ? summarizeTranscripts(clusterAnalytics.transcripts).conversationCount : clusterData.reduce((sum, root) => sum + root.volume, 0);
+    const coverage = metric ? metric.coverage * 100 : (total ? volume / total * 100 : 0);
+    const complexity = metric?.complexity ?? node.complexity;
+    const automation = metric?.automationScore ?? node.automationScore;
+    const open = expanded[node.id] ?? depth < 1;
+    return <div key={node.id} className="space-y-1" style={{ marginLeft: depth ? 18 : 0 }}>
+      <button type="button" aria-expanded={children.length ? open : undefined} onClick={() => children.length && setExpanded((state) => ({ ...state, [node.id]: !open }))} className="flex w-full items-center gap-3 rounded-lg border border-border bg-surface px-3 py-2.5 text-left hover:bg-surface-hover/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong">
+        <span className="w-8 shrink-0 rounded-md bg-accent-soft px-1.5 py-1 text-center text-[10px] font-semibold text-accent-strong">{node.level}</span>
+        <span className="min-w-0 flex-1"><span className="block text-sm font-medium text-foreground">{node.name}</span><span className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] tabular-nums text-muted"><span>{volume.toLocaleString()} conversations · {coverage.toFixed(1)}% of total</span><span>Complexity: {complexity === undefined ? 'Unavailable' : `${Math.round(complexity)}/100`}</span><span>Automation score: {automation === undefined ? 'Unavailable' : `${Math.round(automation)}/100`}</span></span></span>
+        {children.length > 0 && <span className="text-xs text-muted">{open ? '−' : '+'}</span>}
+      </button>
+      {open && children.length > 0 && <div className="space-y-1 border-l border-border pl-2">{children.map((child) => renderCluster(child, depth + 1))}</div>}
+    </div>;
+  };
 
-        {/* Ingestion Source Switcher (Batch Upload vs Real-time Streaming Connector) */}
-        <Card className="bg-surface border border-border p-4 rounded-xl shadow-xs">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-            <div className="flex items-center gap-3 overflow-x-auto">
-              <div className="flex rounded-lg border border-border bg-surface-inset/50 p-1 shrink-0">
-                <Button
-                  type="button"
-                  variant={ingestMode === 'batch' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  className={`h-7 px-3 text-xs font-medium ${ingestMode === 'batch' ? 'bg-surface shadow-xs text-foreground' : 'text-muted'}`}
-                  onClick={() => setIngestMode('batch')}
-                >
-                  <Icon name="upload" className="w-3.5 h-3.5 mr-1.5" />
-                  Batch File Upload
-                </Button>
-                <Button
-                  type="button"
-                  variant={ingestMode === 'stream' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  className={`h-7 px-3 text-xs font-medium ${ingestMode === 'stream' ? 'bg-surface shadow-xs text-foreground' : 'text-muted'}`}
-                  onClick={() => setIngestMode('stream')}
-                >
-                  <Icon name="bolt" className="w-3.5 h-3.5 mr-1.5 text-accent-strong" />
-                  Real-time Stream Connector
-                </Button>
-              </div>
-            </div>
-
-            {ingestMode === 'batch' ? (
-              <div className="flex items-center gap-2 sm:gap-3 text-xs text-muted flex-wrap">
-                <Badge variant="outline" className="border-border text-foreground font-mono text-[11px] py-0.5">
-                  Genesys_March_Q1_Calls.csv
-                </Badge>
-                <span>18,442 calls</span>
-                <span className="text-border">·</span>
-                <span>Ingested 24 min ago</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 sm:gap-3 text-xs flex-wrap">
-                <span className="inline-flex items-center gap-1.5 font-medium text-foreground">
-                  <span className={`w-2 h-2 rounded-full ${streamActive ? 'bg-emerald-500 animate-pulse' : 'bg-muted'}`} />
-                  Genesys Cloud Audio Websocket
-                </span>
-                <Badge variant="outline" className="border-emerald-500/30 text-emerald-600 bg-emerald-500/10 text-[10px]">
-                  42 calls/min
-                </Badge>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs ml-auto"
-                  onClick={() => {
-                    setStreamActive(!streamActive);
-                    toast(streamActive ? 'Streaming paused' : 'Live stream connected', 'bolt');
-                  }}
-                >
-                  {streamActive ? 'Pause Stream' : 'Resume Stream'}
-                </Button>
-              </div>
-            )}
-          </div>
-        </Card>
-
-        {/* 4 Core Discovery KPI Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <Card className="p-4 bg-surface border border-border rounded-xl">
-            <div className="text-[11px] uppercase tracking-wider font-semibold text-muted">Canonical Intents</div>
-            <div className="text-2xl font-bold tracking-tight text-foreground mt-1">286</div>
-            <div className="text-xs text-muted mt-0.5">3,214 raw variants clustered</div>
-          </Card>
-          <Card className="p-4 bg-surface border border-border rounded-xl">
-            <div className="text-[11px] uppercase tracking-wider font-semibold text-muted">Avg Resolution Rate</div>
-            <div className="text-2xl font-bold tracking-tight text-foreground mt-1">74.2%</div>
-            <div className="text-xs text-muted mt-0.5">FCR identified in transcripts</div>
-          </Card>
-          <Card className="p-4 bg-surface border border-border rounded-xl">
-            <div className="text-[11px] uppercase tracking-wider font-semibold text-muted">Top Pain Points</div>
-            <div className="text-2xl font-bold tracking-tight text-foreground mt-1">12 flagged</div>
-            <div className="text-xs text-muted mt-0.5">Friction points driving churn</div>
-          </Card>
-          <Card className="p-4 bg-surface border border-border rounded-xl">
-            <div className="text-[11px] uppercase tracking-wider font-semibold text-muted">Taxonomy Clusters</div>
-            <div className="text-2xl font-bold tracking-tight text-foreground mt-1">6 L1 · 19 L2</div>
-            <div className="text-xs text-muted mt-0.5">57 granular L3 leaf nodes</div>
-          </Card>
+  return <AppShell crumb="Analysis">
+    <main className="mx-auto w-full max-w-[1280px] space-y-6 p-5 pb-16 sm:p-8" data-od-id="analysis-page">
+      <header className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+        <div className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">Analysis · {currentWorkspace.name}</p>
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">Conversation insights</h1>
+          <p className="max-w-2xl text-sm leading-6 text-muted">Find recurring needs, friction, and the reasons conversations slow down. Share an insight or taxonomy output with Design when it is ready.</p>
         </div>
+        <div className="flex flex-wrap items-center gap-2">{selectedPipelineActive && selectedArtifactRun ? clusterDirty ? <Button disabled>Save taxonomy changes first</Button> : <Button asChild><Link href={`/jobs?jobId=${encodeURIComponent(selectedArtifactRun.id)}`}>View pipeline progress</Link></Button> : clusterArtifact ? <Button disabled={clusterDirty} onClick={() => handoffArtifact(clusterArtifact.id, 'design_flow')}>Continue to Design</Button> : insightArtifact ? <Button disabled={clusterDirty} onClick={() => handoffArtifact(insightArtifact.id, 'cluster_intents')}>Build taxonomy from insights</Button> : <Button disabled={clusterDirty} onClick={() => openNewRun('extract_intents')}>Start with conversation insights</Button>}<details className="relative"><summary aria-disabled={clusterDirty} className={`list-none rounded-lg border border-border px-3 py-2 text-sm ${clusterDirty ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`} onClick={(event) => clusterDirty && event.preventDefault()}>More options</summary><div hidden={clusterDirty} className="absolute right-0 z-20 mt-1 w-52 rounded-lg border border-border bg-surface p-2 shadow-lg"><Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => openNewRun('extract_intents')}>Extract insights</Button><Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => openNewRun('cluster_intents')}>Build taxonomy</Button><Link href={`/job-analytics${selectedArtifact?.runId ? `?jobId=${encodeURIComponent(selectedArtifact.runId)}` : ''}`} className="block rounded-md px-3 py-2 text-sm hover:bg-surface-inset">Job dashboard</Link></div></details></div>
+      </header>
 
-        {/* Main Tabs: Intents Ledger, Taxonomy Hierarchy, Pain Points, Hold Reasons */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabView)} className="w-full">
-          <div className="border-b border-border mb-4 overflow-x-auto">
-            <TabsList variant="line" className="w-max justify-start gap-4 h-10 bg-transparent p-0 whitespace-nowrap">
-              <TabsTrigger value="intents" className="text-xs sm:text-sm font-medium">
-                <Icon name="search" className="w-3.5 h-3.5 mr-1.5" />
-                Intents Ledger ({filteredIntents.length})
-              </TabsTrigger>
-              <TabsTrigger value="taxonomy" className="text-xs sm:text-sm font-medium">
-                <Icon name="chart" className="w-3.5 h-3.5 mr-1.5" />
-                L1 → L2 → L3 Taxonomy
-              </TabsTrigger>
-              <TabsTrigger value="pain-points" className="text-xs sm:text-sm font-medium">
-                <Icon name="warn" className="w-3.5 h-3.5 mr-1.5 text-amber-500" />
-                Customer Pain Points ({PAIN_POINTS.length})
-              </TabsTrigger>
-              <TabsTrigger value="hold-reasons" className="text-xs sm:text-sm font-medium">
-                <Icon name="clock" className="w-3.5 h-3.5 mr-1.5 text-muted" />
-                Hold Reasons &amp; Bottlenecks ({HOLD_REASONS.length})
-              </TabsTrigger>
-            </TabsList>
+      {notableRuns.length > 0 && <section aria-label="Analysis job updates" className="space-y-2">{notableRuns.map((run) => <Card key={run.id} className="flex flex-col gap-3 border-border p-4 sm:flex-row sm:items-center"><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><span className={`h-2 w-2 rounded-full ${run.status === 'failed' ? 'bg-destructive' : 'bg-accent-strong'}`}/><p className="truncate text-sm font-medium">{run.name}</p><Badge variant="outline" className="capitalize">{run.status}</Badge><span className="text-xs text-muted">{run.id}</span></div>{run.status === 'failed' ? <p className="mt-1 text-xs text-destructive">{run.error ?? 'This job needs attention.'}</p> : <><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-inset"><div className="h-full rounded-full bg-accent-strong transition-all" style={{ width: `${run.progress}%` }}/></div><p className="mt-1 text-xs text-muted">{run.status === 'queued' ? 'Waiting to start' : run.status === 'paused' ? 'Paused' : `${run.progress}% complete`}</p></>}</div><Link href="/jobs" className="text-sm font-medium text-accent-strong underline-offset-4 hover:underline">View job details</Link></Card>)}</section>}
+
+      <section aria-label="Analysis artifacts" className="grid gap-4">
+        <Card className="min-w-0 space-y-4 border-border p-4 sm:p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div><h2 className="text-base font-semibold">Analysis outputs</h2><p className="mt-1 text-xs text-muted">Results shared by your team in this project.</p></div>
+            {selectedArtifact && <details className="relative"><summary aria-disabled={clusterDirty} className={`list-none rounded-lg border border-border px-3 py-2 text-xs ${clusterDirty ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`} onClick={(event) => clusterDirty && event.preventDefault()}>Output options</summary><div hidden={clusterDirty} className="absolute right-0 z-10 mt-1 w-48 rounded-lg border border-border bg-surface p-2 shadow-lg"><Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => exportArtifact(selectedArtifact)}>Download output JSON</Button>{selectedArtifact.status !== 'approved' && <Button variant="ghost" size="sm" className="w-full justify-start" disabled={clusterDirty} onClick={() => approveArtifact(selectedArtifact.id)}>Mark validated</Button>}</div></details>}
           </div>
+          <fieldset disabled={clusterDirty}><JobOutputPicker key={currentWorkspace.id} kinds={ANALYSIS_KINDS} selectedId={selectedArtifact?.id ?? null} onSelect={(id) => { selectArtifact(id); setSelectedInsight(null);setTranscriptClusterId(null); }} title="Choose an analysis output" description="Outputs from each job and imported shared files stay available here. Drafts are reusable; validation is optional." emptyMessage="No insights or taxonomy outputs in this project yet." /></fieldset>
+          {selectedArtifact && <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3"><div className="space-y-1"><div className="flex flex-wrap items-center gap-2"><p className="text-xs text-muted">Selected: <span className="font-medium text-foreground">{selectedArtifact.name}</span></p><ValidationBadge status={selectedArtifact.status}/></div></div><details className="text-xs"><summary className="cursor-pointer font-medium text-muted">Output details</summary><p className="mt-2 text-muted">{ARTIFACT_LABELS[selectedArtifact.kind]} · version {selectedArtifact.version} · created by {selectedArtifact.createdBy}{selectedArtifactRun && <> · job {selectedArtifactRun.id} ({selectedArtifactRun.status})</>}{selectedArtifact.validatedBy && <> · validated by {selectedArtifact.validatedBy} at version {selectedArtifact.validatedVersion}</>}</p></details></div>}
+        </Card>
+      </section>
 
-          {/* TAB 1: Intents Ledger */}
-          <TabsContent value="intents" className="m-0 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface p-3 border border-border rounded-xl">
-              <div className="relative flex-1 max-w-sm">
-                <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
-                <Input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search intent, cluster, pain point..."
-                  className="pl-9 h-8 text-xs sm:text-sm"
-                />
-              </div>
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Analysis stage view"><Button variant={analysisView === 'insights' ? 'accent-soft' : 'outline'} aria-pressed={analysisView === 'insights'} disabled={clusterDirty} title={clusterDirty ? 'Save or discard taxonomy changes first' : undefined} onClick={() => setAnalysisView('insights')}>Insights</Button><Button variant={analysisView === 'clusters' ? 'accent-soft' : 'outline'} aria-pressed={analysisView === 'clusters'} disabled={clusterDirty} title={clusterDirty ? 'Save or discard taxonomy changes first' : undefined} onClick={() => setAnalysisView('clusters')}>Taxonomy</Button><Button variant={analysisView === 'transcripts' ? 'accent-soft' : 'outline'} aria-pressed={analysisView === 'transcripts'} disabled={clusterDirty} title={clusterDirty ? 'Save or discard taxonomy changes first' : undefined} onClick={() => setAnalysisView('transcripts')}>Transcripts ({allTranscripts.length})</Button></div>
+      {analysisView === 'insights' && insightArtifact && <section className="space-y-4" aria-label="Insight signals">
+        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><div><p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">Signals</p><h2 className="mt-1 text-xl font-semibold">What conversations reveal</h2></div><label className="w-full sm:max-w-xs"><span className="sr-only">Search insights</span><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search this signal…" /></label></div>
+        <div role="group" aria-label="Filter by insight signal" className="flex max-w-full gap-1 overflow-x-auto rounded-xl border border-border bg-surface p-1">{SIGNALS.map((item) => <button key={item.id} type="button" aria-pressed={signal === item.id} onClick={() => setSignal(item.id)} className={`shrink-0 rounded-lg px-3 py-2 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong ${signal === item.id ? 'bg-accent-soft text-accent-strong' : 'text-muted hover:text-foreground'}`}>{item.label}</button>)}</div>
+        <Card className="overflow-hidden border-border p-0">
+          <div className="divide-y divide-border">{rows.map((item) => <button type="button" key={item.id} onClick={() => setSelectedInsight(item)} className="flex w-full flex-col gap-2 p-4 text-left hover:bg-surface-hover/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent-strong sm:flex-row sm:items-center sm:gap-4">
+            <span className="min-w-0 flex-1 text-sm font-medium text-foreground">{String(item[SIGNALS.find((entry) => entry.id === signal)?.field ?? 'intent'])}</span>
+            <span className="shrink-0 text-xs text-muted">{item.volume.toLocaleString()} conversations</span><span className="shrink-0 text-xs font-medium text-accent-strong">{Math.round(item.confidence * 100)}% confidence</span><span className="text-xs text-accent-strong">View evidence →</span>
+          </button>)}</div>
+          {!rows.length && <p className="p-8 text-center text-sm text-muted">{insightData.length ? 'No matching signals. Try another search.' : 'This artifact has no structured insight preview yet. Download its source content or select another shared artifact.'}</p>}
+          <p className="border-t border-border px-4 py-3 text-[11px] text-muted">{insightArtifact.sample ? 'Sample data from the project demo.' : 'Insight details loaded from this shared artifact.'}</p>
+        </Card>
+      </section>}
 
-              <div className="flex items-center gap-2 flex-wrap">
-                <SelectField
-                  value={clusterFilter}
-                  onValueChange={setClusterFilter}
-                  placeholder="All L1 clusters"
-                  options={[
-                    { value: '', label: 'All L1 clusters' },
-                    'Billing & Payments',
-                    'Connectivity & Outages',
-                    'Installation & Provisioning',
-                    'Cancellation & Retention',
-                    'Plan Changes & Upgrades',
-                  ]}
-                  className="h-8 w-[170px] text-xs"
-                />
-                <SelectField
-                  value={confidenceFilter}
-                  onValueChange={setConfidenceFilter}
-                  placeholder="All confidence"
-                  options={[
-                    { value: '', label: 'All confidence' },
-                    { value: 'high', label: 'High confidence (≥0.94)' },
-                    { value: 'mid', label: 'Mid confidence (<0.94)' },
-                  ]}
-                  className="h-8 w-[160px] text-xs"
-                />
-              </div>
-            </div>
+      {analysisView !== 'insights' && <section className="space-y-4" aria-label={analysisView === 'clusters' ? 'Cluster taxonomy' : 'Conversation transcripts'}>
+        {analysisView==='clusters' && (clusterArtifact ? clusterAnalytics?.transcripts.length ? <ClusterManager key={clusterArtifact.id} artifact={clusterArtifact} records={clusterAnalytics.transcripts} onDirtyChange={setClusterDirty} onViewTranscripts={id=>{setTranscriptClusterId(id);setAnalysisView('transcripts');}}/> : <Card className="space-y-2 p-4">{clusterData.map(node=>renderCluster(node))}<p className="text-xs text-muted">Transcript-linked editing is available when this job includes full transcript assignments.</p></Card> : <Card className="p-6 text-center"><h3 className="font-medium">No clusters for this output yet</h3><p className="mt-1 text-sm text-muted">Group these intents into an L1 / L2 / L3 taxonomy to start reviewing clusters.</p>{insightArtifact && <Button className="mt-3" onClick={()=>handoffArtifact(insightArtifact.id,'cluster_intents')}>Cluster these intents</Button>}</Card>)}
+        {analysisView==='transcripts' && <div className="space-y-3">{activeTranscriptCluster && <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-surface p-3"><p className="text-sm">Transcripts in <strong>{activeTranscriptCluster.name}</strong></p><Button size="sm" variant="outline" onClick={()=>setTranscriptClusterId(null)}>Show all transcripts</Button></div>}<TranscriptExplorer key={`${selectedArtifact?.id}-${activeTranscriptCluster?.id??'all'}`} records={visibleTranscripts} sample={Boolean(transcriptAnalytics?.sample)}/></div>}
+      </section>}
 
-            <Card className="bg-surface border border-border rounded-xl shadow-xs overflow-hidden p-0">
-              <div className="overflow-x-auto">
-                <Table className="min-w-[840px]">
-                  <TableHeader className="bg-surface-inset/50 border-b border-border">
-                    <TableRow className="text-[11px] font-semibold uppercase tracking-wider text-muted hover:bg-transparent">
-                      <TableHead className="px-4 py-3">Discovered Intent</TableHead>
-                      <TableHead className="px-4 py-3">Taxonomy Cluster</TableHead>
-                      <TableHead className="px-4 py-3 text-right">Volume</TableHead>
-                      <TableHead className="px-4 py-3 text-center">Resolution</TableHead>
-                      <TableHead className="px-4 py-3 text-center">Escalation</TableHead>
-                      <TableHead className="px-4 py-3">Identified Customer Pain Point</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody className="divide-y divide-border/60">
-                    {filteredIntents.map((item) => (
-                      <TableRow key={item.id} className="hover:bg-surface-hover/40 transition-colors">
-                        <TableCell className="px-4 py-3">
-                          <div className="font-semibold text-xs text-foreground">{item.name}</div>
-                          <div className="text-[11px] text-muted font-mono mt-0.5">L3: {item.l3}</div>
-                        </TableCell>
-                        <TableCell className="px-4 py-3">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-surface-inset border border-border text-[11px] font-medium text-foreground">
-                            {item.l1} &rarr; {item.l2}
-                          </span>
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-right tabular-nums text-xs font-mono">
-                          {item.volume.toLocaleString()}
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-center">
-                          <Badge variant="outline" className={`text-[11px] font-medium ${item.resolutionRate >= 70 ? 'text-emerald-600 bg-emerald-500/10 border-emerald-500/20' : 'text-amber-600 bg-amber-500/10 border-amber-500/20'}`}>
-                            {item.resolutionRate}%
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-center">
-                          <span className={`text-[11px] font-mono font-medium ${item.escalationRate > 30 ? 'text-rose-500' : 'text-muted'}`}>
-                            {item.escalationRate}%
-                          </span>
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-xs text-muted max-w-[280px] truncate" title={item.painPoint}>
-                          {item.painPoint}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </Card>
-          </TabsContent>
-
-          {/* TAB 2: L1 -> L2 -> L3 Taxonomy Hierarchy */}
-          <TabsContent value="taxonomy" className="m-0 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {TAXONOMY_TREE.map((cluster) => (
-                <Card key={cluster.l1} className="bg-surface border border-border rounded-xl p-4 space-y-3">
-                  <div className="flex items-center justify-between pb-2 border-b border-border">
-                    <div>
-                      <h4 className="font-semibold text-sm text-foreground">{cluster.l1}</h4>
-                      <p className="text-xs text-muted">L1 Domain Cluster</p>
-                    </div>
-                    <Badge variant="outline" className="text-xs font-mono">
-                      {cluster.totalVolume.toLocaleString()} calls
-                    </Badge>
-                  </div>
-
-                  <div className="space-y-3 pt-1">
-                    {cluster.subClusters.map((sub) => (
-                      <div key={sub.l2} className="p-2.5 rounded-lg bg-surface-inset/60 border border-border/80 space-y-1.5">
-                        <div className="flex items-center justify-between text-xs font-medium text-foreground">
-                          <span className="flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-accent-strong" />
-                            L2: {sub.l2}
-                          </span>
-                          <span className="text-[11px] text-muted font-mono">{sub.volume}</span>
-                        </div>
-                        <div className="pl-3 border-l-2 border-border/70 space-y-1">
-                          {sub.nodes.map((node) => (
-                            <div key={node} className="text-[11px] text-muted hover:text-foreground transition-colors flex items-center gap-1.5">
-                              <span className="text-border">&bull;</span>
-                              <span>{node}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          {/* TAB 3: Customer Pain Points & Friction */}
-          <TabsContent value="pain-points" className="m-0 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {PAIN_POINTS.map((pp) => (
-                <Card key={pp.id} className="p-4 bg-surface border border-border rounded-xl space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <Badge variant="outline" className="text-[10px] text-muted border-border mb-1">
-                        {pp.category}
-                      </Badge>
-                      <h4 className="text-sm font-semibold text-foreground leading-snug">{pp.title}</h4>
-                    </div>
-                    <Badge variant="outline" className="text-xs border-rose-500/30 text-rose-600 bg-rose-500/10 font-mono shrink-0">
-                      {pp.frustrationScore}% friction
-                    </Badge>
-                  </div>
-
-                  <div className="text-xs space-y-1.5 bg-surface-inset/50 p-2.5 rounded-lg border border-border/60">
-                    <div>
-                      <span className="font-semibold text-foreground">Root Cause: </span>
-                      <span className="text-muted">{pp.rootCause}</span>
-                    </div>
-                    <div>
-                      <span className="font-semibold text-accent-strong">Recommended CX Action: </span>
-                      <span className="text-muted">{pp.suggestedAction}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs text-muted pt-1">
-                    <span>Impact: <strong>{pp.affectedVolume.toLocaleString()}</strong> calls affected</span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 text-xs text-accent-strong hover:text-accent-strong"
-                      onClick={() => toast(`Created design task for "${pp.title}"`, 'flow')}
-                    >
-                      <Icon name="flow" className="w-3.5 h-3.5 mr-1" />
-                      Map in Designer
-                    </Button>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          {/* TAB 4: Hold Reasons & Bottlenecks */}
-          <TabsContent value="hold-reasons" className="m-0 space-y-4">
-            <div className="space-y-3">
-              {HOLD_REASONS.map((hr) => (
-                <Card key={hr.id} className="p-4 bg-surface border border-border rounded-xl">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-border">
-                    <div className="flex items-center gap-2">
-                      <span className="w-7 h-7 rounded-lg bg-surface-inset grid place-items-center text-muted">
-                        <Icon name="clock" className="w-3.5 h-3.5" />
-                      </span>
-                      <div>
-                        <h4 className="font-semibold text-sm text-foreground">{hr.reason}</h4>
-                        <p className="text-xs text-muted">{hr.frequency}</p>
-                      </div>
-                    </div>
-                    <Badge variant="outline" className="text-xs font-mono border-amber-500/30 text-amber-600 bg-amber-500/10 self-start sm:self-auto">
-                      Avg Hold: {hr.avgDuration}
-                    </Badge>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 text-xs">
-                    <div>
-                      <span className="font-medium text-foreground block">System Bottleneck</span>
-                      <span className="text-muted">{hr.bottleneck}</span>
-                    </div>
-                    <div>
-                      <span className="font-medium text-emerald-600 dark:text-emerald-400 block">Automation Potential</span>
-                      <span className="text-muted">{hr.automationOpportunity}</span>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        {/* Collapsible Advanced Extraction & Tuning Options */}
-        <Accordion type="single" collapsible className="w-full border border-border rounded-xl bg-surface px-4 shadow-xs">
-          <AccordionItem value="advanced-options" className="border-none">
-            <AccordionTrigger className="text-xs sm:text-sm font-semibold text-muted hover:text-foreground py-3">
-              <span className="flex items-center gap-2">
-                <Icon name="gear" className="w-4 h-4 text-muted" />
-                Advanced Pipeline Options (LLM Models, Clustering Thresholds & PII)
-              </span>
-            </AccordionTrigger>
-            <AccordionContent className="pt-2 pb-4 space-y-4 border-t border-border">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-foreground">Extraction LLM Model</label>
-                  <SelectField
-                    value={model}
-                    onValueChange={setModel}
-                    options={['Gemini 2.5 Flash', 'Claude 3.5 Sonnet', 'GPT-4o mini']}
-                    className="h-8 text-xs w-full"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-foreground">Clustering Granularity</label>
-                  <SelectField
-                    value={clusterGranularity}
-                    onValueChange={setClusterGranularity}
-                    options={['Coarse (L1 only)', 'Balanced (L1/L2/L3)', 'Fine (Deep Leaf Nodes)']}
-                    className="h-8 text-xs w-full"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-foreground">PII Masking Preset</label>
-                  <SelectField
-                    value={piiRedaction}
-                    onValueChange={setPiiRedaction}
-                    options={['Full redaction (PCI + PII)', 'Light redaction (PCI only)', 'Custom redaction']}
-                    className="h-8 text-xs w-full"
-                  />
-                </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </main>
-    </AppShell>
-  );
+      {insightArtifact && <details className="rounded-xl border border-border bg-surface px-4"><summary className="cursor-pointer list-none py-4 text-sm font-medium text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong">Advanced insight details <span className="ml-2 text-xs font-normal">confidence distribution and evidence data</span></summary><div className="grid gap-4 border-t border-border py-4 sm:grid-cols-3"><div><p className="text-xs text-muted">Confidence range</p><p className="mt-1 text-sm font-medium">{insightData.length ? `${Math.round(Math.min(...insightData.map((item) => item.confidence)) * 100)}–${Math.round(Math.max(...insightData.map((item) => item.confidence)) * 100)}%` : 'Not available'}</p></div><div><p className="text-xs text-muted">Evidence examples</p><p className="mt-1 text-sm font-medium">{insightData.length} conversation excerpts</p></div><div><p className="text-xs text-muted">Artifact revision</p><p className="mt-1 text-sm font-medium">v{selectedArtifact?.version} · {selectedArtifact?.updatedAt}</p></div></div></details>}
+    </main>
+    <Sheet open={Boolean(selectedInsight)} onOpenChange={(open) => !open && setSelectedInsight(null)}><SheetContent side="right" className="w-full overflow-y-auto sm:max-w-lg"><SheetHeader className="pr-10"><p className="text-xs font-semibold uppercase tracking-wider text-muted">Conversation evidence</p><SheetTitle>{selectedInsight?.intent}</SheetTitle><SheetDescription>Evidence linked to the selected project artifact.</SheetDescription></SheetHeader>{selectedInsight && <div className="space-y-5 px-4 pb-6"><div className="rounded-xl bg-surface-inset/50 p-4"><p className="text-xs font-medium text-muted">Example quote</p><blockquote className="mt-2 text-sm leading-6 text-foreground">“{selectedInsight.quote}”</blockquote></div><div className="grid grid-cols-2 gap-3"><div className="rounded-lg border border-border p-3"><p className="text-xs text-muted">Confidence</p><p className="mt-1 text-lg font-semibold">{Math.round(selectedInsight.confidence * 100)}%</p></div><div className="rounded-lg border border-border p-3"><p className="text-xs text-muted">Conversations</p><p className="mt-1 text-lg font-semibold">{selectedInsight.volume.toLocaleString()}</p></div></div><div className="space-y-3 text-sm"><div><p className="text-xs font-medium text-muted">Resolution</p><p className="mt-1">{selectedInsight.resolution}</p></div><div><p className="text-xs font-medium text-muted">Escalation reason</p><p className="mt-1">{selectedInsight.escalation}</p></div><div><p className="text-xs font-medium text-muted">Hold reason</p><p className="mt-1">{selectedInsight.hold}</p></div><div><p className="text-xs font-medium text-muted">Pain point</p><p className="mt-1">{selectedInsight.painPoint}</p></div></div>{insightArtifact?.sample && <p className="text-xs text-muted">This quote and confidence value are examples included with the demo artifact.</p>}</div>}</SheetContent></Sheet>
+  </AppShell>;
 }

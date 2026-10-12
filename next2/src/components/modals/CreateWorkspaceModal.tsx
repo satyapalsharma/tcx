@@ -22,7 +22,7 @@ export function CreateWorkspaceModal() {
     e.preventDefault();
     if (!name.trim()) return;
     const ws = createWorkspace(name.trim());
-    toast(`Workspace "${ws.name}" created`, 'check');
+    toast(`Project "${ws.name}" created`, 'check');
     close();
   };
 
@@ -30,8 +30,8 @@ export function CreateWorkspaceModal() {
     <Dialog open={isNewWsOpen} onOpenChange={(o) => !o && close()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>New workspace</DialogTitle>
-          <DialogDescription>Workspaces keep jobs, flows and agents separate inside {currentOrg.name}.</DialogDescription>
+          <DialogTitle>New project</DialogTitle>
+          <DialogDescription>Projects keep jobs, flows and agents separate inside {currentOrg.name}.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
@@ -48,7 +48,7 @@ export function CreateWorkspaceModal() {
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={close}>Cancel</Button>
-            <Button type="submit" variant="accent">Create workspace</Button>
+            <Button type="submit" variant="accent">Create project</Button>
           </DialogFooter>
         </form>
       </DialogContent>

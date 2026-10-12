@@ -3,79 +3,37 @@
 import { useMemo, useState } from 'react';
 import { AppShell } from '../components/AppShell';
 import { Icon } from '../components/Icon';
-import { useReveal } from '../hooks/useReveal';
 import { PageHeader } from '@/components/common';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { useApp } from '@/context/AppContext';
-
-const SAMPLE_ORG_ID = 'org-skyline';
-
-const SAMPLE_EVENTS = [
-  { id: '1', when: 'Today · 10:42', actor: 'Arjun Shah', action: 'Started an agent build', detail: 'Google ADK · process map v3', icon: 'play' as const },
-  { id: '2', when: 'Today · 10:05', actor: 'Devika Sharma', action: 'Updated a process map', detail: 'Billing Dispute Resolution · version 3', icon: 'flow' as const },
-  { id: '3', when: 'Today · 09:18', actor: 'System', action: 'Completed an intent analysis job', detail: 'Customer Operations · sample activity', icon: 'check' as const },
-  { id: '4', when: 'Yesterday · 16:30', actor: 'Riya Menon', action: 'Created a cluster set', detail: 'Customer Operations · 4 sample clusters', icon: 'chart' as const },
-  { id: '5', when: 'Yesterday · 14:12', actor: 'Priya Nair', action: 'Invited a workspace member', detail: 'Customer Operations', icon: 'users' as const },
-  { id: '6', when: '12 Aug · 11:20', actor: 'Arjun Shah', action: 'Generated an agent draft', detail: 'Amazon Bedrock · process map v2', icon: 'code' as const },
-];
+import { usePipeline } from '@/context/PipelineContext';
 
 export default function AuditLog() {
-  useReveal();
   const { currentOrg } = useApp();
+  const { events } = usePipeline();
   const [search, setSearch] = useState('');
-  const hasSampleHistory = currentOrg.id === SAMPLE_ORG_ID;
-  const events = useMemo(() => {
+  const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) return SAMPLE_EVENTS;
-    return SAMPLE_EVENTS.filter((event) => `${event.when} ${event.actor} ${event.action} ${event.detail}`.toLowerCase().includes(query));
-  }, [search]);
+    return [...events].sort((a, b) => b.time - a.time).filter((event) => !query || `${event.actor} ${event.action} ${event.detail}`.toLowerCase().includes(query));
+  }, [events, search]);
 
   return (
     <AppShell crumb="Audit log">
-      <main className="p-5 sm:p-8 lg:p-10 max-w-[1120px] mx-auto w-full pb-16" data-od-id="audit-page">
-        <PageHeader
-          title="Audit log"
-          description={`Activity history for ${currentOrg.name}.`}
-          dataOdId="page-title"
-        />
-
-        {hasSampleHistory ? (
-          <section className="mt-8" aria-labelledby="sample-history-heading">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-4">
-              <div>
-                <h2 id="sample-history-heading" className="text-base font-semibold text-foreground">Recent activity</h2>
-                <p className="mt-1 text-xs text-muted">Sample history · Skyline Communications</p>
-              </div>
-              <label className="relative w-full sm:w-72">
-                <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
-                <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search activity" aria-label="Search sample activity" className="pl-9" />
-              </label>
-            </div>
-            {events.length ? (
-              <Card className="bg-surface border border-border rounded-xl shadow-xs divide-y divide-border overflow-hidden">
-                {events.map((event) => (
-                  <article key={event.id} className="flex items-start gap-3.5 px-4 sm:px-5 py-4">
-                    <span className="w-8 h-8 mt-0.5 rounded-lg bg-surface-inset grid place-items-center shrink-0"><Icon name={event.icon} className="w-4 h-4 text-muted" /></span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm text-foreground"><span className="font-medium">{event.actor}</span> {event.action.toLowerCase()}</p>
-                      <p className="mt-1 text-xs text-muted">{event.detail}</p>
-                    </div>
-                    <time className="shrink-0 text-xs text-muted">{event.when}</time>
-                  </article>
-                ))}
-              </Card>
-            ) : (
-              <Card className="p-8 bg-surface border border-border rounded-xl text-center text-sm text-muted">No sample activity matches “{search}”.</Card>
-            )}
-          </section>
-        ) : (
-          <Card className="mt-8 p-8 sm:p-10 bg-surface border border-border border-dashed rounded-xl shadow-xs text-center">
-            <span className="mx-auto w-10 h-10 rounded-full bg-surface-inset grid place-items-center"><Icon name="scroll" className="w-5 h-5 text-muted" /></span>
-            <h2 className="mt-4 text-sm font-semibold text-foreground">No activity history yet</h2>
-            <p className="mt-1 mx-auto max-w-lg text-sm text-muted">Activity sync has not been connected for {currentOrg.name}. Events will appear here when organization activity is available.</p>
-          </Card>
-        )}
+      <main className="p-5 sm:p-8 max-w-[1280px] mx-auto w-full pb-16 space-y-6" data-od-id="audit-page">
+        <PageHeader title="Audit log" description={`Recent activity across ${currentOrg.name}.`} dataOdId="page-title" />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div><h2 className="text-base font-semibold">Organization activity</h2><p className="mt-1 text-sm text-muted">Events are visible to members of this organization.</p></div>
+          <label className="relative w-full sm:w-72"><Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" /><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search activity" aria-label="Search activity" className="pl-9" /></label>
+        </div>
+        {filtered.length ? <Card className="divide-y divide-border overflow-hidden p-0">
+          {filtered.map((event) => <article key={event.id} className="flex items-start gap-3.5 px-4 py-4 sm:px-5">
+            <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-surface-inset"><Icon name="scroll" className="h-4 w-4 text-muted" /></span>
+            <div className="min-w-0 flex-1"><p className="text-sm text-foreground"><span className="font-medium">{event.actor}</span> {event.action}</p><p className="mt-1 text-sm text-muted">{event.detail}</p></div>
+            <div className="flex shrink-0 flex-col items-end gap-1.5"><time className="text-xs text-muted" dateTime={new Date(event.time).toISOString()}>{new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(event.time)}</time>{event.workspaceId && <Badge variant="outline" className="max-w-32 truncate text-[10px]">Project activity</Badge>}</div>
+          </article>)}
+        </Card> : <Card className="border-dashed p-8 text-center"><span className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-surface-inset"><Icon name="scroll" className="h-5 w-5 text-muted" /></span><h2 className="mt-3 text-sm font-semibold">{events.length ? 'No activity found' : 'No activity yet'}</h2><p className="mx-auto mt-1 max-w-md text-sm text-muted">{events.length ? `No organization events match “${search}”.` : 'Member, project, and pipeline activity will appear here as it happens in the demo.'}</p></Card>}
       </main>
     </AppShell>
   );

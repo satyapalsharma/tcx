@@ -7,6 +7,7 @@ export type ModularTaskType =
   | 'extract_intents'    // 🎯 1. Extract intents from transcripts/logs
   | 'cluster_intents'    // 🧩 2. Cluster existing intents into L1/L2
   | 'design_flow'        // 🗺️ 3. Design visual process map from intent/cluster
+  | 'generate_uml'
   | 'generate_agent'     // 🤖 4. Generate agent code (ADK / Bedrock)
   | 'full_pipeline';     // ⚡ 5. End-to-end full pipeline
 
@@ -40,7 +41,7 @@ const INITIAL_WORKSPACES: Workspace[] = [
   { id: 'ws-broadband-dev', name: 'Network Support Staging', orgId: 'org-skyline', description: 'Technical triage & field escalations', jobCount: 27 },
   { id: 'ws-returns', name: 'Returns & Exchanges', orgId: 'org-northwind', description: 'E-commerce return flow automation', isDefault: true, jobCount: 16 },
   { id: 'ws-support', name: 'Omnichannel Chat', orgId: 'org-northwind', description: 'Customer service AI agents', jobCount: 9 },
-  { id: 'ws-main', name: 'Core Automation', orgId: 'org-acme', description: 'General workspace', isDefault: true, jobCount: 5 },
+  { id: 'ws-main', name: 'Core Automation', orgId: 'org-acme', description: 'General project', isDefault: true, jobCount: 5 },
 ];
 
 type AppContextType = {
@@ -105,6 +106,7 @@ const TASK_META: Record<ModularTaskType, { prefix: string; pipe: Job['pipe']; pi
   extract_intents: { prefix: 'RUN', pipe: 'Analysis', pipeline: 'Intent analysis' },
   cluster_intents: { prefix: 'CLU', pipe: 'Analysis', pipeline: 'Intent clustering' },
   design_flow: { prefix: 'MAP', pipe: 'Design', pipeline: 'Flow design' },
+  generate_uml: { prefix: 'UML', pipe: 'Design', pipeline: 'UML diagram' },
   generate_agent: { prefix: 'ADK', pipe: 'Develop', pipeline: 'Agent build' },
   full_pipeline: { prefix: 'E2E', pipe: 'Analysis', pipeline: 'Full pipeline' },
 };
@@ -119,16 +121,16 @@ const initials = (s: string) =>
   s.split(/[\s.@_-]+/).filter(Boolean).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
 
 const INITIAL_MEMBERS: Member[] = [
-  { id: 'priya', orgId: 'org-skyline', name: 'Priya Nair', email: 'priya@skyline-broadband.com', role: 'Admin', workspaces: 'All workspaces', lastActive: 'Just now', status: 'active', initials: 'PN' },
+  { id: 'priya', orgId: 'org-skyline', name: 'Priya Nair', email: 'priya@skyline-broadband.com', role: 'Admin', workspaces: 'All projects', lastActive: 'Just now', status: 'active', initials: 'PN' },
   { id: 'riya', orgId: 'org-skyline', name: 'Riya Menon', email: 'riya.m@skyline-broadband.com', role: 'Business Analyst', workspaces: 'Customer Operations', lastActive: '12 min ago', status: 'active', initials: 'RM' },
   { id: 'devika', orgId: 'org-skyline', name: 'Devika Sharma', email: 'devika.s@skyline-broadband.com', role: 'CX Designer', workspaces: 'Billing & Payments', lastActive: '1 hr ago', status: 'active', initials: 'DS' },
   { id: 'arjun', orgId: 'org-skyline', name: 'Arjun Shah', email: 'arjun.sh@skyline-broadband.com', role: 'Developer', workspaces: 'Network Support Staging', lastActive: '24 min ago', status: 'active', initials: 'AS' },
   { id: 'karan', orgId: 'org-skyline', name: 'Karan Mehta', email: 'k.mehta@partner.skylinebb.com', role: 'Viewer', workspaces: 'Customer Operations', lastActive: '2 days ago', status: 'invited', initials: 'KM' },
-  { id: 'svc', orgId: 'org-skyline', name: 'svc-transform-bot', email: 'ci-runner@skyline-broadband.internal', role: 'Developer', workspaces: 'All workspaces', lastActive: 'via CI', status: 'service', initials: 'SB' },
-  { id: 'rohan', orgId: 'org-northwind', name: 'Rohan Gupta', email: 'rohan@northwind.in', role: 'Admin', workspaces: 'All workspaces', lastActive: '5 min ago', status: 'active', initials: 'RG' },
+  { id: 'svc', orgId: 'org-skyline', name: 'svc-transform-bot', email: 'ci-runner@skyline-broadband.internal', role: 'Developer', workspaces: 'All projects', lastActive: 'via CI', status: 'service', initials: 'SB' },
+  { id: 'rohan', orgId: 'org-northwind', name: 'Rohan Gupta', email: 'rohan@northwind.in', role: 'Admin', workspaces: 'All projects', lastActive: '5 min ago', status: 'active', initials: 'RG' },
   { id: 'anita', orgId: 'org-northwind', name: 'Anita Rao', email: 'anita@northwind.in', role: 'Business Analyst', workspaces: 'Returns & Exchanges', lastActive: '3 hr ago', status: 'active', initials: 'AR' },
   { id: 'vik', orgId: 'org-northwind', name: 'Vikram Joshi', email: 'vikram@northwind.in', role: 'Viewer', workspaces: 'Omnichannel Chat', lastActive: 'Yesterday', status: 'active', initials: 'VJ' },
-  { id: 'sam', orgId: 'org-acme', name: 'Sam Carter', email: 'sam@acme.io', role: 'Admin', workspaces: 'All workspaces', lastActive: '1 hr ago', status: 'active', initials: 'SC' },
+  { id: 'sam', orgId: 'org-acme', name: 'Sam Carter', email: 'sam@acme.io', role: 'Admin', workspaces: 'All projects', lastActive: '1 hr ago', status: 'active', initials: 'SC' },
   { id: 'lee', orgId: 'org-acme', name: 'Lee Wong', email: 'lee@acme.io', role: 'Developer', workspaces: 'Core Automation', lastActive: '2 days ago', status: 'active', initials: 'LW' },
 ];
 
@@ -142,7 +144,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [currentWorkspaceId, setCurrentWorkspaceId] = useState<string>('ws-cust-ops');
 
   const [isNewRunOpen, setIsNewRunOpen] = useState(false);
-  const [newRunDefaultType, setNewRunDefaultType] = useState<ModularTaskType>('extract_intents');
+  const [newRunDefaultType, setNewRunDefaultType] = useState<ModularTaskType>('full_pipeline');
 
   const [isNewOrgOpen, setIsNewOrgOpen] = useState(false);
   const [isNewWsOpen, setIsNewWsOpen] = useState(false);
@@ -167,6 +169,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const createOrg = (name: string): Organization => {
+    let ownerEmail='priya@skyline-broadband.com';
+    try { ownerEmail=localStorage.getItem('tx-user')?.trim()||ownerEmail; } catch { /* demo fallback */ }
+    const ownerName=ownerEmail==='priya@skyline-broadband.com'?'Priya Nair':ownerEmail.split('@')[0].replace(/[._-]/g,' ');
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     const newOrg: Organization = {
       id: `org-${crypto.randomUUID()}`,
@@ -180,14 +185,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       id: `ws-${crypto.randomUUID()}`,
       name: 'General',
       orgId: newOrg.id,
-      description: 'Your first workspace',
+      description: 'Your first project',
       isDefault: true,
       jobCount: 0,
     };
     setOrganizations((prev) => [...prev, newOrg]);
     setWorkspaces((prev) => [...prev, defaultWs]);
     setMembers((prev) => [
-      { id: `mem-${crypto.randomUUID()}`, orgId: newOrg.id, name: 'Priya Nair', email: 'priya@skyline-broadband.com', role: 'Admin', workspaces: 'All workspaces', lastActive: 'Just now', status: 'active', initials: 'PN' },
+      { id: `mem-${crypto.randomUUID()}`, orgId: newOrg.id, name: ownerName, email: ownerEmail, role: 'Admin', workspaces: 'All projects', lastActive: 'Just now', status: 'active', initials: initials(ownerName) },
       ...prev,
     ]);
     setCurrentOrgId(newOrg.id);
@@ -215,7 +220,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return newWs;
   };
 
-  const openNewRun = (type: ModularTaskType = 'extract_intents') => {
+  const openNewRun = (type: ModularTaskType = 'full_pipeline') => {
     setNewRunDefaultType(type);
     setIsNewRunOpen(true);
   };
@@ -270,7 +275,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         name: display,
         email,
         role,
-        workspaces: allWorkspaces ? 'All workspaces' : currentWorkspace.name,
+        workspaces: allWorkspaces ? 'All projects' : currentWorkspace.name,
         lastActive: '—',
         status: 'invited',
         initials: initials(display),
@@ -304,7 +309,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           setOrganizations(saved.organizations);
           setWorkspaces(saved.workspaces);
           setJobs(saved.jobs.map((job: WorkspaceJob) => job.id === 'RUN-4770' && job.workspaceId === 'ws-cust-ops' ? { ...job, workspaceId: 'ws-returns' } : job));
-          setMembers(saved.members);
+          setMembers(saved.members.map((member: Member) => ({...member,workspaces:member.workspaces.replace('All workspaces','All projects')})).map((member: Member) => (member.role as string) === 'Builder' ? { ...member, role: member.id === 'devika' ? 'CX Designer' : member.id === 'arjun' ? 'Developer' : 'Business Analyst' } : member));
           const orgId = saved.organizations.some((o: Organization) => o.id === saved.currentOrgId) ? saved.currentOrgId : saved.organizations[0].id;
           setCurrentOrgId(orgId);
           const ws = saved.workspaces.find((w: Workspace) => w.orgId === orgId && w.id === saved.currentWorkspaceId) ?? saved.workspaces.find((w: Workspace) => w.orgId === orgId);
@@ -342,7 +347,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const wsCount = (w: Workspace) => workspacesWithCounts.find((x) => x.id === w.id) ?? w;
 
   if (!hydrated) {
-    return <div className="min-h-screen grid place-items-center text-sm text-muted" role="status">Loading workspace…</div>;
+    return <div className="min-h-screen grid place-items-center text-sm text-muted" role="status">Loading project…</div>;
   }
 
   return (

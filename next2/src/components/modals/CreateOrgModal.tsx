@@ -31,7 +31,7 @@ export function CreateOrgModal() {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>New organization</DialogTitle>
-          <DialogDescription>You&apos;ll be the owner. A default workspace is created for you.</DialogDescription>
+          <DialogDescription>You&apos;ll be the owner. A default project is created for you.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">

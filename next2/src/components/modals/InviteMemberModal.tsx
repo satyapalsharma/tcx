@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useApp, type MemberRole } from '@/context/AppContext';
+import { usePipeline } from '@/context/PipelineContext';
 import { useToast } from '@/components/Toast';
 import { Icon } from '@/components/Icon';
 import { SelectField } from '@/components/common';
@@ -11,15 +12,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 const ROLES: { value: MemberRole; label: string }[] = [
-  { value: 'Admin', label: 'Admin · Full org, members & billing' },
-  { value: 'Business Analyst', label: 'Business Analyst · Intent discovery, taxonomy & clustering' },
-  { value: 'CX Designer', label: 'CX Designer · Process flow maps & UML diagrams' },
-  { value: 'Developer', label: 'Developer · Agent code generation, runtime & deploy' },
-  { value: 'Viewer', label: 'Viewer · Read-only access across all stages' },
+  { value: 'Admin', label: 'Admin · Organization, members & projects' },
+  { value: 'Business Analyst', label: 'Business Analyst · Intent discovery & taxonomy' },
+  { value: 'CX Designer', label: 'CX Designer · Process maps & service flows' },
+  { value: 'Developer', label: 'Developer · Agent code drafts' },
+  { value: 'Viewer', label: 'Viewer · View shared work and results' },
 ];
 
 export function InviteMemberModal() {
   const { isInviteOpen, setIsInviteOpen, currentOrg, membersForCurrentOrg, addMember } = useApp();
+  const { recordEvent } = usePipeline();
   const toast = useToast();
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<MemberRole>('Business Analyst');
@@ -40,7 +42,8 @@ export function InviteMemberModal() {
       return;
     }
     addMember({ email: trimmed, role, allWorkspaces: true });
-    toast(`Invitation for ${trimmed} added to this demo`, 'check');
+    recordEvent('Added organization member', `Added ${trimmed} as ${role}. This demo does not send an invitation email.`);
+    toast(`${trimmed} added to this demo`, 'check');
     close();
   };
 
@@ -49,7 +52,7 @@ export function InviteMemberModal() {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Invite to {currentOrg.name}</DialogTitle>
-          <DialogDescription>Add a person to this organization. You can change their role later.</DialogDescription>
+          <DialogDescription>Add a person to this organization. This demo does not send an email; you can change their role later.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
@@ -73,7 +76,7 @@ export function InviteMemberModal() {
             <Button type="button" variant="outline" onClick={close}>Cancel</Button>
             <Button type="submit" variant="accent" className="gap-1.5">
               <Icon name="mail" className="w-3.5 h-3.5" />
-              Add member
+              Add to demo
             </Button>
           </DialogFooter>
         </form>

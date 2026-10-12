@@ -195,3 +195,60 @@ svg.tx-icon, svg.lucide { flex-shrink: 0; overflow: visible; }
 
 /* Text uses the readable muted ink; shadcn bg-muted uses a pale surface. */
 .text-muted { color: var(--muted); }
+
+/* EXL workbench palette: logo orange, neutral surfaces, charcoal navigation. */
+@theme {
+  --color-accent-strong: oklch(55% 0.19 36);
+  --color-accent-hover: oklch(50% 0.175 35);
+  --color-accent-active: oklch(46% 0.16 34);
+  --color-accent-soft: #fff2ec;
+  --color-accent-border: #f5c3ae;
+  --color-surface: #ffffff;
+  --color-surface-inset: #f3f4f5;
+  --color-surface-hover: #eceef0;
+  --color-surface-active: #e4e7ea;
+}
+:root {
+  --background: #f8f9fa;
+  --bg: #f8f9fa;
+  --foreground: #23272b;
+  --fg: #23272b;
+  --muted: #626b74;
+  --muted-foreground: #626b74;
+  --surface: #ffffff;
+  --surface-inset: #f3f4f5;
+  --surface-hover: #eceef0;
+  --border: #e2e5e8;
+  --border-strong: #c1c7cd;
+  --input: #dce0e4;
+  --primary: oklch(55% 0.19 36);
+  --ring: #fb4e0b;
+  --accent: #fff2ec;
+  --accent-foreground: oklch(50% 0.175 35);
+  --brand-orange: #fb4e0b;
+  --sidebar-primary: oklch(55% 0.19 36);
+  --sidebar-ring: #fb4e0b;
+  --accent-strong: oklch(55% 0.19 36);
+  --accent-soft: #fff2ec;
+  --accent-border: #f5c3ae;
+  --secondary: #f3f4f5;
+  --secondary-foreground: #23272b;
+  --card: #ffffff;
+  --card-foreground: #23272b;
+  --popover: #ffffff;
+  --popover-foreground: #23272b;
+  --sidebar: #202427;
+  --sidebar-foreground: #e0e3e5;
+  --sidebar-accent: #343a3e;
+  --sidebar-accent-foreground: #ffffff;
+}
+:is(.app-navigation, [data-mobile="true"]) [data-slot="sidebar-inner"], .app-navigation [data-sidebar="sidebar"] { background: #202427; }
+.app-navigation { color: #e0e3e5; }
+:is(.app-navigation, [data-mobile="true"]) [data-slot="sidebar-menu-button"] { color: #bfc6cb; }
+:is(.app-navigation, [data-mobile="true"]) [data-slot="sidebar-menu-button"]:hover { background:#2d3337; color:#fff; }
+:is(.app-navigation, [data-mobile="true"]) [data-slot="sidebar-menu-button"][data-active="true"] { background:#3c2e28; color:#fff2ec; box-shadow:inset 3px 0 #fb4e0b; }
+:is(.app-navigation, [data-mobile="true"]) [data-slot="sidebar-menu-button"][data-active="true"] svg { color:#ffad89; }
+[data-slot="sidebar"][data-mobile="true"] { background:#202427; }
+[data-slot="card"] { box-shadow:0 2px 4px #23272b03; }
+[data-slot="button"] { font-weight:550; }
+@media (prefers-reduced-motion:reduce) { *, *::before, *::after { scroll-behavior:auto !important; animation-duration:0.01ms !important; transition-duration:0.01ms !important; } }

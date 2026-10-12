@@ -6,6 +6,7 @@ import { AppShell } from '../components/AppShell';
 import { useToast } from '../components/Toast';
 import { useReveal } from '../hooks/useReveal';
 import { useApp } from '@/context/AppContext';
+import { usePipeline } from '@/context/PipelineContext';
 import { PageHeader } from '@/components/common';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,7 @@ export default function Settings() {
   useReveal();
   const toast = useToast();
   const { currentOrg, updateOrg, membersForCurrentOrg, workspacesForCurrentOrg } = useApp();
+  const { recordEvent } = usePipeline();
   const [draft, setDraft] = useState<{ orgId: string; name: string } | null>(null);
   const orgName = draft?.orgId === currentOrg.id ? draft.name : currentOrg.name;
 
@@ -25,6 +27,7 @@ export default function Settings() {
     const name = orgName.trim();
     if (!name) return;
     updateOrg({ name });
+    recordEvent('Updated organization settings', `Renamed the organization to ${name}.`);
     setDraft(null);
     toast('Organization name updated', 'check');
   };
@@ -58,10 +61,10 @@ export default function Settings() {
           </Card>
           <Card className="p-5 gap-3">
             <div>
-              <h2 className="text-sm font-semibold text-foreground">Workspaces</h2>
-              <p className="text-xs text-muted mt-1">{workspacesForCurrentOrg.length} workspaces in this organization.</p>
+              <h2 className="text-sm font-semibold text-foreground">Projects</h2>
+              <p className="text-xs text-muted mt-1">{workspacesForCurrentOrg.length} projects in this organization.</p>
             </div>
-            <Button asChild variant="outline" size="sm" className="self-start text-xs"><Link to="/projects">Manage workspaces</Link></Button>
+            <Button asChild variant="outline" size="sm" className="self-start text-xs"><Link to="/projects">Manage projects</Link></Button>
           </Card>
         </div>
 
