@@ -16,38 +16,94 @@ import { Label } from '@/components/ui/label';
 export default function Settings() {
   useReveal();
   const toast = useToast();
-  const { currentOrg, updateOrg, membersForCurrentOrg, workspacesForCurrentOrg } = useApp();
+  const {
+    currentOrg,
+    updateOrg,
+    membersForCurrentOrg,
+    workspacesForCurrentOrg,
+  } = useApp();
   const { recordEvent } = usePipeline();
-  const [draft, setDraft] = useState<{ orgId: string; name: string } | null>(null);
+  const [draft, setDraft] = useState<{ orgId: string; name: string } | null>(
+    null,
+  );
+  const [nameError, setNameError] = useState('');
   const orgName = draft?.orgId === currentOrg.id ? draft.name : currentOrg.name;
 
   const dirty = orgName.trim() !== currentOrg.name;
   const saveOrg = (event: FormEvent) => {
     event.preventDefault();
     const name = orgName.trim();
-    if (!name) return;
+    if (!name) {
+      setNameError('Enter an organization name.');
+      return;
+    }
     updateOrg({ name });
-    recordEvent('Updated organization settings', `Renamed the organization to ${name}.`);
+    recordEvent(
+      'Updated organization settings',
+      `Renamed the organization to ${name}.`,
+    );
     setDraft(null);
+    setNameError('');
     toast('Organization name updated', 'check');
   };
 
   return (
     <AppShell crumb="Settings">
-      <div className="p-4 sm:p-6 lg:p-7 max-w-[900px] mx-auto w-full pb-16 space-y-6" data-od-id="settings-page">
-        <PageHeader title="Settings" description={`Manage ${currentOrg.name} and its people.`} dataOdId="page-title" />
+      <div
+        className="p-4 sm:p-6 lg:p-7 max-w-[900px] mx-auto w-full pb-16 space-y-6"
+        data-od-id="settings-page"
+      >
+        <PageHeader
+          title="Settings"
+          description={`Manage ${currentOrg.name} and its people.`}
+          dataOdId="page-title"
+        />
 
         <Card className="p-5 sm:p-6 gap-4">
           <div>
-            <h2 className="text-sm font-semibold text-foreground">Organization name</h2>
-            <p className="text-xs text-muted mt-1">This name is visible to everyone in the organization.</p>
+            <h2 className="text-sm font-semibold text-foreground">
+              Organization name
+            </h2>
+            <p className="text-xs text-muted mt-1">
+              This name is visible to everyone in the organization.
+            </p>
           </div>
           <form onSubmit={saveOrg} className="space-y-3 max-w-md">
             <div className="space-y-1.5">
-              <Label htmlFor="org-name" className="text-xs">Name</Label>
-              <Input id="org-name" value={orgName} onChange={(event) => setDraft({ orgId: currentOrg.id, name: event.target.value })} className="h-9 text-sm" required />
+              <Label htmlFor="org-name" className="text-xs">
+                Name
+              </Label>
+              <Input
+                id="org-name"
+                value={orgName}
+                onChange={(event) => {
+                  setDraft({ orgId: currentOrg.id, name: event.target.value });
+                  setNameError('');
+                }}
+                className="h-9 text-sm"
+                required
+                aria-invalid={Boolean(nameError)}
+                aria-describedby={nameError ? 'org-name-error' : undefined}
+              />
+              {nameError && (
+                <p
+                  id="org-name-error"
+                  role="alert"
+                  className="text-sm text-danger-fg"
+                >
+                  {nameError}
+                </p>
+              )}
             </div>
-            <Button type="submit" variant="accent" size="sm" disabled={!dirty} className="cursor-pointer">Save changes</Button>
+            <Button
+              type="submit"
+              variant="accent"
+              size="sm"
+              disabled={!dirty}
+              className="cursor-pointer"
+            >
+              Save changes
+            </Button>
           </form>
         </Card>
 
@@ -55,24 +111,56 @@ export default function Settings() {
           <Card className="p-5 gap-3">
             <div>
               <h2 className="text-sm font-semibold text-foreground">Members</h2>
-              <p className="text-xs text-muted mt-1">{membersForCurrentOrg.filter((member) => member.status !== 'service').length} people in this organization.</p>
+              <p className="text-xs text-muted mt-1">
+                {
+                  membersForCurrentOrg.filter(
+                    (member) => member.status !== 'service',
+                  ).length
+                }{' '}
+                people in this organization.
+              </p>
             </div>
-            <Button asChild variant="outline" size="sm" className="self-start text-xs"><Link to="/rbac">Manage members</Link></Button>
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="self-start text-xs"
+            >
+              <Link to="/rbac">Manage members</Link>
+            </Button>
           </Card>
           <Card className="p-5 gap-3">
             <div>
-              <h2 className="text-sm font-semibold text-foreground">Projects</h2>
-              <p className="text-xs text-muted mt-1">{workspacesForCurrentOrg.length} projects in this organization.</p>
+              <h2 className="text-sm font-semibold text-foreground">
+                Projects
+              </h2>
+              <p className="text-xs text-muted mt-1">
+                {workspacesForCurrentOrg.length} projects in this organization.
+              </p>
             </div>
-            <Button asChild variant="outline" size="sm" className="self-start text-xs"><Link to="/projects">Manage projects</Link></Button>
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="self-start text-xs"
+            >
+              <Link to="/projects">Manage projects</Link>
+            </Button>
           </Card>
         </div>
 
         <div className="flex flex-wrap gap-4 text-sm">
-          <Link className="text-accent-strong hover:underline" to="/connectors">Integrations</Link>
-          <Link className="text-accent-strong hover:underline" to="/audit-log">Audit log</Link>
+          <Link className="text-accent-strong hover:underline" to="/connectors">
+            Integrations
+          </Link>
+          <Link className="text-accent-strong hover:underline" to="/audit-log">
+            Audit log
+          </Link>
         </div>
-        <p className="text-xs text-muted">Demo changes are saved in this browser. Invitations and jobs aren&apos;t sent to a backend.</p>
+        <p className="text-xs text-muted">
+          Demo changes are saved in this browser. Invitations and jobs
+          aren&apos;t sent to a backend.
+        </p>
       </div>
     </AppShell>
   );

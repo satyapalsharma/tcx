@@ -39,8 +39,12 @@ export function StatusBadge({
     isWarn && 'bg-warn-soft text-warn-fg',
     isDanger && 'bg-danger-soft text-danger-fg',
     isAccent && 'bg-accent-soft text-accent-strong',
-    !isOk && !isWarn && !isDanger && !isAccent && 'bg-surface-inset text-foreground border border-border',
-    className
+    !isOk &&
+      !isWarn &&
+      !isDanger &&
+      !isAccent &&
+      'bg-surface-inset text-foreground border border-border',
+    className,
   );
 
   const dotClasses = cn(
@@ -50,7 +54,7 @@ export function StatusBadge({
     isDanger && 'bg-danger',
     isAccent && 'bg-accent',
     !isOk && !isWarn && !isDanger && !isAccent && 'bg-muted',
-    pulse && 'animate-pulse'
+    pulse && 'animate-pulse',
   );
 
   return (

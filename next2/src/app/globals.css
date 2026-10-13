@@ -1,7 +1,7 @@
-@import "tailwindcss";
-@import "../tx.css";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import 'tailwindcss';
+@import '../tx.css';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
 /*
  ---break---
  */
@@ -52,8 +52,10 @@
   --color-surface-inset: oklch(97.5% 0.004 250);
 
   /* Type */
-  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
-  --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  --font-display:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+  --font-body:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   /* Shape */
@@ -133,31 +135,31 @@
  * Light-mode only; the prototype ships no dark theme, hence no .dark block.
  */
 :root {
-  --background: oklch(99% 0.002 240);        /* --bg */
-  --foreground: oklch(18% 0.012 250);        /* --fg */
-  --card: oklch(100% 0 0);                  /* --surface */
+  --background: oklch(99% 0.002 240); /* --bg */
+  --foreground: oklch(18% 0.012 250); /* --fg */
+  --card: oklch(100% 0 0); /* --surface */
   --card-foreground: oklch(18% 0.012 250);
   --popover: oklch(100% 0 0);
   --popover-foreground: oklch(18% 0.012 250);
-  --primary: oklch(55% 0.19 36);            /* --accent-strong · 5.30:1 vs white */
+  --primary: oklch(55% 0.19 36); /* --accent-strong · 5.30:1 vs white */
   --primary-foreground: oklch(100% 0 0);
-  --secondary: oklch(97.5% 0.004 250);      /* --surface-inset */
+  --secondary: oklch(97.5% 0.004 250); /* --surface-inset */
   --secondary-foreground: oklch(18% 0.012 250);
   /* NB: --muted is intentionally NOT redefined here — tx.css owns it as the
      54% text gray. bg-muted maps to --surface-inset via @theme inline above. */
   --muted-foreground: oklch(54% 0.012 250); /* --muted */
-  --accent: oklch(66.2% 0.218 37);          /* EXL orange #FB4E0B */
+  --accent: oklch(66.2% 0.218 37); /* EXL orange #FB4E0B */
   --accent-foreground: oklch(100% 0 0);
-  --destructive: oklch(54% 0.21 22);        /* --danger */
-  --border: oklch(92% 0.005 250);           /* --border */
+  --destructive: oklch(54% 0.21 22); /* --danger */
+  --border: oklch(92% 0.005 250); /* --border */
   --input: oklch(92% 0.005 250);
-  --ring: oklch(55% 0.19 36);               /* --accent-strong */
-  --chart-1: oklch(66.2% 0.218 37);         /* brand orange */
-  --chart-2: oklch(55% 0.19 36);           /* accent-strong */
-  --chart-3: oklch(60% 0.14 150);          /* success */
-  --chart-4: oklch(78% 0.145 88);          /* warn */
-  --chart-5: oklch(54% 0.21 22);           /* danger */
-  --radius: 12px;                           /* --r-lg · sonner/dialog base */
+  --ring: oklch(55% 0.19 36); /* --accent-strong */
+  --chart-1: oklch(66.2% 0.218 37); /* brand orange */
+  --chart-2: oklch(55% 0.19 36); /* accent-strong */
+  --chart-3: oklch(60% 0.14 150); /* success */
+  --chart-4: oklch(78% 0.145 88); /* warn */
+  --chart-5: oklch(54% 0.21 22); /* danger */
+  --radius: 12px; /* --r-lg · sonner/dialog base */
   --sidebar: oklch(100% 0 0);
   --sidebar-foreground: oklch(18% 0.012 250);
   --sidebar-primary: oklch(55% 0.19 36);
@@ -179,7 +181,8 @@
   body {
     @apply bg-background text-foreground;
   }
-  button:not(:disabled), [role="button"]:not(:disabled) {
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
     cursor: pointer;
   }
   html {
@@ -187,14 +190,30 @@
   }
 }
 /* Icons keep their intrinsic square and stroke when nested in tight controls. */
-svg.tx-icon, svg.lucide { flex-shrink: 0; overflow: visible; }
-[data-slot="sidebar-menu-button"][data-active="true"] { background: var(--surface-inset); color: var(--fg); }
-[data-slot="sidebar-menu-button"] { min-height: 36px; }
-[data-slot="button"] { min-height: 32px; }
-[data-slot="dialog-content"] { max-height: calc(100dvh - 32px); overflow-y: auto; }
+svg.tx-icon,
+svg.lucide {
+  flex-shrink: 0;
+  overflow: visible;
+}
+[data-slot='sidebar-menu-button'][data-active='true'] {
+  background: var(--surface-inset);
+  color: var(--fg);
+}
+[data-slot='sidebar-menu-button'] {
+  min-height: 36px;
+}
+[data-slot='button'] {
+  min-height: 32px;
+}
+[data-slot='dialog-content'] {
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+}
 
 /* Text uses the readable muted ink; shadcn bg-muted uses a pale surface. */
-.text-muted { color: var(--muted); }
+.text-muted {
+  color: var(--muted);
+}
 
 /* EXL workbench palette: logo orange, neutral surfaces, charcoal navigation. */
 @theme {
@@ -242,13 +261,47 @@ svg.tx-icon, svg.lucide { flex-shrink: 0; overflow: visible; }
   --sidebar-accent: #343a3e;
   --sidebar-accent-foreground: #ffffff;
 }
-:is(.app-navigation, [data-mobile="true"]) [data-slot="sidebar-inner"], .app-navigation [data-sidebar="sidebar"] { background: #202427; }
-.app-navigation { color: #e0e3e5; }
-:is(.app-navigation, [data-mobile="true"]) [data-slot="sidebar-menu-button"] { color: #bfc6cb; }
-:is(.app-navigation, [data-mobile="true"]) [data-slot="sidebar-menu-button"]:hover { background:#2d3337; color:#fff; }
-:is(.app-navigation, [data-mobile="true"]) [data-slot="sidebar-menu-button"][data-active="true"] { background:#3c2e28; color:#fff2ec; box-shadow:inset 3px 0 #fb4e0b; }
-:is(.app-navigation, [data-mobile="true"]) [data-slot="sidebar-menu-button"][data-active="true"] svg { color:#ffad89; }
-[data-slot="sidebar"][data-mobile="true"] { background:#202427; }
-[data-slot="card"] { box-shadow:0 2px 4px #23272b03; }
-[data-slot="button"] { font-weight:550; }
-@media (prefers-reduced-motion:reduce) { *, *::before, *::after { scroll-behavior:auto !important; animation-duration:0.01ms !important; transition-duration:0.01ms !important; } }
+:is(.app-navigation, [data-mobile='true']) [data-slot='sidebar-inner'],
+.app-navigation [data-sidebar='sidebar'] {
+  background: #202427;
+}
+.app-navigation {
+  color: #e0e3e5;
+}
+:is(.app-navigation, [data-mobile='true']) [data-slot='sidebar-menu-button'] {
+  color: #bfc6cb;
+}
+:is(.app-navigation, [data-mobile='true'])
+  [data-slot='sidebar-menu-button']:hover {
+  background: #2d3337;
+  color: #fff;
+}
+:is(.app-navigation, [data-mobile='true'])
+  [data-slot='sidebar-menu-button'][data-active='true'] {
+  background: #3c2e28;
+  color: #fff2ec;
+  box-shadow: inset 3px 0 #fb4e0b;
+}
+:is(.app-navigation, [data-mobile='true'])
+  [data-slot='sidebar-menu-button'][data-active='true']
+  svg {
+  color: #ffad89;
+}
+[data-slot='sidebar'][data-mobile='true'] {
+  background: #202427;
+}
+[data-slot='card'] {
+  box-shadow: 0 2px 4px #23272b03;
+}
+[data-slot='button'] {
+  font-weight: 550;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,6 +1,6 @@
 'use client';
 
-import { OverlayProvider } from '@/components/Overlay';
+import { AppSidebarProvider } from '@/components/layout/AppSidebarProvider';
 import { ToastProvider } from '@/components/Toast';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { PipelineProvider } from '@/context/PipelineContext';
@@ -11,7 +11,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <TooltipProvider>
       <ToastProvider>
         <AppProvider>
-          <PipelineProvider><OverlayProvider>{children}</OverlayProvider></PipelineProvider>
+          <PipelineProvider>
+            <AppSidebarProvider>{children}</AppSidebarProvider>
+          </PipelineProvider>
         </AppProvider>
       </ToastProvider>
     </TooltipProvider>

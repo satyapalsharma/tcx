@@ -22,7 +22,7 @@ export function PageHeader({
     <div
       className={cn(
         'flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6',
-        className
+        className,
       )}
     >
       <div>

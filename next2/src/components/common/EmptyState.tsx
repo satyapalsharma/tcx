@@ -1,16 +1,24 @@
-import React from 'react';
-import { Icon } from '@/components/Icon';
-import { cn } from 'cn';
+import type { ReactNode } from 'react';
+import { Icon, type IconName } from '@/components/Icon';
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyContent,
+} from '@/components/ui/empty';
 
 export interface EmptyStateProps {
-  icon?: Parameters<typeof Icon>[0]['name'];
+  icon?: IconName;
   title?: string;
   description?: string;
-  action?: React.ReactNode;
+  action?: ReactNode;
   dataOdId?: string;
   className?: string;
 }
 
+/** Product copy and icons composed with the official shadcn Empty primitives. */
 export function EmptyState({
   icon = 'filter',
   title = 'No results found',
@@ -20,17 +28,19 @@ export function EmptyState({
   className,
 }: EmptyStateProps) {
   return (
-    <div
-      className={cn(
-        'p-12 text-center text-muted text-xs sm:text-sm flex flex-col items-center justify-center gap-2',
-        className
-      )}
-      data-od-id={dataOdId}
-    >
-      <Icon name={icon} className="w-6 h-6 text-muted mb-1 opacity-70" />
-      <span className="font-medium text-foreground">{title}</span>
-      {description && <span className="text-xs text-muted max-w-sm">{description}</span>}
-      {action && <div className="mt-2">{action}</div>}
-    </div>
+    <Empty className={className} data-od-id={dataOdId}>
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <Icon name={icon} className="size-5 text-muted" />
+        </EmptyMedia>
+        <EmptyTitle>{title}</EmptyTitle>
+        {description && (
+          <EmptyDescription className="text-xs text-muted">
+            {description}
+          </EmptyDescription>
+        )}
+      </EmptyHeader>
+      {action && <EmptyContent>{action}</EmptyContent>}
+    </Empty>
   );
 }

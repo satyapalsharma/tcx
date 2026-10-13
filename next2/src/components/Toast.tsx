@@ -5,7 +5,9 @@ import { toast as sonnerToast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
 import { type IconName } from './Icon';
 
-const ToastCtx = createContext<(msg: string, icon?: IconName) => void>(() => {});
+const ToastCtx = createContext<(msg: string, icon?: IconName) => void>(
+  () => {},
+);
 
 export function useToast() {
   return useContext(ToastCtx);

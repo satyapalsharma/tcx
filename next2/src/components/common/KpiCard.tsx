@@ -30,7 +30,7 @@ export function KpiCard({
       className={cn(
         'p-3 sm:p-4 bg-surface border border-border rounded-xl shadow-xs flex flex-col gap-0.5 sm:gap-1 transition-all min-w-0',
         onClick && 'cursor-pointer hover:bg-surface-hover/70',
-        className
+        className,
       )}
     >
       <div className="flex items-center justify-between gap-1.5 min-w-0">

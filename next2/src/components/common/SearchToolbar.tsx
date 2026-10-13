@@ -29,7 +29,10 @@ export function SearchToolbar({
   dataOdId,
 }: SearchToolbarProps) {
   return (
-    <div className={cn('flex flex-wrap items-center gap-2.5', className)} data-od-id={dataOdId}>
+    <div
+      className={cn('flex flex-wrap items-center gap-2.5', className)}
+      data-od-id={dataOdId}
+    >
       <div className="relative">
         <Icon
           name="search"
@@ -38,7 +41,7 @@ export function SearchToolbar({
         <Input
           className={cn(
             'h-8 pl-8 pr-3 w-full sm:w-[210px] bg-surface-inset border-border text-xs text-foreground placeholder:text-muted focus-visible:border-accent focus-visible:ring-1 focus-visible:ring-accent transition-colors',
-            inputClassName
+            inputClassName,
           )}
           placeholder={placeholder}
           aria-label={placeholder}

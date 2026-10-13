@@ -57,12 +57,58 @@ import {
 } from 'lucide-react';
 
 export type IconName =
-  | 'grid' | 'chart' | 'flow' | 'code' | 'plug' | 'users' | 'scroll' | 'gear' | 'out'
-  | 'check' | 'chev' | 'chevr' | 'plus' | 'upload' | 'search' | 'download' | 'copy'
-  | 'bell' | 'x' | 'clock' | 'warn' | 'info' | 'bolt' | 'eye' | 'filter' | 'ext'
-  | 'lock' | 'mail' | 'shield' | 'sync' | 'folder' | 'file' | 'branch' | 'rocket'
-  | 'key' | 'play' | 'pause' | 'arrowr' | 'minus' | 'dot' | 'more' | 'globe' | 'trash'
-  | 'edit' | 'robot' | 'send' | 'flag' | 'target' | 'cloud' | 'merge' | 'db' | 'menu';
+  | 'grid'
+  | 'chart'
+  | 'flow'
+  | 'code'
+  | 'plug'
+  | 'users'
+  | 'scroll'
+  | 'gear'
+  | 'out'
+  | 'check'
+  | 'chev'
+  | 'chevr'
+  | 'plus'
+  | 'upload'
+  | 'search'
+  | 'download'
+  | 'copy'
+  | 'bell'
+  | 'x'
+  | 'clock'
+  | 'warn'
+  | 'info'
+  | 'bolt'
+  | 'eye'
+  | 'filter'
+  | 'ext'
+  | 'lock'
+  | 'mail'
+  | 'shield'
+  | 'sync'
+  | 'folder'
+  | 'file'
+  | 'branch'
+  | 'rocket'
+  | 'key'
+  | 'play'
+  | 'pause'
+  | 'arrowr'
+  | 'minus'
+  | 'dot'
+  | 'more'
+  | 'globe'
+  | 'trash'
+  | 'edit'
+  | 'robot'
+  | 'send'
+  | 'flag'
+  | 'target'
+  | 'cloud'
+  | 'merge'
+  | 'db'
+  | 'menu';
 
 const LUCIDE_MAP: Record<IconName, LucideIcon> = {
   grid: LayoutGrid,
@@ -130,7 +176,11 @@ export function Icon({ name, large, className = '', ...rest }: Props) {
   if (!LucideComp) return null;
   return (
     <LucideComp
-      className={cn('tx-icon shrink-0', large ? 'size-[18px]' : 'size-4', className)}
+      className={cn(
+        'tx-icon shrink-0',
+        large ? 'size-[18px]' : 'size-4',
+        className,
+      )}
       strokeWidth={1.8}
       aria-hidden="true"
       {...rest}

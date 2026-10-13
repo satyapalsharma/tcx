@@ -1,50 +1,79 @@
 'use client';
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import type { ComponentProps } from 'react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { cn } from 'cn';
 
-export type SelectOption = string | { value: string; label: string };
+export type SelectOption =
+  string | { value: string; label: string; disabled?: boolean };
+type Props = Omit<
+  ComponentProps<typeof SelectTrigger>,
+  'children' | 'onChange'
+> & {
+  value: string;
+  onValueChange: (value: string) => void;
+  options: readonly SelectOption[];
+  placeholder?: string;
+  name?: string;
+  required?: boolean;
+};
 
-// Radix Select forbids empty-string item values; filters use '' for "All".
-const EMPTY = '__all__';
-const toInner = (v: string) => (v === '' ? EMPTY : v);
-const toOuter = (v: string) => (v === EMPTY ? '' : v);
-
-/**
- * Thin composition over shadcn Select for the common "value + options" case.
- * Accepts '' as a value (mapped internally) so filter "All …" options keep working.
- */
+/** Shadcn Select composition. Empty filter values work without breaking placeholders. */
 export function SelectField({
   value,
   onValueChange,
   options,
   placeholder,
-  id,
   className,
   size = 'sm',
   disabled,
-  'aria-label': ariaLabel,
-}: {
-  value: string;
-  onValueChange: (value: string) => void;
-  options: SelectOption[];
-  placeholder?: string;
-  id?: string;
-  className?: string;
-  size?: 'sm' | 'default';
-  disabled?: boolean;
-  'aria-label'?: string;
-}) {
-  const items = options.map((o) => (typeof o === 'string' ? { value: o, label: o } : o));
+  name,
+  required,
+  ...triggerProps
+}: Props) {
+  const items = options.map((option) =>
+    typeof option === 'string' ? { value: option, label: option } : option,
+  );
+  const hasEmptyOption = items.some((option) => option.value === '');
+  // Generate a sentinel outside the caller's value domain (including literal '__all__').
+  const values = new Set(items.map((option) => option.value));
+  let emptyValue = '__select_empty__';
+  while (values.has(emptyValue)) emptyValue += '_';
+  const innerValue = value === '' && hasEmptyOption ? emptyValue : value;
+
   return (
-    <Select value={toInner(value)} onValueChange={(v) => onValueChange(toOuter(v))} disabled={disabled}>
-      <SelectTrigger id={id} size={size} aria-label={ariaLabel} className={cn('text-xs cursor-pointer', className)}>
+    <Select
+      name={name}
+      required={required}
+      value={innerValue}
+      disabled={disabled}
+      onValueChange={(next) =>
+        onValueChange(hasEmptyOption && next === emptyValue ? '' : next)
+      }
+    >
+      <SelectTrigger
+        {...triggerProps}
+        size={size}
+        disabled={disabled}
+        className={cn('cursor-pointer text-xs', className)}
+      >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
-        {items.map((o) => (
-          <SelectItem key={o.value || EMPTY} value={toInner(o.value)} className="text-xs">
-            {o.label}
+        {items.map((option) => (
+          <SelectItem
+            key={option.value === '' ? emptyValue : option.value}
+            value={option.value === '' ? emptyValue : option.value}
+            disabled={option.disabled}
+            className="text-xs"
+          >
+            {option.label}
           </SelectItem>
         ))}
       </SelectContent>

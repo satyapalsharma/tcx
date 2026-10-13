@@ -4,3 +4,4 @@ export * from './StatusBadge';
 export * from './EmptyState';
 export * from './SearchToolbar';
 export * from './SelectField';
+export * from './Disclosure';
