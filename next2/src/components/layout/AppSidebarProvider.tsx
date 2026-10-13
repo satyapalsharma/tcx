@@ -16,7 +16,7 @@ export function AppSidebarProvider({ children }: { children: ReactNode }) {
     true,
     readPreference,
   );
-  if (['/', '/login', '/onboarding'].includes(pathname)) return <>{children}</>;
+  if (['/login', '/onboarding'].includes(pathname)) return <>{children}</>;
   return (
     <SidebarProvider
       open={open}
